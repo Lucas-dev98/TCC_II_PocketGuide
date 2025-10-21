@@ -1,0 +1,76 @@
+# Expo
+.expo/
+.expo-shared/
+dist/
+npm-debug.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+web-build/
+
+# React Native
+node_modules/
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# IDEs
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.c9/
+*.launch
+.settings/
+*.sublime-workspace
+*.sublime-project
+
+# IDE - VSCode
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+*.lcov
+.nyc_output
+
+# Logs
+npm-debug.log
+yarn-debug.log
+yarn-error.log
+lerna-debug.log
+
+# OS
+Thumbs.db
+
+# Dependencies
+package-lock.json
+yarn.lock
+
+# Build
+build/
+dist/
+
+# Testing
+coverage/
+.jest/
+
+# IDE-specific files
+*.iml
+.gradle
+local.properties

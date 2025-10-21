@@ -1,0 +1,42 @@
+{
+  "expo": {
+    "name": "Pocket Guide",
+    "slug": "pocket-guide",
+    "version": "1.0.0",
+    "sdkVersion": "54.0.0",
+    "scheme": "exp+pocketguide",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTabletMode": true,
+      "bundleIdentifier": "com.lucasbastos.pocketguide"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "package": "com.lucasbastos.pocketguide",
+      "versionCode": 1,
+      "enableExpoGo": true
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [],
+    "extra": {
+      "eas": {
+        "projectId": "pocket-guide-project"
+      }
+    }
+  }
+}
