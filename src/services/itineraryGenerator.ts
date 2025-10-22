@@ -192,6 +192,31 @@ const generateGenericItinerary = (
 ): ItineraryItem[] => {
   const itinerary: ItineraryItem[] = [];
 
+  // Default coordinates for common destinations
+  const defaultCoords: { [key: string]: { lat: number; lng: number } } = {
+    'paris': { lat: 48.8566, lng: 2.3522 },
+    'london': { lat: 51.5074, lng: -0.1278 },
+    'new york': { lat: 40.7128, lng: -74.0060 },
+    'tokyo': { lat: 35.6762, lng: 139.6503 },
+    'rio de janeiro': { lat: -22.9068, lng: -43.1729 },
+    'barcelona': { lat: 41.3851, lng: 2.1734 },
+    'rome': { lat: 41.9028, lng: 12.4964 },
+    'dubai': { lat: 25.2048, lng: 55.2708 },
+    'singapore': { lat: 1.3521, lng: 103.8198 },
+    'bangkok': { lat: 13.7563, lng: 100.5018 },
+    'lisbon': { lat: 38.7223, lng: -9.1393 },
+    'amsterdam': { lat: 52.3676, lng: 4.9041 },
+    'berlin': { lat: 52.5200, lng: 13.4050 },
+    'madrid': { lat: 40.4168, lng: -3.7038 },
+    'são paulo': { lat: -23.5505, lng: -46.6333 },
+    'buenos aires': { lat: -34.6037, lng: -58.3816 },
+    'sydney': { lat: -33.8688, lng: 151.2093 },
+    'istanbul': { lat: 41.0082, lng: 28.9784 },
+  };
+
+  const destLower = destination.toLowerCase();
+  const baseCoords = defaultCoords[destLower] || { lat: 0, lng: 0 };
+
   for (let day = 1; day <= days; day++) {
     const activities = [
       {
@@ -199,24 +224,32 @@ const generateGenericItinerary = (
         name: `Explore ${destination} - Morning Tour`,
         category: 'Exploration',
         reason: 'Discover the main attractions of the city',
+        latOffset: 0,
+        lngOffset: 0,
       },
       {
         time: '12:00',
         name: `Local Lunch in ${destination}`,
         category: 'Food & Beverage',
         reason: 'Experience authentic local cuisine',
+        latOffset: 0.01,
+        lngOffset: 0.01,
       },
       {
         time: '15:00',
         name: `Cultural Site Visit`,
         category: 'Culture',
         reason: 'Learn about local history and culture',
+        latOffset: -0.01,
+        lngOffset: 0.01,
       },
       {
         time: '19:00',
         name: `Dinner and Evening Entertainment`,
         category: 'Food & Beverage',
         reason: 'Enjoy local nightlife and restaurants',
+        latOffset: -0.01,
+        lngOffset: -0.01,
       },
     ];
 
@@ -230,6 +263,10 @@ const generateGenericItinerary = (
         reason: activity.reason,
         tip: `${tags[index % tags.length] || 'Enjoy'} this experience`,
         category: activity.category,
+        location: {
+          lat: baseCoords.lat + (activity.latOffset || 0),
+          lng: baseCoords.lng + (activity.lngOffset || 0),
+        },
       });
     });
   }

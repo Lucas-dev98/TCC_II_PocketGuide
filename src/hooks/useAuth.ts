@@ -123,50 +123,63 @@ export const useAuth = () => {
    * Check authentication status on mount
    */
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
-      try {
-        if (fbUser) {
-          setFirebaseUser(fbUser);
+    let unsubscribe: (() => void) | null = null;
 
-          // Fetch user data from Firestore
-          const userRef = doc(db, "users", fbUser.uid);
-          const userDoc = await getDoc(userRef);
+    try {
+      unsubscribe = onAuthStateChanged(auth, async (fbUser) => {
+        try {
+          if (fbUser) {
+            setFirebaseUser(fbUser);
 
-          if (userDoc.exists()) {
-            const userData = userDoc.data();
-            setUser({
-              uid: fbUser.uid,
-              email: fbUser.email || "",
-              name: fbUser.displayName || userData.name || "User",
-              photoURL: fbUser.photoURL || userData.photoURL || "",
-              tags: userData.tags || [],
-              createdAt: userData.createdAt ? userData.createdAt.toDate() : new Date(),
-            });
+            // Fetch user data from Firestore
+            const userRef = doc(db, "users", fbUser.uid);
+            const userDoc = await getDoc(userRef);
+
+            if (userDoc.exists()) {
+              const userData = userDoc.data();
+              setUser({
+                uid: fbUser.uid,
+                email: fbUser.email || "",
+                name: fbUser.displayName || userData.name || "User",
+                photoURL: fbUser.photoURL || userData.photoURL || "",
+                tags: userData.tags || [],
+                createdAt: userData.createdAt ? userData.createdAt.toDate() : new Date(),
+              });
+            } else {
+              // User not in Firestore yet (shouldn't happen after login)
+              setUser({
+                uid: fbUser.uid,
+                email: fbUser.email || "",
+                name: fbUser.displayName || "User",
+                photoURL: fbUser.photoURL || "",
+                tags: [],
+                createdAt: new Date(),
+              });
+            }
           } else {
-            // User not in Firestore yet (shouldn't happen after login)
-            setUser({
-              uid: fbUser.uid,
-              email: fbUser.email || "",
-              name: fbUser.displayName || "User",
-              photoURL: fbUser.photoURL || "",
-              tags: [],
-              createdAt: new Date(),
-            });
+            setUser(null);
+            setFirebaseUser(null);
           }
-        } else {
-          setUser(null);
-          setFirebaseUser(null);
+        } catch (err) {
+          const errorMsg =
+            err instanceof Error ? err.message : "Failed to check auth status";
+          setError(errorMsg);
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        const errorMsg =
-          err instanceof Error ? err.message : "Failed to check auth status";
-        setError(errorMsg);
-      } finally {
-        setLoading(false);
+      });
+    } catch (err: any) {
+      // Handle Firebase initialization errors (e.g., in Expo Go)
+      if (err?.message?.includes("Component auth has not been registered")) {
+        console.warn("⚠️ Firebase Auth not available (Expo Go limitation)");
+        console.warn("💡 Tip: Use 'npm run web' for Firebase Auth support");
       }
-    });
+      setLoading(false);
+    }
 
-    return unsubscribe;
+    return () => {
+      if (unsubscribe) unsubscribe();
+    };
   }, []);
 
   return {

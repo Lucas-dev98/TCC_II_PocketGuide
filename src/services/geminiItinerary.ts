@@ -48,7 +48,27 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `For ${destination} (${days} days), budget=${budget}, group=${groupType}, interests=${tags.join(',')}. Return JSON array of activities only. No thinking, no text.`;
+    const prompt = `Generate a ${days}-day itinerary for ${destination} with budget="${budget}" and group="${groupType}". Interests: ${tags.join(',')}. 
+
+IMPORTANT: Return ONLY a valid JSON object in this exact format with NO markdown code blocks, NO explanations, NO extra text:
+{
+  "itinerary": [
+    {
+      "day": 1,
+      "time": "09:00",
+      "name": "Attraction name",
+      "duration": 120,
+      "reason": "Why visit",
+      "tip": "Local tip",
+      "category": "category",
+      "lat": latitude_number,
+      "lng": longitude_number
+    }
+  ],
+  "tips": ["tip1", "tip2"]
+}
+
+Generate approximately ${days * 3} activities spread across ${days} days (3 per day). Each activity MUST include real coordinates (lat, lng) for places in ${destination}.`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -155,15 +175,50 @@ export const generateItineraryWithGemini = async (
     }
 
     const itineraryItems: ItineraryItem[] = activities.map(
-      (item: any, index: number) => ({
-        day: item.day || Math.floor(index / 3) + 1,
-        time: item.time || '09:00',
-        name: item.name || 'Activity',
-        duration: item.duration || 120,
-        reason: item.reason || 'Explore this attraction',
-        tip: item.tip || 'Check opening hours',
-        category: item.category || 'General',
-      })
+      (item: any, index: number) => {
+        // Extract coordinates - they can be named lat/lng or latitude/longitude
+        let lat = item.lat !== undefined ? item.lat : item.latitude;
+        let lng = item.lng !== undefined ? item.lng : item.longitude;
+        
+        // If still no coordinates, generate random ones for the destination
+        if (lat === undefined || lng === undefined || lat === 0 || lng === 0) {
+          console.warn(`⚠️ No coordinates for ${item.name}, using defaults`);
+          // Default coordinates for common destinations
+          const defaultCoords: { [key: string]: [number, number] } = {
+            'paris': [48.8566, 2.3522],
+            'london': [51.5074, -0.1278],
+            'new york': [40.7128, -74.0060],
+            'tokyo': [35.6762, 139.6503],
+            'rio de janeiro': [-22.9068, -43.1729],
+            'barcelona': [41.3851, 2.1734],
+            'rome': [41.9028, 12.4964],
+            'dubai': [25.2048, 55.2708],
+            'singapore': [1.3521, 103.8198],
+            'bangkok': [13.7563, 100.5018],
+          };
+          
+          const destLower = destination.toLowerCase();
+          let coords = defaultCoords[destLower] || [0, 0];
+          
+          // Add slight random offset for nearby attractions
+          lat = coords[0] + (Math.random() - 0.5) * 0.05;
+          lng = coords[1] + (Math.random() - 0.5) * 0.05;
+        }
+        
+        return {
+          day: item.day || Math.floor(index / 3) + 1,
+          time: item.time || '09:00',
+          name: item.name || 'Activity',
+          duration: item.duration || 120,
+          reason: item.reason || 'Explore this attraction',
+          tip: item.tip || 'Check opening hours',
+          category: item.category || 'General',
+          location: {
+            lat: Number(lat) || 0,
+            lng: Number(lng) || 0,
+          },
+        };
+      }
     );
 
     return {
@@ -176,19 +231,46 @@ export const generateItineraryWithGemini = async (
     console.error('❌ Error generating itinerary with Gemini:', error);
     console.warn('⚠️ Using fallback itinerary instead...');
     
+    // Default coordinates for common destinations
+    const defaultCoords: { [key: string]: [number, number] } = {
+      'paris': [48.8566, 2.3522],
+      'london': [51.5074, -0.1278],
+      'new york': [40.7128, -74.0060],
+      'tokyo': [35.6762, 139.6503],
+      'rio de janeiro': [-22.9068, -43.1729],
+      'barcelona': [41.3851, 2.1734],
+      'rome': [41.9028, 12.4964],
+      'dubai': [25.2048, 55.2708],
+      'singapore': [1.3521, 103.8198],
+      'bangkok': [13.7563, 100.5018],
+    };
+    
+    const destLower = destination.toLowerCase();
+    const baseCoords = defaultCoords[destLower] || [0, 0];
+    
     // Fallback itinerary when Gemini fails
     const fallbackItinerary: GeneratedItinerary = {
       destination,
       days,
-      itinerary: Array.from({ length: days * 3 }, (_, i) => ({
-        day: Math.floor(i / 3) + 1,
-        time: ['09:00', '13:00', '18:00'][i % 3],
-        name: `Activity ${i + 1}`,
-        duration: 120,
-        reason: `Explore ${destination}`,
-        tip: 'Check opening hours and book in advance',
-        category: 'General',
-      })),
+      itinerary: Array.from({ length: days * 3 }, (_, i) => {
+        // Add slight random offset for nearby attractions
+        const lat = baseCoords[0] + (Math.random() - 0.5) * 0.05;
+        const lng = baseCoords[1] + (Math.random() - 0.5) * 0.05;
+        
+        return {
+          day: Math.floor(i / 3) + 1,
+          time: ['09:00', '13:00', '18:00'][i % 3],
+          name: `Activity ${i + 1}`,
+          duration: 120,
+          reason: `Explore ${destination}`,
+          tip: 'Check opening hours and book in advance',
+          category: 'General',
+          location: {
+            lat,
+            lng,
+          },
+        };
+      }),
       tips: [
         `Start exploring ${destination} early in the morning`,
         'Try local restaurants and cuisine',
