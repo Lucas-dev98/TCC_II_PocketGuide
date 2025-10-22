@@ -1,9 +1,10 @@
 /**
  * TripCard Component - Displays a trip in card format
  * Used in HomeScreen to show saved trips
+ * Memoized to prevent unnecessary re-renders
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { Trip } from "../types";
 import { formatDate } from "../utils/formatDate";
@@ -13,7 +14,10 @@ interface TripCardProps {
   onPress: (trip: Trip) => void;
 }
 
-export const TripCard: React.FC<TripCardProps> = ({ trip, onPress }) => {
+const TripCardComponent: React.FC<TripCardProps> = ({ trip, onPress }) => {
+  const handlePress = useCallback(() => {
+    onPress(trip);
+  }, [trip, onPress]);
   // Ensure dates are Date objects
   const startDate = trip.startDate instanceof Date ? trip.startDate : new Date(trip.startDate);
   const endDate = trip.endDate instanceof Date ? trip.endDate : new Date(trip.endDate);
@@ -27,8 +31,11 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, onPress }) => {
   return (
     <TouchableOpacity
       style={styles.container}
-      onPress={() => onPress(trip)}
+      onPress={handlePress}
       activeOpacity={0.7}
+      accessibilityLabel={`View trip to ${trip.destination}`}
+      accessibilityRole="button"
+      accessibilityHint="Opens trip details"
     >
       <View style={styles.content}>
         <Text style={styles.destination}>{trip.destination}</Text>
@@ -47,6 +54,20 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, onPress }) => {
   );
 };
 
+// Memoization comparison function for performance optimization
+const arePropsEqual = (prevProps: TripCardProps, nextProps: TripCardProps) => {
+  return (
+    prevProps.trip.id === nextProps.trip.id &&
+    prevProps.trip.destination === nextProps.trip.destination &&
+    prevProps.trip.startDate === nextProps.trip.startDate &&
+    prevProps.trip.endDate === nextProps.trip.endDate &&
+    prevProps.trip.attractions?.length === nextProps.trip.attractions?.length &&
+    prevProps.onPress === nextProps.onPress
+  );
+};
+
+export const TripCard = React.memo(TripCardComponent, arePropsEqual);
+
 const styles = StyleSheet.create({
   container: {
     flexDirection: "row",
@@ -54,15 +75,11 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     paddingHorizontal: 16,
     paddingVertical: 12,
-    marginVertical: 8,
-    marginHorizontal: 16,
-    backgroundColor: "#FFFFFF",
+    marginBottom: 8,
+    backgroundColor: "#fff",
     borderRadius: 8,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 3,
-    elevation: 3,
+    borderBottomWidth: 1,
+    borderBottomColor: "#f0f0f0",
   },
   content: {
     flex: 1,
@@ -70,23 +87,24 @@ const styles = StyleSheet.create({
   destination: {
     fontSize: 16,
     fontWeight: "600",
-    color: "#1F2937",
     marginBottom: 4,
+    color: "#333",
   },
   dateRange: {
     fontSize: 13,
-    color: "#6B7280",
+    color: "#666",
     marginBottom: 4,
   },
   attractions: {
-    fontSize: 13,
-    color: "#9CA3AF",
+    fontSize: 12,
+    color: "#999",
   },
   chevron: {
-    marginLeft: 12,
+    marginLeft: 8,
   },
   chevronText: {
     fontSize: 24,
-    color: "#D1D5DB",
+    color: "#ccc",
+    fontWeight: "300",
   },
 });

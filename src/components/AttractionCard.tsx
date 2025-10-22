@@ -3,7 +3,7 @@
  * Used in TripDetailScreen to show each day's activities
  */
 
-import React from "react";
+import React, { useCallback } from "react";
 import { StyleSheet, TouchableOpacity, View, Text } from "react-native";
 import { Attraction } from "../types";
 
@@ -14,18 +14,29 @@ interface AttractionCardProps {
   isDragging?: boolean;
 }
 
-export const AttractionCard: React.FC<AttractionCardProps> = ({
+const AttractionCardComponent: React.FC<AttractionCardProps> = ({
   attraction,
   onPress,
   onLongPress,
   isDragging = false,
 }) => {
+  const handlePress = useCallback(() => {
+    onPress?.(attraction);
+  }, [attraction, onPress]);
+
+  const handleLongPress = useCallback(() => {
+    onLongPress?.(attraction);
+  }, [attraction, onLongPress]);
+
   return (
     <TouchableOpacity
       style={[styles.container, isDragging && styles.dragging]}
-      onPress={() => onPress?.(attraction)}
-      onLongPress={() => onLongPress?.(attraction)}
+      onPress={handlePress}
+      onLongPress={handleLongPress}
       activeOpacity={0.7}
+      accessibilityLabel={`Attraction: ${attraction.name}`}
+      accessibilityRole="button"
+      accessibilityHint={`${attraction.reason}. Duration: ${attraction.duration} minutes`}
     >
       <View style={styles.timeContainer}>
         <Text style={styles.time}>{attraction.time}</Text>
@@ -111,3 +122,23 @@ const styles = StyleSheet.create({
     color: "#D1D5DB",
   },
 });
+
+const arePropsEqual = (
+  prevProps: AttractionCardProps,
+  nextProps: AttractionCardProps
+) => {
+  return (
+    prevProps.attraction.id === nextProps.attraction.id &&
+    prevProps.attraction.name === nextProps.attraction.name &&
+    prevProps.attraction.time === nextProps.attraction.time &&
+    prevProps.attraction.duration === nextProps.attraction.duration &&
+    prevProps.isDragging === nextProps.isDragging &&
+    prevProps.onPress === nextProps.onPress &&
+    prevProps.onLongPress === nextProps.onLongPress
+  );
+};
+
+export const AttractionCard = React.memo(
+  AttractionCardComponent,
+  arePropsEqual
+);

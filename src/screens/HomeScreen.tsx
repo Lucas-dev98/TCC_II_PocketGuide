@@ -3,7 +3,7 @@
  * Lists all user's saved trips and provides button to create new trip
  */
 
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useCallback } from "react";
 import {
   StyleSheet,
   FlatList,
@@ -33,30 +33,36 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
     setFilteredTrips(sorted);
   }, [trips]);
 
-  const handleTripPress = (trip: Trip) => {
-    setCurrentTrip(trip);
-    navigation.navigate("TripDetail", { tripId: trip.id });
-  };
+  const handleTripPress = useCallback(
+    (trip: Trip) => {
+      setCurrentTrip(trip);
+      navigation.navigate("TripDetail", { tripId: trip.id });
+    },
+    [navigation, setCurrentTrip]
+  );
 
-  const handleCreateTrip = () => {
+  const handleCreateTrip = useCallback(() => {
     setCurrentTrip(null);
     navigation.navigate("CreateTrip");
-  };
+  }, [navigation, setCurrentTrip]);
 
-  const renderEmptyState = () => (
-    <View style={styles.emptyContainer}>
-      <Text style={styles.emptyIcon}>📝</Text>
-      <Text style={styles.emptyTitle}>No trips yet</Text>
-      <Text style={styles.emptyText}>
-        Create your first trip and let AI help you plan
-      </Text>
-      <TouchableOpacity
-        style={styles.createButton}
-        onPress={handleCreateTrip}
-      >
-        <Text style={styles.createButtonText}>Create First Trip</Text>
-      </TouchableOpacity>
-    </View>
+  const renderEmptyState = useCallback(
+    () => (
+      <View style={styles.emptyContainer}>
+        <Text style={styles.emptyIcon}>📝</Text>
+        <Text style={styles.emptyTitle}>No trips yet</Text>
+        <Text style={styles.emptyText}>
+          Create your first trip and let AI help you plan
+        </Text>
+        <TouchableOpacity
+          style={styles.createButton}
+          onPress={handleCreateTrip}
+        >
+          <Text style={styles.createButtonText}>Create First Trip</Text>
+        </TouchableOpacity>
+      </View>
+    ),
+    [handleCreateTrip]
   );
 
   if (loading) {

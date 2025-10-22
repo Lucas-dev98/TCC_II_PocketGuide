@@ -19,7 +19,7 @@ interface LoadingSpinnerProps {
   fullScreen?: boolean;
 }
 
-export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
+const LoadingSpinnerComponent: React.FC<LoadingSpinnerProps> = ({
   size = "large",
   message,
   containerStyle,
@@ -32,7 +32,12 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
   ];
 
   return (
-    <View style={containerStyles}>
+    <View
+      style={containerStyles}
+      accessibilityLabel="Loading"
+      accessibilityRole="progressbar"
+      accessibilityLiveRegion="polite"
+    >
       <ActivityIndicator
         size={size}
         color="#3B82F6"
@@ -42,6 +47,22 @@ export const LoadingSpinner: React.FC<LoadingSpinnerProps> = ({
     </View>
   );
 };
+
+const arePropsEqual = (
+  prevProps: LoadingSpinnerProps,
+  nextProps: LoadingSpinnerProps
+) => {
+  return (
+    prevProps.size === nextProps.size &&
+    prevProps.message === nextProps.message &&
+    prevProps.fullScreen === nextProps.fullScreen
+  );
+};
+
+export const LoadingSpinner = React.memo(
+  LoadingSpinnerComponent,
+  arePropsEqual
+);
 
 const styles = StyleSheet.create({
   container: {
