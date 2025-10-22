@@ -48,34 +48,7 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `Create a detailed ${days}-day travel itinerary for ${destination} for a traveler who likes ${tags.join(
-      ', '
-    )}. 
-    Budget level: ${budget}
-    Group type: ${groupType}
-    
-    Return ONLY a valid JSON object with this exact structure (no markdown, no extra text):
-    {
-      "itinerary": [
-        {
-          "day": 1,
-          "time": "09:00",
-          "name": "Attraction name",
-          "duration": 120,
-          "reason": "Why visit this place",
-          "tip": "Pro tip for the visit",
-          "category": "category"
-        }
-      ],
-      "tips": ["General travel tip 1", "General travel tip 2"]
-    }
-    
-    Make sure:
-    - Each day has 3-4 activities
-    - Times are realistic and sequential
-    - Durations are in minutes
-    - Names are actual attractions in ${destination}
-    - Return valid JSON that can be parsed`;
+    const prompt = `For ${destination} (${days} days), budget=${budget}, group=${groupType}, interests=${tags.join(',')}. Return JSON array of activities only. No thinking, no text.`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -83,6 +56,11 @@ export const generateItineraryWithGemini = async (
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
+        systemInstruction: {
+          parts: [{
+            text: "Return only valid JSON. No markdown. No explanation. No thinking."
+          }]
+        },
         contents: [
           {
             parts: [
@@ -93,8 +71,10 @@ export const generateItineraryWithGemini = async (
           },
         ],
         generationConfig: {
-          temperature: 0.7,
+          temperature: 0.3,
           maxOutputTokens: 2048,
+          topP: 0.8,
+          topK: 40,
         },
       }),
     });
@@ -108,17 +88,28 @@ export const generateItineraryWithGemini = async (
 
     console.log('📦 Gemini API Response:', JSON.stringify(data, null, 2));
 
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
       console.error('❌ Invalid Gemini API response structure:', data);
       return null;
     }
 
-    if (!data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
+    const content = data.candidates[0].content;
+    
+    // Check if there are parts in the content
+    if (!content.parts || content.parts.length === 0) {
+      console.error('❌ No content parts in response. Finish reason:', data.candidates[0].finishReason);
+      if (data.candidates[0].finishReason === 'MAX_TOKENS') {
+        console.error('⚠️ Response was cut off due to MAX_TOKENS limit');
+      }
+      return null;
+    }
+
+    if (!content.parts[0] || !content.parts[0].text) {
       console.error('❌ No text content in Gemini response');
       return null;
     }
 
-    const textContent = data.candidates[0].content.parts[0].text;
+    const textContent = content.parts[0].text;
     console.log('📄 Text content:', textContent);
 
     // Try to extract JSON from the response
@@ -151,15 +142,19 @@ export const generateItineraryWithGemini = async (
 
     console.log('✅ Parsed JSON:', jsonData);
 
-    console.log('✅ Parsed JSON:', jsonData);
-
-    // Validate and structure the response
-    if (!jsonData.itinerary || !Array.isArray(jsonData.itinerary)) {
-      console.warn('⚠️ No itinerary array in response, creating fallback');
-      jsonData.itinerary = [];
+    // Handle both array and object formats
+    let activities: any[] = [];
+    
+    if (Array.isArray(jsonData)) {
+      activities = jsonData;
+    } else if (jsonData.itinerary && Array.isArray(jsonData.itinerary)) {
+      activities = jsonData.itinerary;
+    } else {
+      console.warn('⚠️ No itinerary array in response, using empty array');
+      activities = [];
     }
 
-    const itineraryItems: ItineraryItem[] = jsonData.itinerary.map(
+    const itineraryItems: ItineraryItem[] = activities.map(
       (item: any, index: number) => ({
         day: item.day || Math.floor(index / 3) + 1,
         time: item.time || '09:00',
@@ -178,8 +173,32 @@ export const generateItineraryWithGemini = async (
       tips: jsonData.tips || ['Check local weather', 'Learn basic local phrases'],
     };
   } catch (error) {
-    console.error('Error generating itinerary with Gemini:', error);
-    return null;
+    console.error('❌ Error generating itinerary with Gemini:', error);
+    console.warn('⚠️ Using fallback itinerary instead...');
+    
+    // Fallback itinerary when Gemini fails
+    const fallbackItinerary: GeneratedItinerary = {
+      destination,
+      days,
+      itinerary: Array.from({ length: days * 3 }, (_, i) => ({
+        day: Math.floor(i / 3) + 1,
+        time: ['09:00', '13:00', '18:00'][i % 3],
+        name: `Activity ${i + 1}`,
+        duration: 120,
+        reason: `Explore ${destination}`,
+        tip: 'Check opening hours and book in advance',
+        category: 'General',
+      })),
+      tips: [
+        `Start exploring ${destination} early in the morning`,
+        'Try local restaurants and cuisine',
+        'Take public transportation to save money',
+        'Visit popular attractions during off-peak hours',
+      ],
+    };
+    
+    console.log('📋 Using fallback itinerary:', fallbackItinerary);
+    return fallbackItinerary;
   }
 };
 

@@ -46,10 +46,13 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
     return <LoadingSpinner message="Loading trip..." fullScreen />;
   }
 
+  // Ensure dates are Date objects
+  const startDate = currentTrip.startDate instanceof Date ? currentTrip.startDate : new Date(currentTrip.startDate);
+  const endDate = currentTrip.endDate instanceof Date ? currentTrip.endDate : new Date(currentTrip.endDate);
+
   const totalDays = Math.ceil(
-    (currentTrip.endDate.getTime() - currentTrip.startDate.getTime()) /
-      (1000 * 60 * 60 * 24)
-  );
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  ) + 1;
 
   const handleAddAttraction = () => {
     // TODO: Open modal to add new attraction

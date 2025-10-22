@@ -17,10 +17,23 @@ import {
   Modal,
 } from "react-native";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { DatePickerCalendar } from "../components/DatePickerCalendar";
 import { generateItineraryWithGemini } from "../services/geminiItinerary";
 import { useTripStore } from "../store/tripStore";
 import { useAuth } from "../hooks/useAuth";
 import { Trip, Attraction } from "../types";
+
+// Popular destinations for quick select
+const POPULAR_DESTINATIONS = [
+  "🗼 Paris",
+  "🗽 New York",
+  "🏖️ Bali",
+  "🏛️ Rome",
+  "🏰 Tokyo",
+  "🌃 Barcelona",
+  "🕌 Dubai",
+  "🗽 Canada",
+];
 
 interface CreateTripScreenProps {
   navigation: any;
@@ -39,7 +52,7 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [selectedDateType, setSelectedDateType] = useState<"start" | "end" | null>(null);
-  const [tempDate, setTempDate] = useState("");
+  const [showSuggestions, setShowSuggestions] = useState(false);
 
   const handleGenerateItinerary = async () => {
     if (!destination || !startDate || !endDate) {
@@ -135,43 +148,7 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
 
   const handleDatePick = (dateType: "start" | "end") => {
     setSelectedDateType(dateType);
-    setTempDate("");
     setShowDatePicker(true);
-  };
-
-  const handleDateConfirm = () => {
-    if (!tempDate) return;
-
-    try {
-      // Parse date in format YYYY-MM-DD or MM/DD/YYYY
-      let parsedDate: Date;
-      if (tempDate.includes("-")) {
-        parsedDate = new Date(tempDate);
-      } else if (tempDate.includes("/")) {
-        const [month, day, year] = tempDate.split("/");
-        parsedDate = new Date(`${year}-${month}-${day}`);
-      } else {
-        setError("Please use format MM/DD/YYYY or YYYY-MM-DD");
-        return;
-      }
-
-      if (isNaN(parsedDate.getTime())) {
-        setError("Invalid date format");
-        return;
-      }
-
-      if (selectedDateType === "start") {
-        setStartDate(parsedDate);
-      } else {
-        setEndDate(parsedDate);
-      }
-
-      setShowDatePicker(false);
-      setTempDate("");
-      setError(null);
-    } catch (err) {
-      setError("Invalid date");
-    }
   };
 
   return (
@@ -187,83 +164,163 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()}>
-              <Text style={styles.backButton}>‹ Back</Text>
+              <Text style={styles.backButton}>← Back</Text>
             </TouchableOpacity>
-            <Text style={styles.title}>Plan New Trip</Text>
+            <Text style={styles.title}>✈️ Plan New Trip</Text>
+            <Text style={styles.subtitle}>
+              Let our AI create the perfect itinerary
+            </Text>
           </View>
 
-          {/* Destination Input */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Destination</Text>
-            <TextInput
-              style={styles.input}
-              placeholder="Where are you going?"
-              value={destination}
-              onChangeText={setDestination}
-              editable={!loading}
-            />
-            <Text style={styles.hint}>Search for city or country</Text>
-          </View>
+          {/* Card Container */}
+          <View style={styles.card}>
+            {/* Destination Input */}
+            <View style={styles.formSection}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>📍 Destination</Text>
+              </View>
+              <TextInput
+                style={styles.input}
+                placeholder="Where are you going?"
+                placeholderTextColor="#9CA3AF"
+                value={destination}
+                onChangeText={(text) => {
+                  setDestination(text);
+                  setShowSuggestions(text.length > 0);
+                }}
+                editable={!loading}
+              />
 
-          {/* Date Range */}
-          <View style={styles.section}>
-            <Text style={styles.label}>Travel Dates</Text>
-            <View style={styles.dateRow}>
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => handleDatePick("start")}
-                disabled={loading}
-              >
-                <Text style={styles.dateInputText}>
-                  {startDate
-                    ? startDate.toLocaleDateString()
-                    : "Start date"}
-                </Text>
-              </TouchableOpacity>
-              <Text style={styles.dateSeparator}>→</Text>
-              <TouchableOpacity
-                style={styles.dateInput}
-                onPress={() => handleDatePick("end")}
-                disabled={loading}
-              >
-                <Text style={styles.dateInputText}>
-                  {endDate ? endDate.toLocaleDateString() : "End date"}
-                </Text>
-              </TouchableOpacity>
+              {/* Popular Destinations */}
+              {showSuggestions && destination.length > 0 && (
+                <View style={styles.suggestionsContainer}>
+                  {POPULAR_DESTINATIONS.filter((d) =>
+                    d.toLowerCase().includes(destination.toLowerCase())
+                  ).map((dest, idx) => (
+                    <TouchableOpacity
+                      key={idx}
+                      style={styles.suggestionItem}
+                      onPress={() => {
+                        setDestination(dest.split(" ")[1]); // Remove emoji
+                        setShowSuggestions(false);
+                      }}
+                    >
+                      <Text style={styles.suggestionText}>{dest}</Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
+              )}
+            </View>
+
+            {/* Travel Dates */}
+            <View style={styles.formSection}>
+              <View style={styles.labelRow}>
+                <Text style={styles.label}>📅 Travel Dates</Text>
+              </View>
+              <View style={styles.dateRow}>
+                <TouchableOpacity
+                  style={[styles.dateInput, startDate && styles.dateInputFilled]}
+                  onPress={() => handleDatePick("start")}
+                  disabled={loading}
+                >
+                  <Text style={styles.dateLabel}>From</Text>
+                  <Text style={styles.dateValue}>
+                    {startDate
+                      ? startDate.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Select date"}
+                  </Text>
+                </TouchableOpacity>
+
+                <View style={styles.dateArrow}>
+                  <Text style={styles.arrowText}>→</Text>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.dateInput, endDate && styles.dateInputFilled]}
+                  onPress={() => handleDatePick("end")}
+                  disabled={loading}
+                >
+                  <Text style={styles.dateLabel}>To</Text>
+                  <Text style={styles.dateValue}>
+                    {endDate
+                      ? endDate.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                        })
+                      : "Select date"}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Trip Duration */}
+              {startDate && endDate && (
+                <View style={styles.durationBadge}>
+                  <Text style={styles.durationText}>
+                    🕐{" "}
+                    {Math.ceil(
+                      (endDate.getTime() - startDate.getTime()) /
+                        (1000 * 60 * 60 * 24)
+                    ) + 1}{" "}
+                    days
+                  </Text>
+                </View>
+              )}
             </View>
           </View>
 
           {/* Error Message */}
           {error && (
             <View style={styles.errorContainer}>
+              <Text style={styles.errorEmoji}>⚠️</Text>
               <Text style={styles.errorText}>{error}</Text>
             </View>
           )}
 
           {/* Generate Button */}
           <TouchableOpacity
-            style={[styles.generateButton, loading && styles.buttonDisabled]}
+            style={[
+              styles.generateButton,
+              (loading ||
+                !destination ||
+                !startDate ||
+                !endDate) &&
+                styles.buttonDisabled,
+            ]}
             onPress={handleGenerateItinerary}
-            disabled={loading}
+            disabled={loading || !destination || !startDate || !endDate}
           >
             {loading ? (
-              <View>
+              <View style={styles.loadingContainer}>
                 <LoadingSpinner size="small" />
+                <Text style={styles.loadingText}>Generating...</Text>
               </View>
             ) : (
-              <Text style={styles.generateButtonText}>Generate Itinerary</Text>
+              <Text style={styles.generateButtonText}>✨ Generate Itinerary</Text>
             )}
           </TouchableOpacity>
 
-          {/* Info */}
+          {/* Info Box */}
           <View style={styles.infoBox}>
-            <Text style={styles.infoTitle}>⚡ How it works</Text>
-            <Text style={styles.infoText}>
-              1. Select your destination and dates{"\n"}
-              2. Our AI generates a personalized itinerary{"\n"}
-              3. Edit and customize as you like{"\n"}
-              4. View on map and go offline anytime
-            </Text>
+            <Text style={styles.infoTitle}>💡 How it works</Text>
+            <View style={styles.infoStep}>
+              <Text style={styles.stepNumber}>1</Text>
+              <Text style={styles.stepText}>Select destination & dates</Text>
+            </View>
+            <View style={styles.infoStep}>
+              <Text style={styles.stepNumber}>2</Text>
+              <Text style={styles.stepText}>AI generates your itinerary</Text>
+            </View>
+            <View style={styles.infoStep}>
+              <Text style={styles.stepNumber}>3</Text>
+              <Text style={styles.stepText}>Edit & save to your trips</Text>
+            </View>
+            <View style={styles.infoStep}>
+              <Text style={styles.stepNumber}>4</Text>
+              <Text style={styles.stepText}>View maps & go offline</Text>
+            </View>
           </View>
         </ScrollView>
 
@@ -275,43 +332,45 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
           onRequestClose={() => setShowDatePicker(false)}
         >
           <View style={styles.modalOverlay}>
-            <View style={styles.modalContent}>
-              <Text style={styles.modalTitle}>
-                Enter {selectedDateType === "start" ? "start" : "end"} date
-              </Text>
-              <Text style={styles.modalSubtitle}>Format: MM/DD/YYYY</Text>
+            <ScrollView 
+              style={styles.modalContentWrapper}
+              contentContainerStyle={styles.modalContentScroll}
+            >
+              <View style={styles.modalContent}>
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>
+                    Select {selectedDateType === "start" ? "start" : "end"} date
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => setShowDatePicker(false)}
+                    style={styles.closeButton}
+                  >
+                    <Text style={styles.closeButtonText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
 
-              <TextInput
-                style={styles.dateModalInput}
-                placeholder="MM/DD/YYYY"
-                placeholderTextColor="#9CA3AF"
-                value={tempDate}
-                onChangeText={setTempDate}
-                keyboardType="decimal-pad"
-                maxLength={10}
-              />
+                <DatePickerCalendar
+                  onDateSelect={(date) => {
+                    if (selectedDateType === "start") {
+                      setStartDate(date);
+                    } else {
+                      setEndDate(date);
+                    }
+                    setShowDatePicker(false);
+                  }}
+                  selectedDate={selectedDateType === "start" ? startDate || undefined : endDate || undefined}
+                  minDate={selectedDateType === "end" ? startDate || undefined : undefined}
+                  maxDate={selectedDateType === "start" ? endDate || undefined : undefined}
+                />
 
-              <View style={styles.modalButtonRow}>
                 <TouchableOpacity
-                  style={[styles.modalButton, styles.cancelButton]}
+                  style={styles.doneButton}
                   onPress={() => setShowDatePicker(false)}
                 >
-                  <Text style={styles.cancelButtonText}>Cancel</Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  style={[
-                    styles.modalButton,
-                    styles.confirmButton,
-                    !tempDate && styles.buttonDisabled,
-                  ]}
-                  onPress={handleDateConfirm}
-                  disabled={!tempDate}
-                >
-                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                  <Text style={styles.doneButtonText}>Done</Text>
                 </TouchableOpacity>
               </View>
-            </View>
+            </ScrollView>
           </View>
         </Modal>
       </KeyboardAvoidingView>
@@ -322,14 +381,14 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#FFFFFF",
+    backgroundColor: "#F3F4F6",
   },
   keyboardAvoid: {
     flex: 1,
   },
   scrollContent: {
     paddingHorizontal: 16,
-    paddingVertical: 16,
+    paddingVertical: 20,
   },
   header: {
     marginBottom: 24,
@@ -338,34 +397,70 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#3B82F6",
     marginBottom: 12,
+    fontWeight: "600",
   },
   title: {
-    fontSize: 28,
+    fontSize: 32,
+    fontWeight: "800",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  subtitle: {
+    fontSize: 16,
+    color: "#6B7280",
+    fontWeight: "500",
+  },
+  card: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 16,
+    paddingHorizontal: 20,
+    paddingVertical: 24,
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08,
+    shadowRadius: 8,
+    elevation: 3,
+  },
+  formSection: {
+    marginBottom: 24,
+  },
+  labelRow: {
+    marginBottom: 12,
+  },
+  label: {
+    fontSize: 16,
     fontWeight: "700",
     color: "#1F2937",
   },
-  section: {
-    marginBottom: 24,
-  },
-  label: {
-    fontSize: 15,
-    fontWeight: "600",
-    color: "#1F2937",
-    marginBottom: 8,
-  },
   input: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     fontSize: 15,
     backgroundColor: "#F9FAFB",
+    color: "#1F2937",
+    fontWeight: "500",
   },
-  hint: {
-    fontSize: 12,
-    color: "#9CA3AF",
-    marginTop: 6,
+  suggestionsContainer: {
+    marginTop: 8,
+    backgroundColor: "#F9FAFB",
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  suggestionItem: {
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: "#E5E7EB",
+  },
+  suggestionText: {
+    fontSize: 14,
+    color: "#4B5563",
+    fontWeight: "500",
   },
   dateRow: {
     flexDirection: "row",
@@ -374,66 +469,139 @@ const styles = StyleSheet.create({
   },
   dateInput: {
     flex: 1,
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    borderRadius: 8,
-    paddingVertical: 12,
-    paddingHorizontal: 12,
+    borderRadius: 10,
+    paddingVertical: 14,
+    paddingHorizontal: 16,
     backgroundColor: "#F9FAFB",
   },
-  dateInputText: {
-    fontSize: 14,
-    color: "#4B5563",
+  dateInputFilled: {
+    backgroundColor: "#EFF6FF",
+    borderColor: "#3B82F6",
   },
-  dateSeparator: {
-    fontSize: 16,
+  dateLabel: {
+    fontSize: 12,
+    color: "#9CA3AF",
+    fontWeight: "600",
+    marginBottom: 4,
+  },
+  dateValue: {
+    fontSize: 15,
+    color: "#1F2937",
+    fontWeight: "700",
+  },
+  dateArrow: {
+    paddingVertical: 8,
+  },
+  arrowText: {
+    fontSize: 18,
     color: "#D1D5DB",
+  },
+  durationBadge: {
+    marginTop: 12,
+    backgroundColor: "#F0FDF4",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: "#22C55E",
+  },
+  durationText: {
+    fontSize: 13,
+    color: "#166534",
+    fontWeight: "600",
   },
   errorContainer: {
     backgroundColor: "#FEE2E2",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    borderRadius: 10,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     marginBottom: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 12,
+    borderLeftWidth: 3,
+    borderLeftColor: "#DC2626",
+  },
+  errorEmoji: {
+    fontSize: 18,
   },
   errorText: {
-    color: "#DC2626",
-    fontSize: 13,
+    color: "#991B1B",
+    fontSize: 14,
+    fontWeight: "600",
+    flex: 1,
   },
   generateButton: {
     backgroundColor: "#3B82F6",
-    borderRadius: 10,
-    paddingVertical: 14,
+    borderRadius: 12,
+    paddingVertical: 16,
     alignItems: "center",
     marginVertical: 12,
+    shadowColor: "#3B82F6",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 5,
   },
   buttonDisabled: {
     opacity: 0.6,
   },
+  loadingContainer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 10,
+  },
+  loadingText: {
+    color: "#FFFFFF",
+    fontSize: 15,
+    fontWeight: "600",
+  },
   generateButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
-    fontWeight: "600",
+    fontWeight: "700",
   },
   infoBox: {
-    backgroundColor: "#EFF6FF",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
+    backgroundColor: "#F0F9FF",
+    borderRadius: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
     marginTop: 24,
+    marginBottom: 40,
     borderLeftWidth: 4,
     borderLeftColor: "#3B82F6",
   },
   infoTitle: {
-    fontSize: 14,
-    fontWeight: "600",
+    fontSize: 15,
+    fontWeight: "700",
     color: "#1E40AF",
-    marginBottom: 8,
+    marginBottom: 12,
   },
-  infoText: {
+  infoStep: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 10,
+    gap: 12,
+  },
+  stepNumber: {
     fontSize: 13,
+    fontWeight: "700",
+    color: "#FFFFFF",
+    backgroundColor: "#3B82F6",
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    textAlign: "center",
+    paddingTop: 5,
+  },
+  stepText: {
+    fontSize: 14,
     color: "#1E40AF",
-    lineHeight: 20,
+    fontWeight: "500",
+    flex: 1,
   },
   modalOverlay: {
     flex: 1,
@@ -443,16 +611,16 @@ const styles = StyleSheet.create({
   },
   modalContent: {
     backgroundColor: "#FFFFFF",
-    borderRadius: 12,
+    borderRadius: 16,
     paddingHorizontal: 24,
     paddingVertical: 24,
     width: "85%",
     maxWidth: 350,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 4,
-    elevation: 5,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 8,
   },
   modalTitle: {
     fontSize: 18,
@@ -464,17 +632,19 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#9CA3AF",
     marginBottom: 16,
+    fontWeight: "500",
   },
   dateModalInput: {
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
-    borderRadius: 8,
+    borderRadius: 10,
     paddingVertical: 12,
-    paddingHorizontal: 12,
+    paddingHorizontal: 16,
     fontSize: 15,
     backgroundColor: "#F9FAFB",
     marginBottom: 16,
     color: "#1F2937",
+    fontWeight: "500",
   },
   modalButtonRow: {
     flexDirection: "row",
@@ -483,17 +653,17 @@ const styles = StyleSheet.create({
   modalButton: {
     flex: 1,
     paddingVertical: 12,
-    borderRadius: 8,
+    borderRadius: 10,
     alignItems: "center",
   },
   cancelButton: {
     backgroundColor: "#F3F4F6",
-    borderWidth: 1,
+    borderWidth: 1.5,
     borderColor: "#E5E7EB",
   },
   cancelButtonText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "700",
     color: "#6B7280",
   },
   confirmButton: {
@@ -501,7 +671,46 @@ const styles = StyleSheet.create({
   },
   confirmButtonText: {
     fontSize: 15,
-    fontWeight: "600",
+    fontWeight: "700",
+    color: "#FFFFFF",
+  },
+  modalContentWrapper: {
+    flex: 1,
+  },
+  modalContentScroll: {
+    flexGrow: 1,
+    justifyContent: "center",
+  },
+  modalHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 16,
+  },
+  closeButton: {
+    padding: 8,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: "#F3F4F6",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  closeButtonText: {
+    fontSize: 18,
+    color: "#6B7280",
+    fontWeight: "700",
+  },
+  doneButton: {
+    backgroundColor: "#3B82F6",
+    borderRadius: 10,
+    paddingVertical: 12,
+    alignItems: "center",
+    marginTop: 16,
+  },
+  doneButtonText: {
+    fontSize: 15,
+    fontWeight: "700",
     color: "#FFFFFF",
   },
 });

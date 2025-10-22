@@ -14,11 +14,15 @@ interface TripCardProps {
 }
 
 export const TripCard: React.FC<TripCardProps> = ({ trip, onPress }) => {
-  const tripDuration = Math.ceil(
-    (trip.endDate.getTime() - trip.startDate.getTime()) / (1000 * 60 * 60 * 24)
-  );
+  // Ensure dates are Date objects
+  const startDate = trip.startDate instanceof Date ? trip.startDate : new Date(trip.startDate);
+  const endDate = trip.endDate instanceof Date ? trip.endDate : new Date(trip.endDate);
 
-  const attractionCount = trip.attractions.length;
+  const tripDuration = Math.ceil(
+    (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+  ) + 1;
+
+  const attractionCount = trip.attractions?.length || 0;
 
   return (
     <TouchableOpacity
@@ -29,7 +33,7 @@ export const TripCard: React.FC<TripCardProps> = ({ trip, onPress }) => {
       <View style={styles.content}>
         <Text style={styles.destination}>{trip.destination}</Text>
         <Text style={styles.dateRange}>
-          {formatDate(trip.startDate)} - {formatDate(trip.endDate)} •{" "}
+          {formatDate(startDate)} - {formatDate(endDate)} •{" "}
           {tripDuration} {tripDuration === 1 ? "day" : "days"}
         </Text>
         <Text style={styles.attractions}>
