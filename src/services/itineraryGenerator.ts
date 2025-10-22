@@ -1,11 +1,12 @@
 /**
  * itineraryGenerator.ts - Itinerary generation with fallback options
  * Uses Gemini API when available, falls back to local/predefined data
- * Includes retry logic for resilient API calls
+ * Includes retry logic and structured logging for resilience
  */
 
 import { generateItineraryWithGemini } from './geminiItinerary';
 import { withRetry } from '../utils/retryService';
+import logger from './logger';
 
 export interface ItineraryItem {
   day: number;
@@ -154,6 +155,14 @@ export const generateItinerary = async (
   groupType: string = 'couple'
 ): Promise<ItineraryItem[]> => {
   try {
+    logger.info('Generating itinerary', {
+      destination,
+      days,
+      tags,
+      budget,
+      groupType,
+    });
+
     // Try to use Gemini API first with retry logic for resilience
     const geminiResult = await withRetry(
       () =>
@@ -170,32 +179,46 @@ export const generateItinerary = async (
         maxDelayMs: 10000,
         multiplier: 2,
         onRetry: (attempt, delay, error) => {
-          console.warn(
-            `Gemini API retry attempt ${attempt} in ${delay}ms. Error: ${error?.message}`
-          );
+          logger.warn(`Gemini API retry attempt ${attempt}`, {
+            delay,
+            error: error?.message,
+          });
         },
       }
     );
 
     if (geminiResult && geminiResult.itinerary && geminiResult.itinerary.length > 0) {
+      logger.info('Itinerary generated successfully from Gemini API', {
+        itemCount: geminiResult.itinerary.length,
+      });
       return geminiResult.itinerary;
     }
   } catch (error) {
-    console.warn('Gemini API error after retries, falling back to predefined itineraries:', error);
+    logger.warn('Gemini API error after retries, using fallback', {
+      error: error instanceof Error ? error.message : String(error),
+    });
   }
 
   // Fallback to predefined itineraries
+  logger.info('Using predefined itinerary fallback', { destination });
+
   const normalizedDestination = Object.keys(predefinedItineraries).find(
     (key) => key.toLowerCase() === destination.toLowerCase()
   );
 
   if (normalizedDestination) {
     const items = predefinedItineraries[normalizedDestination];
+    const filtered = items.filter((item) => item.day <= days);
+    logger.info('Predefined itinerary loaded', {
+      destination: normalizedDestination,
+      itemCount: filtered.length,
+    });
     // Filter items for selected days
-    return items.filter((item) => item.day <= days);
+    return filtered;
   }
 
   // Last resort: return generic itinerary
+  logger.info('Generating generic itinerary fallback', { destination });
   return generateGenericItinerary(destination, days, tags);
 };
 

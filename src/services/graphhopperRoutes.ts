@@ -1,10 +1,11 @@
 /**
  * graphhopperRoutes.ts - Service to calculate routes between attractions using GraphHopper
- * Includes retry logic for resilient API calls
+ * Includes retry logic and structured logging for resilient API calls
  */
 
 import { Attraction } from '../types';
 import { withRetry } from '../utils/retryService';
+import logger from './logger';
 
 export interface RoutePoint {
   lat: number;
@@ -29,6 +30,8 @@ export async function calculateDayRoutes(attractions: Attraction[]): Promise<Rou
     return [];
   }
 
+  logger.debug('Calculating routes for day', { attractionCount: attractions.length });
+
   // Sort by time
   const sorted = [...attractions].sort((a, b) => a.time.localeCompare(b.time));
   const routes: RouteSegment[] = [];
@@ -47,12 +50,20 @@ export async function calculateDayRoutes(attractions: Attraction[]): Promise<Rou
         duration: route.duration,
         polyline: route.polyline,
       });
+      logger.debug(`Route calculated: ${from.name} -> ${to.name}`, {
+        distance: route.distance,
+        duration: route.duration,
+      });
     } catch (error) {
-      console.error(`Error calculating route from ${from.name} to ${to.name}:`, error);
+      logger.error(
+        `Error calculating route from ${from.name} to ${to.name}`,
+        error instanceof Error ? error : new Error(String(error))
+      );
       // Continue with next route
     }
   }
 
+  logger.info('Day routes calculated successfully', { routeCount: routes.length });
   return routes;
 }
 
@@ -64,7 +75,7 @@ async function getRoute(
   to: { lat: number; lng: number }
 ): Promise<{ distance: number; duration: number; polyline: string }> {
   if (!GRAPHHOPPER_API_KEY) {
-    console.warn('GraphHopper API key not found, returning fallback route');
+    logger.warn('GraphHopper API key not found, using fallback route');
     return getFallbackRoute(from, to);
   }
 
@@ -106,9 +117,10 @@ async function getRoute(
         maxDelayMs: 5000,
         multiplier: 2,
         onRetry: (attempt, delay, error) => {
-          console.warn(
-            `GraphHopper route retry attempt ${attempt} in ${delay}ms. Error: ${error?.message}`
-          );
+          logger.warn(`GraphHopper route retry attempt ${attempt}`, {
+            delay,
+            error: error?.message,
+          });
         },
       }
     );
@@ -117,9 +129,13 @@ async function getRoute(
       return result;
     }
 
+    logger.debug('GraphHopper returned no path, using fallback');
     return getFallbackRoute(from, to);
   } catch (error) {
-    console.error('Error fetching route from GraphHopper after retries:', error);
+    logger.error(
+      'Error fetching route from GraphHopper after retries',
+      error instanceof Error ? error : new Error(String(error))
+    );
     return getFallbackRoute(from, to);
   }
 }
