@@ -3,7 +3,7 @@
  * Displays attractions for the day with Mapbox integration
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
   View,
   Text,
@@ -14,54 +14,95 @@ import {
 } from 'react-native';
 import Mapbox from '@rnmapbox/maps';
 import { useTripStore } from '../store/tripStore';
-import { getDirections } from '../services/graphhopper';
+import { Attraction } from '../types';
 
 // Set Mapbox access token
 Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_API_KEY || '');
 
 interface MapDayScreenProps {
   route: { params: { day: number } };
-  navigation: any;
+  navigation?: any;
 }
 
 interface RouteData {
   distance: number;
   duration: number;
-  polyline: any[];
+  coordinates: Array<[number, number]>;
 }
 
 export const MapDayScreen: React.FC<MapDayScreenProps> = ({
   route,
-  navigation,
 }) => {
   const { day } = route.params;
   const { currentTrip, loading } = useTripStore();
   const [mapRoute, setMapRoute] = useState<RouteData | null>(null);
   const [routeLoading, setRouteLoading] = useState(false);
 
-  const dayItinerary = currentTrip?.itinerary?.[day - 1] || [];
+  // Filter attractions for this day
+  const dayAttractions = useMemo(() => {
+    return currentTrip?.attractions?.filter((attr: Attraction) => attr.day === day) || [];
+  }, [currentTrip, day]);
 
+  // Load route when attractions change
   useEffect(() => {
-    if (dayItinerary.length > 1) {
+    if (dayAttractions.length > 1) {
       loadRoute();
     }
-  }, [dayItinerary]);
+  }, [dayAttractions]);
 
   const loadRoute = async () => {
     try {
       setRouteLoading(true);
-      const attractions = dayItinerary.map((item: any) => ({
-        lat: item.location.lat,
-        lng: item.location.lng,
-      }));
 
-      const routeData = await getDirections(attractions);
-      setMapRoute(routeData);
+      // Build route coordinates as tuples
+      const coordinates: Array<[number, number]> = dayAttractions.map((attr: Attraction) => [
+        attr.location.lng,
+        attr.location.lat,
+      ]);
+
+      if (coordinates.length < 2) {
+        setMapRoute(null);
+        return;
+      }
+
+      // For now, create a simple line between points
+      // In a real app, you'd use GraphHopper API
+      const distance = calculateDistance(dayAttractions);
+      const duration = dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.duration, 0);
+
+      setMapRoute({
+        distance,
+        duration,
+        coordinates,
+      });
     } catch (error) {
       console.error('Erro ao calcular rota:', error);
     } finally {
       setRouteLoading(false);
     }
+  };
+
+  const calculateDistance = (attractions: Attraction[]): number => {
+    // Simple distance calculation (in real app, use GraphHopper)
+    let totalDistance = 0;
+    for (let i = 0; i < attractions.length - 1; i++) {
+      const lat1 = attractions[i].location.lat;
+      const lng1 = attractions[i].location.lng;
+      const lat2 = attractions[i + 1].location.lat;
+      const lng2 = attractions[i + 1].location.lng;
+
+      const dLat = (lat2 - lat1) * Math.PI / 180;
+      const dLng = (lng2 - lng1) * Math.PI / 180;
+      const a =
+        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+        Math.cos(lat1 * Math.PI / 180) *
+        Math.cos(lat2 * Math.PI / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+      totalDistance += 6371 * c; // Earth radius in km
+    }
+    return totalDistance;
   };
 
   if (loading) {
@@ -72,22 +113,23 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
     );
   }
 
-  if (!dayItinerary.length) {
+  if (!dayAttractions.length) {
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhuma atração para este dia</Text>
+          <Text style={styles.emptyText}>Nenhuma atração para o dia {day}</Text>
         </View>
       </SafeAreaView>
     );
   }
 
+  // Calculate map center
   const centerLat =
-    dayItinerary.reduce((sum: number, item: any) => sum + item.location.lat, 0) /
-    dayItinerary.length;
+    dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.location.lat, 0) /
+    dayAttractions.length;
   const centerLng =
-    dayItinerary.reduce((sum: number, item: any) => sum + item.location.lng, 0) /
-    dayItinerary.length;
+    dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.location.lng, 0) /
+    dayAttractions.length;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -101,8 +143,6 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
         <Mapbox.MapView
           style={styles.map}
           styleURL="mapbox://styles/mapbox/streets-v12"
-          centerCoordinate={[centerLng, centerLat]}
-          zoomLevel={13}
         >
           <Mapbox.Camera
             centerCoordinate={[centerLng, centerLat]}
@@ -110,33 +150,11 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
             animationDuration={500}
           />
 
-          {/* Route Polyline */}
-          {mapRoute?.polyline && (
-            <Mapbox.ShapeSource
-              id="route"
-              shape={{
-                type: 'Feature',
-                geometry: {
-                  type: 'LineString',
-                  coordinates: mapRoute.polyline,
-                },
-              }}
-            >
-              <Mapbox.LineLayer
-                id="routeLine"
-                style={{
-                  lineColor: '#FF6B6B',
-                  lineWidth: 3,
-                  lineOpacity: 0.8,
-                }}
-              />
-            </Mapbox.ShapeSource>
-          )}
-
           {/* Markers */}
-          {dayItinerary.map((attraction: any, index: number) => (
+          {dayAttractions.map((attraction: Attraction, index: number) => (
             <Mapbox.PointAnnotation
-              key={attraction.id}
+              key={`${attraction.id}-${index}`}
+              id={`marker-${attraction.id}`}
               coordinate={[attraction.location.lng, attraction.location.lat]}
               title={attraction.name}
             >
@@ -150,12 +168,36 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
               </View>
             </Mapbox.PointAnnotation>
           ))}
+
+          {/* Route Line */}
+          {mapRoute && mapRoute.coordinates.length > 1 && (
+            <Mapbox.ShapeSource
+              id="route-source"
+              shape={{
+                type: 'Feature',
+                geometry: {
+                  type: 'LineString',
+                  coordinates: mapRoute.coordinates,
+                },
+                properties: {},
+              }}
+            >
+              <Mapbox.LineLayer
+                id="route-layer"
+                style={{
+                  lineColor: '#FF6B6B',
+                  lineWidth: 3,
+                  lineOpacity: 0.8,
+                }}
+              />
+            </Mapbox.ShapeSource>
+          )}
         </Mapbox.MapView>
       </View>
 
       {/* Attractions List */}
       <ScrollView style={styles.listContainer}>
-        {dayItinerary.map((attraction: any, index: number) => (
+        {dayAttractions.map((attraction: Attraction, index: number) => (
           <View key={attraction.id} style={styles.card}>
             <View style={styles.badge}>
               <Text style={styles.badgeText}>{index + 1}</Text>
@@ -172,15 +214,15 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
           </View>
         ))}
 
-        {/* Route Info */}
+        {/* Route Summary */}
         {mapRoute && (
           <View style={styles.routeInfo}>
             <Text style={styles.routeTitle}>📍 Resumo da Rota</Text>
             <Text style={styles.routeText}>
-              Distância Total: {(mapRoute.distance / 1000).toFixed(2)} km
+              Distância Total: {mapRoute.distance.toFixed(2)} km
             </Text>
             <Text style={styles.routeText}>
-              Tempo Total: {Math.round(mapRoute.duration / 60)} minutos
+              Tempo Total: {Math.round(mapRoute.duration)} minutos
             </Text>
           </View>
         )}
@@ -225,6 +267,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: '#FFFFFF',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+    elevation: 5,
   },
   markerText: {
     color: '#FFFFFF',

@@ -23,7 +23,7 @@ type RootStackParamList = {
   Home: undefined;
   CreateTrip: undefined;
   TripDetail: undefined;
-  MapDay: undefined;
+  MapDay: { day: number };
 };
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
