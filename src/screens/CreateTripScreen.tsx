@@ -14,8 +14,13 @@ import {
   ScrollView,
   KeyboardAvoidingView,
   Platform,
+  Modal,
 } from "react-native";
 import { LoadingSpinner } from "../components/LoadingSpinner";
+import { generateItineraryWithGemini } from "../services/geminiItinerary";
+import { useTripStore } from "../store/tripStore";
+import { useAuth } from "../hooks/useAuth";
+import { Trip, Attraction } from "../types";
 
 interface CreateTripScreenProps {
   navigation: any;
@@ -24,11 +29,17 @@ interface CreateTripScreenProps {
 export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
   navigation,
 }) => {
+  const { user } = useAuth();
+  const { addTrip, setCurrentTrip } = useTripStore();
+
   const [destination, setDestination] = useState("");
-  const [startDate, _setStartDate] = useState<Date | null>(null);
-  const [endDate, _setEndDate] = useState<Date | null>(null);
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [showDatePicker, setShowDatePicker] = useState(false);
+  const [selectedDateType, setSelectedDateType] = useState<"start" | "end" | null>(null);
+  const [tempDate, setTempDate] = useState("");
 
   const handleGenerateItinerary = async () => {
     if (!destination || !startDate || !endDate) {
@@ -36,22 +47,131 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
       return;
     }
 
+    if (startDate > endDate) {
+      setError("End date must be after start date");
+      return;
+    }
+
     try {
       setLoading(true);
       setError(null);
-      // TODO: Implement itinerary generation
-      // 1. Call Gemini API to generate itinerary
-      // 2. Save trip to Zustand store
-      // 3. Navigate to TripDetailScreen
+
+      // Calculate number of days
+      const days = Math.ceil(
+        (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
+      ) + 1;
+
+      // Generate itinerary using Gemini AI
+      console.log("🤖 Generating itinerary with Gemini...");
+      const itinerary = await generateItineraryWithGemini(
+        destination,
+        days,
+        ["culture", "gastronomy", "sightseeing"], // Default tags
+        "mid", // Default budget
+        "couple" // Default group type
+      );
+
+      if (!itinerary) {
+        setError("Failed to generate itinerary. Please try again.");
+        return;
+      }
+
+      console.log("✅ Itinerary generated successfully!");
+      console.log("🧳 Trip details:", {
+        destination,
+        startDate: startDate.toLocaleDateString(),
+        endDate: endDate.toLocaleDateString(),
+        days,
+        itemsCount: itinerary.itinerary.length,
+      });
+
+      // Convert Gemini itinerary to Attraction format
+      const attractions: Attraction[] = itinerary.itinerary.map(
+        (item: any, index: number) => ({
+          id: `attraction-${Date.now()}-${index}`,
+          day: item.day || 1,
+          time: item.time || "09:00",
+          name: item.name,
+          duration: item.duration || 60,
+          reason: item.reason || item.description || "",
+          tip: item.tip || "",
+          location: {
+            lat: item.location?.lat || 0,
+            lng: item.location?.lng || 0,
+            address: item.location?.address || "",
+          },
+          order: index,
+        })
+      );
+
+      // Create Trip object
+      const newTrip: Trip = {
+        id: `trip-${Date.now()}`,
+        userId: user?.uid || "",
+        destination,
+        startDate,
+        endDate,
+        attractions,
+        createdAt: new Date(),
+        updatedAt: new Date(),
+        isSyncedToFirestore: false,
+      };
+
+      // Save to Zustand store
+      addTrip(newTrip);
+      setCurrentTrip(newTrip);
+
+      console.log("💾 Trip saved to store!");
+
+      // Navigate to TripDetailScreen
+      navigation.navigate("TripDetail", { tripId: newTrip.id });
     } catch (err) {
+      console.error("❌ Error generating itinerary:", err);
       setError(err instanceof Error ? err.message : "Error creating trip");
     } finally {
       setLoading(false);
     }
   };
 
-  const handleDatePick = (_dateType: "start" | "end") => {
-    // TODO: Implement date picker
+  const handleDatePick = (dateType: "start" | "end") => {
+    setSelectedDateType(dateType);
+    setTempDate("");
+    setShowDatePicker(true);
+  };
+
+  const handleDateConfirm = () => {
+    if (!tempDate) return;
+
+    try {
+      // Parse date in format YYYY-MM-DD or MM/DD/YYYY
+      let parsedDate: Date;
+      if (tempDate.includes("-")) {
+        parsedDate = new Date(tempDate);
+      } else if (tempDate.includes("/")) {
+        const [month, day, year] = tempDate.split("/");
+        parsedDate = new Date(`${year}-${month}-${day}`);
+      } else {
+        setError("Please use format MM/DD/YYYY or YYYY-MM-DD");
+        return;
+      }
+
+      if (isNaN(parsedDate.getTime())) {
+        setError("Invalid date format");
+        return;
+      }
+
+      if (selectedDateType === "start") {
+        setStartDate(parsedDate);
+      } else {
+        setEndDate(parsedDate);
+      }
+
+      setShowDatePicker(false);
+      setTempDate("");
+      setError(null);
+    } catch (err) {
+      setError("Invalid date");
+    }
   };
 
   return (
@@ -146,6 +266,54 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
             </Text>
           </View>
         </ScrollView>
+
+        {/* Date Picker Modal */}
+        <Modal
+          visible={showDatePicker}
+          transparent={true}
+          animationType="fade"
+          onRequestClose={() => setShowDatePicker(false)}
+        >
+          <View style={styles.modalOverlay}>
+            <View style={styles.modalContent}>
+              <Text style={styles.modalTitle}>
+                Enter {selectedDateType === "start" ? "start" : "end"} date
+              </Text>
+              <Text style={styles.modalSubtitle}>Format: MM/DD/YYYY</Text>
+
+              <TextInput
+                style={styles.dateModalInput}
+                placeholder="MM/DD/YYYY"
+                placeholderTextColor="#9CA3AF"
+                value={tempDate}
+                onChangeText={setTempDate}
+                keyboardType="decimal-pad"
+                maxLength={10}
+              />
+
+              <View style={styles.modalButtonRow}>
+                <TouchableOpacity
+                  style={[styles.modalButton, styles.cancelButton]}
+                  onPress={() => setShowDatePicker(false)}
+                >
+                  <Text style={styles.cancelButtonText}>Cancel</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={[
+                    styles.modalButton,
+                    styles.confirmButton,
+                    !tempDate && styles.buttonDisabled,
+                  ]}
+                  onPress={handleDateConfirm}
+                  disabled={!tempDate}
+                >
+                  <Text style={styles.confirmButtonText}>Confirm</Text>
+                </TouchableOpacity>
+              </View>
+            </View>
+          </View>
+        </Modal>
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -266,5 +434,74 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: "#1E40AF",
     lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    justifyContent: "center",
+    alignItems: "center",
+  },
+  modalContent: {
+    backgroundColor: "#FFFFFF",
+    borderRadius: 12,
+    paddingHorizontal: 24,
+    paddingVertical: 24,
+    width: "85%",
+    maxWidth: 350,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 5,
+  },
+  modalTitle: {
+    fontSize: 18,
+    fontWeight: "700",
+    color: "#1F2937",
+    marginBottom: 4,
+  },
+  modalSubtitle: {
+    fontSize: 13,
+    color: "#9CA3AF",
+    marginBottom: 16,
+  },
+  dateModalInput: {
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+    borderRadius: 8,
+    paddingVertical: 12,
+    paddingHorizontal: 12,
+    fontSize: 15,
+    backgroundColor: "#F9FAFB",
+    marginBottom: 16,
+    color: "#1F2937",
+  },
+  modalButtonRow: {
+    flexDirection: "row",
+    gap: 12,
+  },
+  modalButton: {
+    flex: 1,
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: "center",
+  },
+  cancelButton: {
+    backgroundColor: "#F3F4F6",
+    borderWidth: 1,
+    borderColor: "#E5E7EB",
+  },
+  cancelButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#6B7280",
+  },
+  confirmButton: {
+    backgroundColor: "#3B82F6",
+  },
+  confirmButtonText: {
+    fontSize: 15,
+    fontWeight: "600",
+    color: "#FFFFFF",
   },
 });
