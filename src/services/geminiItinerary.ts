@@ -106,36 +106,60 @@ export const generateItineraryWithGemini = async (
 
     const data = await response.json();
 
-    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
-      console.error('Invalid Gemini API response structure');
+    console.log('📦 Gemini API Response:', JSON.stringify(data, null, 2));
+
+    if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts) {
+      console.error('❌ Invalid Gemini API response structure:', data);
+      return null;
+    }
+
+    if (!data.candidates[0].content.parts[0] || !data.candidates[0].content.parts[0].text) {
+      console.error('❌ No text content in Gemini response');
       return null;
     }
 
     const textContent = data.candidates[0].content.parts[0].text;
+    console.log('📄 Text content:', textContent);
 
     // Try to extract JSON from the response
     let jsonData;
     try {
       // First try to parse directly
       jsonData = JSON.parse(textContent);
-    } catch {
-      // Try to extract JSON from markdown code blocks
-      const jsonMatch = textContent.match(/```json\n?([\s\S]*?)\n?```/);
-      if (jsonMatch) {
-        jsonData = JSON.parse(jsonMatch[1]);
-      } else {
-        // Try to find JSON object in the text
-        const objectMatch = textContent.match(/\{[\s\S]*\}/);
-        if (objectMatch) {
-          jsonData = JSON.parse(objectMatch[0]);
+    } catch (parseError) {
+      console.warn('⚠️ Direct JSON parse failed, trying extraction...', parseError);
+      try {
+        // Try to extract JSON from markdown code blocks
+        const jsonMatch = textContent.match(/```json\n?([\s\S]*?)\n?```/);
+        if (jsonMatch) {
+          jsonData = JSON.parse(jsonMatch[1]);
         } else {
-          throw new Error('No valid JSON found in response');
+          // Try to find JSON object in the text
+          const objectMatch = textContent.match(/\{[\s\S]*\}/);
+          if (objectMatch) {
+            jsonData = JSON.parse(objectMatch[0]);
+          } else {
+            throw new Error('No valid JSON found in response');
+          }
         }
+      } catch (extractError) {
+        console.error('❌ Failed to extract JSON:', extractError);
+        console.error('Full response text:', textContent);
+        throw extractError;
       }
     }
 
+    console.log('✅ Parsed JSON:', jsonData);
+
+    console.log('✅ Parsed JSON:', jsonData);
+
     // Validate and structure the response
-    const itineraryItems: ItineraryItem[] = (jsonData.itinerary || []).map(
+    if (!jsonData.itinerary || !Array.isArray(jsonData.itinerary)) {
+      console.warn('⚠️ No itinerary array in response, creating fallback');
+      jsonData.itinerary = [];
+    }
+
+    const itineraryItems: ItineraryItem[] = jsonData.itinerary.map(
       (item: any, index: number) => ({
         day: item.day || Math.floor(index / 3) + 1,
         time: item.time || '09:00',
