@@ -57,6 +57,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.createButton}
           onPress={handleCreateTrip}
+          accessibilityLabel="Create first trip"
+          accessibilityRole="button"
+          accessibilityHint="Opens the trip creation form to plan your first journey"
         >
           <Text style={styles.createButtonText}>Create First Trip</Text>
         </TouchableOpacity>
@@ -97,6 +100,9 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ navigation }) => {
         <TouchableOpacity
           style={styles.fab}
           onPress={handleCreateTrip}
+          accessibilityLabel="Create new trip"
+          accessibilityRole="button"
+          accessibilityHint="Floating action button to create a new travel plan"
         >
           <Text style={styles.fabIcon}>+</Text>
         </TouchableOpacity>

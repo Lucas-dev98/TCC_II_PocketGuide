@@ -89,6 +89,10 @@ export const LoginScreen: React.FC = () => {
           style={[styles.googleButton, loading && styles.buttonDisabled]}
           onPress={handleGoogleLogin}
           disabled={loading}
+          accessibilityLabel="Sign in with Google"
+          accessibilityRole="button"
+          accessibilityHint="Authenticates using your Google account"
+          accessibilityState={{ disabled: loading, busy: loading }}
         >
           <Text style={styles.googleButtonText}>
             {loading ? "Signing in..." : "Sign in with Google"}
@@ -101,6 +105,10 @@ export const LoginScreen: React.FC = () => {
             style={[styles.demoButton, demoLoading && styles.buttonDisabled]}
             onPress={handleDemoLogin}
             disabled={demoLoading}
+            accessibilityLabel="Try demo mode"
+            accessibilityRole="button"
+            accessibilityHint="Enters demo mode to explore the app without authentication"
+            accessibilityState={{ disabled: demoLoading, busy: demoLoading }}
           >
             <Text style={styles.demoButtonText}>
               {demoLoading ? "Loading..." : "📱 Try Demo Mode"}

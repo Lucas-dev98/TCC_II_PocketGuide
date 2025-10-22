@@ -88,6 +88,10 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
               isSelected && styles.dayButtonSelected,
             ]}
             onPress={() => setSelectedDay(day)}
+            accessibilityLabel={`Day ${day}`}
+            accessibilityRole="tab"
+            accessibilityHint={`Shows attractions for day ${day}${isSelected ? ' (selected)' : ''}`}
+            accessibilityState={{ selected: isSelected }}
           >
             <Text
               style={[
@@ -107,7 +111,12 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
     <SafeAreaView style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()}>
+        <TouchableOpacity 
+          onPress={() => navigation.goBack()}
+          accessibilityLabel="Go back"
+          accessibilityRole="button"
+          accessibilityHint="Returns to the previous screen"
+        >
           <Text style={styles.backButton}>‹ Back</Text>
         </TouchableOpacity>
         <Text style={styles.title}>{currentTrip.destination}</Text>
@@ -143,12 +152,18 @@ export const TripDetailScreen: React.FC<TripDetailScreenProps> = ({
         <TouchableOpacity
           style={styles.buttonSecondary}
           onPress={handleAddAttraction}
+          accessibilityLabel="Add attraction"
+          accessibilityRole="button"
+          accessibilityHint="Opens form to add a new attraction to this day"
         >
           <Text style={styles.buttonSecondaryText}>+ Add Attraction</Text>
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.buttonPrimary}
           onPress={handleViewMap}
+          accessibilityLabel="View on map"
+          accessibilityRole="button"
+          accessibilityHint="Shows the day's attractions on an interactive map"
         >
           <Text style={styles.buttonPrimaryText}>📍 View on Map</Text>
         </TouchableOpacity>

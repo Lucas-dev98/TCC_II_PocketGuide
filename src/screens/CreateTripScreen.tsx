@@ -180,7 +180,12 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
         >
           {/* Header */}
           <View style={styles.header}>
-            <TouchableOpacity onPress={() => navigation.goBack()}>
+            <TouchableOpacity 
+              onPress={() => navigation.goBack()}
+              accessibilityLabel="Go back"
+              accessibilityRole="button"
+              accessibilityHint="Returns to the previous screen"
+            >
               <Text style={styles.backButton}>← Back</Text>
             </TouchableOpacity>
             <Text style={styles.title}>✈️ Plan New Trip</Text>
@@ -206,6 +211,8 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                   setShowSuggestions(text.length > 0);
                 }}
                 editable={!loading}
+                accessibilityLabel="Destination input"
+                accessibilityHint="Enter your travel destination"
               />
 
               {/* Popular Destinations */}
@@ -221,6 +228,9 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                         setDestination(dest.split(" ")[1]); // Remove emoji
                         setShowSuggestions(false);
                       }}
+                      accessibilityLabel={`Select ${dest}`}
+                      accessibilityRole="button"
+                      accessibilityHint="Selects this as your travel destination"
                     >
                       <Text style={styles.suggestionText}>{dest}</Text>
                     </TouchableOpacity>
@@ -239,6 +249,9 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                   style={[styles.dateInput, startDate && styles.dateInputFilled]}
                   onPress={() => handleDatePick("start")}
                   disabled={loading}
+                  accessibilityLabel="Start date picker"
+                  accessibilityRole="button"
+                  accessibilityHint="Opens date picker to select trip start date"
                 >
                   <Text style={styles.dateLabel}>From</Text>
                   <Text style={styles.dateValue}>
@@ -259,6 +272,9 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                   style={[styles.dateInput, endDate && styles.dateInputFilled]}
                   onPress={() => handleDatePick("end")}
                   disabled={loading}
+                  accessibilityLabel="End date picker"
+                  accessibilityRole="button"
+                  accessibilityHint="Opens date picker to select trip end date"
                 >
                   <Text style={styles.dateLabel}>To</Text>
                   <Text style={styles.dateValue}>
@@ -308,6 +324,13 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
             ]}
             onPress={handleGenerateItinerary}
             disabled={loading || !destination || !startDate || !endDate}
+            accessibilityLabel="Generate itinerary"
+            accessibilityRole="button"
+            accessibilityHint="Uses AI to generate a personalized travel itinerary for your trip"
+            accessibilityState={{
+              disabled: loading || !destination || !startDate || !endDate,
+              busy: loading,
+            }}
           >
             {loading ? (
               <View style={styles.loadingContainer}>
