@@ -1,5 +1,6 @@
 /**
- * MapViewer.tsx - Component to display attractions on a map
+ * MapViewer.tsx - Map viewer component (web-safe)
+ * Shows attraction routes and itinerary information
  */
 
 import React, { useEffect, useState } from 'react';
@@ -10,22 +11,9 @@ import {
   ActivityIndicator,
   ScrollView,
   Dimensions,
-  Platform,
 } from 'react-native';
 import { Attraction } from '../types';
-import { calculateDayRoutes, RouteSegment, decodePolyline, formatDistance, formatDuration } from '../services/graphhopperRoutes';
-
-// Only import native maps on native platforms
-let MapView: any;
-let Marker: any;
-let Polyline: any;
-
-if (Platform.OS !== 'web') {
-  const maps = require('react-native-maps');
-  MapView = maps.default;
-  Marker = maps.Marker;
-  Polyline = maps.Polyline;
-}
+import { calculateDayRoutes, RouteSegment, formatDistance, formatDuration } from '../services/graphhopperRoutes';
 
 const { height } = Dimensions.get('window');
 
@@ -73,155 +61,18 @@ export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
   const centerLat = (minLat + maxLat) / 2;
   const centerLng = (minLng + maxLng) / 2;
 
-  // Calculate padding
-  const latDelta = (maxLat - minLat) * 1.3; // 30% padding
-  const lngDelta = (maxLng - minLng) * 1.3;
-
-  // Render different UI for web vs native
-  if (Platform.OS === 'web') {
-    return (
-      <View style={styles.container}>
-        {/* Web version - show static map image and list */}
-        <View style={styles.mapPlaceholder}>
-          <Text style={styles.mapPlaceholderText}>📍 Mapa Interativo</Text>
-          <Text style={styles.mapPlaceholderSubtext}>
-            Ver em app nativo para mapa interativo com rotas
-          </Text>
-          <Text style={styles.coordinates}>
-            {centerLat.toFixed(4)}, {centerLng.toFixed(4)}
-          </Text>
-        </View>
-
-        {/* Route information */}
-        <ScrollView style={styles.routeInfo}>
-          {loading ? (
-            <View style={styles.loadingContainer}>
-              <ActivityIndicator size="large" color="#FF6B6B" />
-              <Text style={styles.loadingText}>Calculando rotas...</Text>
-            </View>
-          ) : (
-            <>
-              <Text style={styles.routeTitle}>📍 Roteiro do Dia {day}</Text>
-              
-              {/* Attractions list with route info */}
-              {attractions.map((attraction, index) => (
-                <View key={attraction.id} style={styles.attractionItem}>
-                  <View style={styles.attractionHeader}>
-                    <View style={[
-                      styles.attractionNumber,
-                      {
-                        backgroundColor: index === 0 ? '#FF6B6B' : index === attractions.length - 1 ? '#4CAF50' : '#2196F3'
-                      }
-                    ]}>
-                      <Text style={styles.attractionNumberText}>{index + 1}</Text>
-                    </View>
-                    <View style={styles.attractionInfo}>
-                      <Text style={styles.attractionName}>{attraction.name}</Text>
-                      <Text style={styles.attractionTime}>
-                        🕐 {attraction.time} • ⏱️ {attraction.duration}min
-                      </Text>
-                      <Text style={styles.attractionCoords}>
-                        📍 {attraction.location.lat.toFixed(4)}, {attraction.location.lng.toFixed(4)}
-                      </Text>
-                    </View>
-                  </View>
-
-                  {/* Route to next attraction */}
-                  {index < routes.length && (
-                    <View style={styles.routeToNext}>
-                      <Text style={styles.routeArrow}>⬇️</Text>
-                      <View style={styles.routeDetails}>
-                        <Text style={styles.routeDetail}>
-                          📏 {formatDistance(routes[index].distance)}
-                        </Text>
-                        <Text style={styles.routeDetail}>
-                          ⏱️ {formatDuration(routes[index].duration)}
-                        </Text>
-                      </View>
-                    </View>
-                  )}
-
-                  {attraction.tip && (
-                    <Text style={styles.attractionTip}>💡 {attraction.tip}</Text>
-                  )}
-                </View>
-              ))}
-
-              {/* Total trip summary */}
-              {routes.length > 0 && (
-                <View style={styles.summary}>
-                  <Text style={styles.summaryTitle}>📊 Resumo do Dia</Text>
-                  <Text style={styles.summaryText}>
-                    Total de deslocamento: {formatDistance(
-                      routes.reduce((sum, r) => sum + r.distance, 0)
-                    )}
-                  </Text>
-                  <Text style={styles.summaryText}>
-                    Tempo total de deslocamento: {formatDuration(
-                      routes.reduce((sum, r) => sum + r.duration, 0)
-                    )}
-                  </Text>
-                </View>
-              )}
-            </>
-          )}
-        </ScrollView>
-      </View>
-    );
-  }
-
-  // Native version with interactive map
   return (
     <View style={styles.container}>
-      {MapView && (
-        <MapView
-          style={styles.map}
-          initialRegion={{
-            latitude: centerLat,
-            longitude: centerLng,
-            latitudeDelta: Math.max(latDelta, 0.05),
-            longitudeDelta: Math.max(lngDelta, 0.05),
-          }}
-        >
-          {/* Draw route polylines */}
-          {Polyline && routes.map((route, index) => {
-            try {
-              const polylineCoords = decodePolyline(route.polyline);
-              const mappedCoords = polylineCoords.map(p => ({
-                latitude: p.lat,
-                longitude: p.lng,
-              }));
-              return (
-                <Polyline
-                  key={`route-${index}`}
-                  coordinates={mappedCoords}
-                  strokeColor="#FF6B6B"
-                  strokeWidth={3}
-                  lineDashPattern={[5, 5]}
-                  tappable={false}
-                />
-              );
-            } catch (error) {
-              console.error(`Error rendering polyline ${index}:`, error);
-              return null;
-            }
-          })}
-
-          {/* Draw attraction markers */}
-          {Marker && attractions.map((attraction, index) => (
-            <Marker
-              key={attraction.id}
-              coordinate={{
-                latitude: attraction.location.lat,
-                longitude: attraction.location.lng,
-              }}
-              title={`${index + 1}. ${attraction.name}`}
-              description={`${attraction.time} - ${attraction.duration} min`}
-              pinColor={index === 0 ? '#FF6B6B' : index === attractions.length - 1 ? '#4CAF50' : '#2196F3'}
-            />
-          ))}
-        </MapView>
-      )}
+      {/* Map placeholder */}
+      <View style={styles.mapPlaceholder}>
+        <Text style={styles.mapPlaceholderText}>📍 Mapa Interativo</Text>
+        <Text style={styles.mapPlaceholderSubtext}>
+          Atualmente em: {centerLat.toFixed(4)}, {centerLng.toFixed(4)}
+        </Text>
+        <Text style={styles.mapHint}>
+          🗺️ Mapa completo disponível em app nativo
+        </Text>
+      </View>
 
       {/* Route information */}
       <ScrollView style={styles.routeInfo}>
@@ -250,6 +101,9 @@ export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
                     <Text style={styles.attractionName}>{attraction.name}</Text>
                     <Text style={styles.attractionTime}>
                       🕐 {attraction.time} • ⏱️ {attraction.duration}min
+                    </Text>
+                    <Text style={styles.attractionCoords}>
+                      📍 {attraction.location.lat.toFixed(4)}, {attraction.location.lng.toFixed(4)}
                     </Text>
                   </View>
                 </View>
@@ -303,9 +157,30 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: '#FFFFFF',
   },
-  map: {
-    width: '100%',
-    height: height * 0.5,
+  mapPlaceholder: {
+    height: height * 0.35,
+    backgroundColor: '#F0F0F0',
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderBottomWidth: 1,
+    borderBottomColor: '#EEEEEE',
+    paddingHorizontal: 16,
+  },
+  mapPlaceholderText: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#666666',
+    marginBottom: 8,
+  },
+  mapPlaceholderSubtext: {
+    fontSize: 13,
+    color: '#999999',
+    marginBottom: 8,
+  },
+  mapHint: {
+    fontSize: 12,
+    color: '#2196F3',
+    fontStyle: 'italic',
   },
   emptyContainer: {
     flex: 1,
@@ -378,6 +253,11 @@ const styles = StyleSheet.create({
     fontSize: 13,
     color: '#666666',
   },
+  attractionCoords: {
+    fontSize: 11,
+    color: '#999999',
+    marginTop: 4,
+  },
   routeToNext: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -403,35 +283,6 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
     paddingLeft: 40,
-  },
-  attractionCoords: {
-    fontSize: 11,
-    color: '#999999',
-    marginTop: 4,
-  },
-  mapPlaceholder: {
-    height: height * 0.35,
-    backgroundColor: '#F0F0F0',
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: '#EEEEEE',
-  },
-  mapPlaceholderText: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#666666',
-    marginBottom: 8,
-  },
-  mapPlaceholderSubtext: {
-    fontSize: 13,
-    color: '#999999',
-    marginBottom: 12,
-  },
-  coordinates: {
-    fontSize: 12,
-    color: '#2196F3',
-    fontFamily: 'monospace',
   },
   summary: {
     backgroundColor: '#FF6B6B',
