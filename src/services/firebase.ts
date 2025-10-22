@@ -16,6 +16,13 @@ const firebaseConfig = {
   appId: process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
+// Validate Firebase config
+console.warn('🔧 Firebase Config Keys:', {
+  apiKey: firebaseConfig.apiKey ? '✅ Present' : '❌ Missing',
+  authDomain: firebaseConfig.authDomain ? '✅ Present' : '❌ Missing',
+  projectId: firebaseConfig.projectId ? '✅ Present' : '❌ Missing',
+});
+
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
