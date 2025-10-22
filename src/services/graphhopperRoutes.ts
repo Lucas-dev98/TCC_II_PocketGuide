@@ -1,8 +1,10 @@
 /**
  * graphhopperRoutes.ts - Service to calculate routes between attractions using GraphHopper
+ * Includes retry logic for resilient API calls
  */
 
 import { Attraction } from '../types';
+import { withRetry } from '../utils/retryService';
 
 export interface RoutePoint {
   lat: number;
@@ -55,7 +57,7 @@ export async function calculateDayRoutes(attractions: Attraction[]): Promise<Rou
 }
 
 /**
- * Get route between two locations using GraphHopper
+ * Get route between two locations using GraphHopper with retry logic
  */
 async function getRoute(
   from: { lat: number; lng: number },
@@ -67,34 +69,57 @@ async function getRoute(
   }
 
   try {
-    const url = new URL('https://graphhopper.com/api/1/route');
-    url.searchParams.append('point', `${from.lat},${from.lng}`);
-    url.searchParams.append('point', `${to.lat},${to.lng}`);
-    url.searchParams.append('vehicle', 'car');
-    url.searchParams.append('locale', 'pt');
-    url.searchParams.append('points_encoded', 'true');
-    url.searchParams.append('key', GRAPHHOPPER_API_KEY);
+    // Use retry logic for resilient API calls
+    const result = await withRetry(
+      () =>
+        (async () => {
+          const url = new URL('https://graphhopper.com/api/1/route');
+          url.searchParams.append('point', `${from.lat},${from.lng}`);
+          url.searchParams.append('point', `${to.lat},${to.lng}`);
+          url.searchParams.append('vehicle', 'car');
+          url.searchParams.append('locale', 'pt');
+          url.searchParams.append('points_encoded', 'true');
+          url.searchParams.append('key', GRAPHHOPPER_API_KEY);
 
-    const response = await fetch(url.toString());
+          const response = await fetch(url.toString());
 
-    if (!response.ok) {
-      throw new Error(`GraphHopper API error: ${response.status}`);
-    }
+          if (!response.ok) {
+            throw new Error(`GraphHopper API error: ${response.status}`);
+          }
 
-    const data = await response.json();
+          const data = await response.json();
 
-    if (data.paths && data.paths.length > 0) {
-      const path = data.paths[0];
-      return {
-        distance: path.distance || 0,
-        duration: Math.round((path.time || 0) / 1000), // Convert ms to seconds
-        polyline: path.points || '',
-      };
+          if (data.paths && data.paths.length > 0) {
+            const path = data.paths[0];
+            return {
+              distance: path.distance || 0,
+              duration: Math.round((path.time || 0) / 1000), // Convert ms to seconds
+              polyline: path.points || '',
+            };
+          }
+
+          return null;
+        })(),
+      {
+        maxRetries: 2,
+        baseDelayMs: 500,
+        maxDelayMs: 5000,
+        multiplier: 2,
+        onRetry: (attempt, delay, error) => {
+          console.warn(
+            `GraphHopper route retry attempt ${attempt} in ${delay}ms. Error: ${error?.message}`
+          );
+        },
+      }
+    );
+
+    if (result) {
+      return result;
     }
 
     return getFallbackRoute(from, to);
   } catch (error) {
-    console.error('Error fetching route from GraphHopper:', error);
+    console.error('Error fetching route from GraphHopper after retries:', error);
     return getFallbackRoute(from, to);
   }
 }

@@ -1,9 +1,11 @@
 /**
  * itineraryGenerator.ts - Itinerary generation with fallback options
  * Uses Gemini API when available, falls back to local/predefined data
+ * Includes retry logic for resilient API calls
  */
 
 import { generateItineraryWithGemini } from './geminiItinerary';
+import { withRetry } from '../utils/retryService';
 
 export interface ItineraryItem {
   day: number;
@@ -142,6 +144,7 @@ const predefinedItineraries: Record<string, ItineraryItem[]> = {
 
 /**
  * Generate itinerary using Gemini API with fallback to predefined data
+ * Includes retry logic for better reliability
  */
 export const generateItinerary = async (
   destination: string,
@@ -151,20 +154,34 @@ export const generateItinerary = async (
   groupType: string = 'couple'
 ): Promise<ItineraryItem[]> => {
   try {
-    // Try to use Gemini API first
-    const geminiResult = await generateItineraryWithGemini(
-      destination,
-      days,
-      tags,
-      budget,
-      groupType
+    // Try to use Gemini API first with retry logic for resilience
+    const geminiResult = await withRetry(
+      () =>
+        generateItineraryWithGemini(
+          destination,
+          days,
+          tags,
+          budget,
+          groupType
+        ),
+      {
+        maxRetries: 3,
+        baseDelayMs: 1000,
+        maxDelayMs: 10000,
+        multiplier: 2,
+        onRetry: (attempt, delay, error) => {
+          console.warn(
+            `Gemini API retry attempt ${attempt} in ${delay}ms. Error: ${error?.message}`
+          );
+        },
+      }
     );
 
     if (geminiResult && geminiResult.itinerary && geminiResult.itinerary.length > 0) {
       return geminiResult.itinerary;
     }
   } catch (error) {
-    console.warn('Gemini API error, falling back to predefined itineraries:', error);
+    console.warn('Gemini API error after retries, falling back to predefined itineraries:', error);
   }
 
   // Fallback to predefined itineraries
