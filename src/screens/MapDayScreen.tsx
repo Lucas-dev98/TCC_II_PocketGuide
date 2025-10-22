@@ -1,6 +1,6 @@
 /**
  * MapDayScreen.tsx - Map view for a specific day of the trip
- * Displays attractions for the day with Mapbox integration
+ * Displays attractions for the day with interactive map
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -12,12 +12,10 @@ import {
   SafeAreaView,
   ActivityIndicator,
 } from 'react-native';
-import Mapbox from '@rnmapbox/maps';
+import MapView, { Marker, Polyline } from 'react-native-maps';
 import { useTripStore } from '../store/tripStore';
 import { Attraction } from '../types';
-
-// Set Mapbox access token
-Mapbox.setAccessToken(process.env.EXPO_PUBLIC_MAPBOX_API_KEY || '');
+import { getOptimizedRoute } from '../services/graphhopper';
 
 interface MapDayScreenProps {
   route: { params: { day: number } };
@@ -27,7 +25,7 @@ interface MapDayScreenProps {
 interface RouteData {
   distance: number;
   duration: number;
-  coordinates: Array<[number, number]>;
+  coordinates: Array<{ latitude: number; longitude: number }>;
 }
 
 export const MapDayScreen: React.FC<MapDayScreenProps> = ({
@@ -54,55 +52,29 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
     try {
       setRouteLoading(true);
 
-      // Build route coordinates as tuples
-      const coordinates: Array<[number, number]> = dayAttractions.map((attr: Attraction) => [
-        attr.location.lng,
-        attr.location.lat,
-      ]);
+      // Build route coordinates for GraphHopper
+      const routeCoordinates = dayAttractions.map((attr: Attraction) => ({
+        latitude: attr.location.lat,
+        longitude: attr.location.lng,
+        name: attr.name,
+      }));
 
-      if (coordinates.length < 2) {
-        setMapRoute(null);
-        return;
+      if (routeCoordinates.length > 1) {
+        const routeData = await getOptimizedRoute(routeCoordinates);
+        
+        if (routeData) {
+          setMapRoute({
+            distance: routeData.totalDistance,
+            duration: routeData.totalTime,
+            coordinates: routeData.coordinates,
+          });
+        }
       }
-
-      // For now, create a simple line between points
-      // In a real app, you'd use GraphHopper API
-      const distance = calculateDistance(dayAttractions);
-      const duration = dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.duration, 0);
-
-      setMapRoute({
-        distance,
-        duration,
-        coordinates,
-      });
     } catch (error) {
       console.error('Erro ao calcular rota:', error);
     } finally {
       setRouteLoading(false);
     }
-  };
-
-  const calculateDistance = (attractions: Attraction[]): number => {
-    // Simple distance calculation (in real app, use GraphHopper)
-    let totalDistance = 0;
-    for (let i = 0; i < attractions.length - 1; i++) {
-      const lat1 = attractions[i].location.lat;
-      const lng1 = attractions[i].location.lng;
-      const lat2 = attractions[i + 1].location.lat;
-      const lng2 = attractions[i + 1].location.lng;
-
-      const dLat = (lat2 - lat1) * Math.PI / 180;
-      const dLng = (lng2 - lng1) * Math.PI / 180;
-      const a =
-        Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-        Math.cos(lat1 * Math.PI / 180) *
-        Math.cos(lat2 * Math.PI / 180) *
-        Math.sin(dLng / 2) *
-        Math.sin(dLng / 2);
-      const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-      totalDistance += 6371 * c; // Earth radius in km
-    }
-    return totalDistance;
   };
 
   if (loading) {
@@ -117,19 +89,26 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
     return (
       <SafeAreaView style={styles.container}>
         <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>Nenhuma atração para o dia {day}</Text>
+          <Text style={styles.emptyText}>Nenhuma atração para este dia</Text>
         </View>
       </SafeAreaView>
     );
   }
 
-  // Calculate map center
+  // Calculate map region center
   const centerLat =
     dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.location.lat, 0) /
     dayAttractions.length;
   const centerLng =
     dayAttractions.reduce((sum: number, attr: Attraction) => sum + attr.location.lng, 0) /
     dayAttractions.length;
+
+  const initialRegion = {
+    latitude: centerLat,
+    longitude: centerLng,
+    latitudeDelta: 0.05,
+    longitudeDelta: 0.05,
+  };
 
   return (
     <SafeAreaView style={styles.container}>
@@ -138,61 +117,37 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
         {routeLoading && <ActivityIndicator size="small" color="#FF6B6B" />}
       </View>
 
-      {/* Mapbox Map */}
+      {/* Map View */}
       <View style={styles.mapContainer}>
-        <Mapbox.MapView
+        <MapView
           style={styles.map}
-          styleURL="mapbox://styles/mapbox/streets-v12"
+          initialRegion={initialRegion}
+          provider="google"
         >
-          <Mapbox.Camera
-            centerCoordinate={[centerLng, centerLat]}
-            zoomLevel={13}
-            animationDuration={500}
-          />
-
-          {/* Markers */}
-          {dayAttractions.map((attraction: Attraction, index: number) => (
-            <Mapbox.PointAnnotation
-              key={`${attraction.id}-${index}`}
-              id={`marker-${attraction.id}`}
-              coordinate={[attraction.location.lng, attraction.location.lat]}
-              title={attraction.name}
-            >
-              <View
-                style={[
-                  styles.marker,
-                  { backgroundColor: index === 0 ? '#4CAF50' : '#FF6B6B' },
-                ]}
-              >
-                <Text style={styles.markerText}>{index + 1}</Text>
-              </View>
-            </Mapbox.PointAnnotation>
-          ))}
-
-          {/* Route Line */}
-          {mapRoute && mapRoute.coordinates.length > 1 && (
-            <Mapbox.ShapeSource
-              id="route-source"
-              shape={{
-                type: 'Feature',
-                geometry: {
-                  type: 'LineString',
-                  coordinates: mapRoute.coordinates,
-                },
-                properties: {},
-              }}
-            >
-              <Mapbox.LineLayer
-                id="route-layer"
-                style={{
-                  lineColor: '#FF6B6B',
-                  lineWidth: 3,
-                  lineOpacity: 0.8,
-                }}
-              />
-            </Mapbox.ShapeSource>
+          {/* Route Polyline */}
+          {mapRoute?.coordinates && mapRoute.coordinates.length > 1 && (
+            <Polyline
+              coordinates={mapRoute.coordinates}
+              strokeColor="#FF6B6B"
+              strokeWidth={3}
+              lineDashPattern={[5]}
+            />
           )}
-        </Mapbox.MapView>
+
+          {/* Markers for attractions */}
+          {dayAttractions.map((attraction: Attraction, index: number) => (
+            <Marker
+              key={attraction.id}
+              coordinate={{
+                latitude: attraction.location.lat,
+                longitude: attraction.location.lng,
+              }}
+              title={attraction.name}
+              description={`${index + 1}. ${attraction.reason}`}
+              pinColor={index === 0 ? '#4CAF50' : '#FF6B6B'}
+            />
+          ))}
+        </MapView>
       </View>
 
       {/* Attractions List */}
@@ -219,13 +174,15 @@ export const MapDayScreen: React.FC<MapDayScreenProps> = ({
           <View style={styles.routeInfo}>
             <Text style={styles.routeTitle}>📍 Resumo da Rota</Text>
             <Text style={styles.routeText}>
-              Distância Total: {mapRoute.distance.toFixed(2)} km
+              Distância Total: {(mapRoute.distance / 1000).toFixed(2)} km
             </Text>
             <Text style={styles.routeText}>
-              Tempo Total: {Math.round(mapRoute.duration)} minutos
+              Tempo Total: {Math.round(mapRoute.duration / 60)} minutos
             </Text>
           </View>
         )}
+
+        <View style={{ height: 20 }} />
       </ScrollView>
     </SafeAreaView>
   );
@@ -258,25 +215,6 @@ const styles = StyleSheet.create({
   },
   map: {
     flex: 1,
-  },
-  marker: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    justifyContent: 'center',
-    alignItems: 'center',
-    borderWidth: 2,
-    borderColor: '#FFFFFF',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.25,
-    shadowRadius: 3,
-    elevation: 5,
-  },
-  markerText: {
-    color: '#FFFFFF',
-    fontWeight: 'bold',
-    fontSize: 16,
   },
   listContainer: {
     flex: 1,
