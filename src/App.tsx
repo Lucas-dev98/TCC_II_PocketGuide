@@ -17,7 +17,16 @@ import { CreateTripScreen } from "./screens/CreateTripScreen";
 import { TripDetailScreen } from "./screens/TripDetailScreen";
 import { MapDayScreen } from "./screens/MapDayScreen";
 
-const Stack = createNativeStackNavigator();
+type RootStackParamList = {
+  Login: undefined;
+  Onboarding: undefined;
+  Home: undefined;
+  CreateTrip: undefined;
+  TripDetail: undefined;
+  MapDay: undefined;
+};
+
+const Stack = createNativeStackNavigator<RootStackParamList>();
 
 export const App: React.FC = () => {
   const { user, loading: authLoading } = useAuth();
@@ -47,7 +56,9 @@ export const App: React.FC = () => {
             <Stack.Screen name="Home" component={HomeScreen} />
             <Stack.Screen name="CreateTrip" component={CreateTripScreen} />
             <Stack.Screen name="TripDetail" component={TripDetailScreen} />
-            <Stack.Screen name="MapDay" component={MapDayScreen} />
+            <Stack.Screen name="MapDay">
+              {props => <MapDayScreen {...props} />}
+            </Stack.Screen>
           </Stack.Group>
         )}
       </Stack.Navigator>
