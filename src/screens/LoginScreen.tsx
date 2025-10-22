@@ -1,6 +1,7 @@
 /**
  * LoginScreen - Initial login screen with Google Sign-In
  * User logs in with their Google account
+ * Falls back to demo mode if Firebase Auth fails (e.g., Expo Go)
  */
 
 import React, { useState } from "react";
@@ -10,19 +11,43 @@ import {
   View,
   Text,
   SafeAreaView,
+  Platform,
 } from "react-native";
 import { useAuth } from "../hooks/useAuth";
+import { useDemoAuth } from "../hooks/useDemoAuth";
 
 export const LoginScreen: React.FC = () => {
   const { loginWithGoogle, loading } = useAuth();
+  const { loginWithGoogle: demoLogin, loading: demoLoading } = useDemoAuth();
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [showDemoButton, setShowDemoButton] = useState(false);
 
   const handleGoogleLogin = async () => {
     try {
       setErrorMessage(null);
       await loginWithGoogle();
     } catch (err) {
-      setErrorMessage(err instanceof Error ? err.message : "Login failed");
+      const errorMsg = err instanceof Error ? err.message : "Login failed";
+      setErrorMessage(errorMsg);
+      
+      // Show demo mode button if Firebase Auth fails on mobile
+      if (
+        (errorMsg.includes("Component auth") || 
+         errorMsg.includes("runtime not ready") ||
+         errorMsg.includes("auth")) &&
+        Platform.OS !== "web"
+      ) {
+        setShowDemoButton(true);
+      }
+    }
+  };
+
+  const handleDemoLogin = async () => {
+    try {
+      setErrorMessage(null);
+      await demoLogin();
+    } catch (err) {
+      setErrorMessage(err instanceof Error ? err.message : "Demo login failed");
     }
   };
 
@@ -69,6 +94,19 @@ export const LoginScreen: React.FC = () => {
             {loading ? "Signing in..." : "Sign in with Google"}
           </Text>
         </TouchableOpacity>
+
+        {/* Demo Mode Button for Mobile (when Firebase fails) */}
+        {showDemoButton && (
+          <TouchableOpacity
+            style={[styles.demoButton, demoLoading && styles.buttonDisabled]}
+            onPress={handleDemoLogin}
+            disabled={demoLoading}
+          >
+            <Text style={styles.demoButtonText}>
+              {demoLoading ? "Loading..." : "📱 Try Demo Mode"}
+            </Text>
+          </TouchableOpacity>
+        )}
 
         {/* Terms and Privacy */}
         <View style={styles.footer}>
@@ -150,10 +188,24 @@ const styles = StyleSheet.create({
     alignItems: "center",
     marginVertical: 12,
   },
+  demoButton: {
+    backgroundColor: "#10B981",
+    borderRadius: 10,
+    paddingVertical: 14,
+    alignItems: "center",
+    marginVertical: 8,
+    borderWidth: 1,
+    borderColor: "#059669",
+  },
   buttonDisabled: {
     opacity: 0.6,
   },
   googleButtonText: {
+    color: "#FFFFFF",
+    fontSize: 16,
+    fontWeight: "600",
+  },
+  demoButtonText: {
     color: "#FFFFFF",
     fontSize: 16,
     fontWeight: "600",
