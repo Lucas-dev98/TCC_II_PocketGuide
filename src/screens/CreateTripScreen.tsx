@@ -1,6 +1,7 @@
 /**
  * CreateTripScreen - Screen to create a new trip
  * User selects destination and dates, then AI generates itinerary
+ * Input validation using Zod schemas
  */
 
 import React, { useState } from "react";
@@ -22,6 +23,8 @@ import { generateItineraryWithGemini } from "../services/geminiItinerary";
 import { useTripStore } from "../store/tripStore";
 import { useAuth } from "../hooks/useAuth";
 import { Trip, Attraction } from "../types";
+import { validateGenerateItineraryRequest } from "../schemas/validation";
+import logger from "../services/logger";
 
 // Popular destinations for quick select
 const POPULAR_DESTINATIONS = [
@@ -74,10 +77,28 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
       ) + 1;
 
+      // Validate input using Zod schema
+      const cleanDestination = destination.replace(/^[^a-zA-Z]*/, '').trim(); // Remove emoji
+      try {
+        validateGenerateItineraryRequest({
+          destination: cleanDestination,
+          days,
+          tags: ["culture", "gastronomy", "sightseeing"],
+          budget: "mid",
+          groupType: "couple",
+        });
+        logger.info('Trip input validated successfully', { destination: cleanDestination, days });
+      } catch (validationError) {
+        const errorMsg = validationError instanceof Error ? validationError.message : 'Validation failed';
+        logger.error('Trip input validation failed', validationError instanceof Error ? validationError : new Error(errorMsg));
+        setError(`Invalid input: ${errorMsg}`);
+        return;
+      }
+
       // Generate itinerary using Gemini AI
-      console.log("🤖 Generating itinerary with Gemini...");
+      logger.info("🤖 Generating itinerary with Gemini...", { destination: cleanDestination, days });
       const itinerary = await generateItineraryWithGemini(
-        destination,
+        cleanDestination,
         days,
         ["culture", "gastronomy", "sightseeing"], // Default tags
         "mid", // Default budget
@@ -86,15 +107,11 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
 
       if (!itinerary) {
         setError("Failed to generate itinerary. Please try again.");
+        logger.error("Itinerary generation returned empty result", new Error("Empty itinerary"));
         return;
       }
 
-      console.log("✅ Itinerary generated successfully!");
-      console.log("🧳 Trip details:", {
-        destination,
-        startDate: startDate.toLocaleDateString(),
-        endDate: endDate.toLocaleDateString(),
-        days,
+      logger.info("✅ Itinerary generated successfully!", {
         itemsCount: itinerary.itinerary.length,
       });
 
