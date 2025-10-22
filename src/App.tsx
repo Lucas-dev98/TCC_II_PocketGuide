@@ -1,11 +1,12 @@
 /**
- * App.tsx - Root component with Authentication and Navigation
+ * App.tsx - Root component with Authentication, Navigation, and Error Handling
  */
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ActivityIndicator, View } from 'react-native';
 import { useAuth } from './hooks/useAuth';
+import { ErrorBoundary } from './components/ErrorBoundary';
 
 // Screens
 import { LoginScreen } from './screens/LoginScreen';
@@ -17,13 +18,13 @@ import { MapDayScreen } from './screens/MapDayScreen';
 
 const Stack = createNativeStackNavigator();
 
-export default function App() {
+function AppNavigator() {
   const { user, loading } = useAuth();
 
   if (loading) {
     return (
       <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-        <ActivityIndicator size="large" color="#FF6B6B" />
+        <ActivityIndicator size="large" color="#3B82F6" />
       </View>
     );
   }
@@ -48,5 +49,18 @@ export default function App() {
         )}
       </Stack.Navigator>
     </NavigationContainer>
+  );
+}
+
+export default function App() {
+  return (
+    <ErrorBoundary
+      onError={(error, errorInfo) => {
+        // Log to external service if available (e.g., Sentry)
+        console.error('App Error Boundary:', error, errorInfo);
+      }}
+    >
+      <AppNavigator />
+    </ErrorBoundary>
   );
 }
