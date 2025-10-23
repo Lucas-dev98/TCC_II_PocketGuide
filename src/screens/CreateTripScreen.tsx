@@ -38,6 +38,17 @@ const POPULAR_DESTINATIONS = [
   "🗽 Canada",
 ];
 
+/**
+ * Sanitize destination input
+ */
+const sanitizeDestination = (input: string): string => {
+  return input
+    .replace(/^[^a-zA-Z]*/, '') // Remove leading emoji/special chars
+    .trim()
+    .slice(0, 100) // Max 100 characters
+    .replace(/[<>\"']/g, ''); // Remove dangerous characters
+};
+
 interface CreateTripScreenProps {
   navigation: any;
 }
@@ -96,8 +107,14 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
         (endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24)
       ) + 1;
 
-      // Validate input using Zod schema
-      const cleanDestination = destination.replace(/^[^a-zA-Z]*/, '').trim(); // Remove emoji
+      // Sanitize and validate destination input
+      const cleanDestination = sanitizeDestination(destination);
+      
+      if (!cleanDestination || cleanDestination.length < 2) {
+        setError("Destination must be at least 2 characters");
+        return;
+      }
+
       try {
         validateGenerateItineraryRequest({
           destination: cleanDestination,

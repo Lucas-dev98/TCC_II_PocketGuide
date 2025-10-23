@@ -61,6 +61,7 @@ export const useAuth = () => {
       "auth/user-disabled": "Usuário desabilitado.",
       "auth/user-not-found": "Usuário não encontrado.",
       "auth/wrong-password": "Senha incorreta.",
+      "auth/too-many-requests": "Muitas tentativas. Tente novamente mais tarde.",
     };
     return errorMap[code] || "Erro na autenticação. Tente novamente.";
   };

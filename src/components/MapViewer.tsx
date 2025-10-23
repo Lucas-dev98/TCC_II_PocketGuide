@@ -1,9 +1,14 @@
 /**
  * MapViewer.tsx - Map viewer component (web-safe)
- * Shows attraction routes and itinerary information
+ * 
+ * Features:
+ * - Shows attraction routes and itinerary information
+ * - Calculates optimal routes between attractions
+ * - Provides error handling and fallback UI
+ * - Loading states for async operations
  */
 
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,9 +16,11 @@ import {
   ActivityIndicator,
   ScrollView,
   Dimensions,
+  TouchableOpacity,
 } from 'react-native';
 import { Attraction } from '../types';
 import { calculateDayRoutes, RouteSegment, formatDistance, formatDuration } from '../services/graphhopperRoutes';
+import logger from '../services/logger';
 
 const { height } = Dimensions.get('window');
 
@@ -22,30 +29,69 @@ interface MapViewerProps {
   day: number;
 }
 
+interface MapViewerState {
+  routes: RouteSegment[];
+  loading: boolean;
+  error: string | null;
+}
+
 export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
-  const [routes, setRoutes] = useState<RouteSegment[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [state, setState] = useState<MapViewerState>({
+    routes: [],
+    loading: true,
+    error: null,
+  });
 
   useEffect(() => {
     loadRoutes();
   }, [attractions, day]);
 
-  const loadRoutes = async () => {
+  /**
+   * Load and calculate day routes with error handling
+   */
+  const loadRoutes = useCallback(async () => {
     try {
-      setLoading(true);
+      setState(prev => ({ ...prev, loading: true, error: null }));
+      
+      if (!attractions || attractions.length === 0) {
+        setState(prev => ({ ...prev, loading: false, error: null }));
+        return;
+      }
+
       const calculatedRoutes = await calculateDayRoutes(attractions);
-      setRoutes(calculatedRoutes);
+      setState(prev => ({ ...prev, routes: calculatedRoutes, loading: false }));
+      logger.info('Routes calculated successfully', { count: calculatedRoutes.length });
     } catch (error) {
-      console.error('Error loading routes:', error);
-    } finally {
-      setLoading(false);
+      const errorMsg = error instanceof Error ? error.message : 'Failed to calculate routes';
+      logger.error('Error loading routes', error instanceof Error ? error : new Error(errorMsg));
+      setState(prev => ({ ...prev, error: errorMsg, loading: false }));
     }
-  };
+  }, [attractions]);
+
+  /**
+   * Retry loading routes
+   */
+  const handleRetry = useCallback(() => {
+    loadRoutes();
+  }, [loadRoutes]);
 
   if (!attractions || attractions.length === 0) {
     return (
       <View style={styles.emptyContainer}>
         <Text style={styles.emptyText}>Nenhuma atração para este dia</Text>
+      </View>
+    );
+  }
+
+  // Show error state with retry button
+  if (state.error) {
+    return (
+      <View style={styles.errorContainer}>
+        <Text style={styles.errorTitle}>❌ Erro ao carregar mapa</Text>
+        <Text style={styles.errorMessage}>{state.error}</Text>
+        <TouchableOpacity style={styles.retryButton} onPress={handleRetry}>
+          <Text style={styles.retryButtonText}>Tentar Novamente</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -76,7 +122,7 @@ export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
 
       {/* Route information */}
       <ScrollView style={styles.routeInfo}>
-        {loading ? (
+        {state.loading ? (
           <View style={styles.loadingContainer}>
             <ActivityIndicator size="large" color="#FF6B6B" />
             <Text style={styles.loadingText}>Calculando rotas...</Text>
@@ -109,15 +155,15 @@ export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
                 </View>
 
                 {/* Route to next attraction */}
-                {index < routes.length && (
+                {index < state.routes.length && (
                   <View style={styles.routeToNext}>
                     <Text style={styles.routeArrow}>⬇️</Text>
                     <View style={styles.routeDetails}>
                       <Text style={styles.routeDetail}>
-                        📏 {formatDistance(routes[index].distance)}
+                        📏 {formatDistance(state.routes[index].distance)}
                       </Text>
                       <Text style={styles.routeDetail}>
-                        ⏱️ {formatDuration(routes[index].duration)}
+                        ⏱️ {formatDuration(state.routes[index].duration)}
                       </Text>
                     </View>
                   </View>
@@ -130,17 +176,17 @@ export const MapViewer: React.FC<MapViewerProps> = ({ attractions, day }) => {
             ))}
 
             {/* Total trip summary */}
-            {routes.length > 0 && (
+            {state.routes.length > 0 && (
               <View style={styles.summary}>
                 <Text style={styles.summaryTitle}>📊 Resumo do Dia</Text>
                 <Text style={styles.summaryText}>
                   Total de deslocamento: {formatDistance(
-                    routes.reduce((sum, r) => sum + r.distance, 0)
+                    state.routes.reduce((sum: number, r: RouteSegment) => sum + r.distance, 0)
                   )}
                 </Text>
                 <Text style={styles.summaryText}>
                   Tempo total de deslocamento: {formatDuration(
-                    routes.reduce((sum, r) => sum + r.duration, 0)
+                    state.routes.reduce((sum: number, r: RouteSegment) => sum + r.duration, 0)
                   )}
                 </Text>
               </View>
@@ -283,6 +329,36 @@ const styles = StyleSheet.create({
     fontStyle: 'italic',
     marginTop: 8,
     paddingLeft: 40,
+  },
+  errorContainer: {
+    backgroundColor: '#FFEBEE',
+    borderRadius: 12,
+    padding: 16,
+    marginVertical: 16,
+    alignItems: 'center',
+  },
+  errorTitle: {
+    fontSize: 16,
+    fontWeight: 'bold',
+    color: '#C62828',
+    marginBottom: 8,
+  },
+  errorMessage: {
+    fontSize: 14,
+    color: '#D32F2F',
+    marginBottom: 16,
+    textAlign: 'center',
+  },
+  retryButton: {
+    backgroundColor: '#FF6B6B',
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  retryButtonText: {
+    color: '#FFFFFF',
+    fontWeight: '600',
+    fontSize: 14,
   },
   summary: {
     backgroundColor: '#FF6B6B',
