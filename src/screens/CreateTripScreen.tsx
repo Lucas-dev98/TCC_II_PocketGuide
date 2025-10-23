@@ -4,7 +4,7 @@
  * Input validation using Zod schemas
  */
 
-import React, { useState } from "react";
+import React, { useState, useCallback } from "react";
 import {
   StyleSheet,
   View,
@@ -57,7 +57,26 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
   const [selectedDateType, setSelectedDateType] = useState<"start" | "end" | null>(null);
   const [showSuggestions, setShowSuggestions] = useState(false);
 
-  const handleGenerateItinerary = async () => {
+  /**
+   * Update destination with input sanitization
+   */
+  const handleDestinationChange = useCallback((text: string) => {
+    setDestination(text);
+    setShowSuggestions(text.length > 0);
+  }, []);
+
+  /**
+   * Open date picker for start or end date
+   */
+  const handleDatePick = useCallback((dateType: "start" | "end") => {
+    setSelectedDateType(dateType);
+    setShowDatePicker(true);
+  }, []);
+
+  /**
+   * Generate itinerary from AI with full validation
+   */
+  const handleGenerateItinerary = useCallback(async () => {
     if (!destination || !startDate || !endDate) {
       setError("Please fill in all fields");
       return;
@@ -161,12 +180,16 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
     } finally {
       setLoading(false);
     }
-  };
+  }, [destination, startDate, endDate, user, addTrip, setCurrentTrip, navigation]);
 
-  const handleDatePick = (dateType: "start" | "end") => {
-    setSelectedDateType(dateType);
-    setShowDatePicker(true);
-  };
+  /**
+   * Quick select a popular destination
+   */
+  const handleQuickSelect = useCallback((dest: string) => {
+    const cleanDest = dest.replace(/^[^a-zA-Z]*/, '').trim();
+    setDestination(cleanDest);
+    setShowSuggestions(false);
+  }, []);
 
   return (
     <SafeAreaView style={styles.container}>
@@ -206,10 +229,7 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                 placeholder="Where are you going?"
                 placeholderTextColor="#9CA3AF"
                 value={destination}
-                onChangeText={(text) => {
-                  setDestination(text);
-                  setShowSuggestions(text.length > 0);
-                }}
+                onChangeText={handleDestinationChange}
                 editable={!loading}
                 accessibilityLabel="Destination input"
                 accessibilityHint="Enter your travel destination"
@@ -224,10 +244,7 @@ export const CreateTripScreen: React.FC<CreateTripScreenProps> = ({
                     <TouchableOpacity
                       key={idx}
                       style={styles.suggestionItem}
-                      onPress={() => {
-                        setDestination(dest.split(" ")[1]); // Remove emoji
-                        setShowSuggestions(false);
-                      }}
+                      onPress={() => handleQuickSelect(dest)}
                       accessibilityLabel={`Select ${dest}`}
                       accessibilityRole="button"
                       accessibilityHint="Selects this as your travel destination"

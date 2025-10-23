@@ -1,14 +1,73 @@
-// User Profile
-export interface User {
+// ============================================
+// 🔐 AUTH & USER TYPES
+// ============================================
+
+/**
+ * Authenticated User Profile
+ * Stored in Firestore and used throughout the app
+ */
+export interface AuthUser {
   uid: string;
+  email: string | null;
   name: string;
-  email: string;
-  photoURL?: string;
+  photoURL: string | null;
   tags: string[]; // ["gastronomia", "médio", "casal"]
   createdAt: Date;
+  lastSignIn: Date;
 }
 
-// Travel Trip
+/**
+ * Firebase Auth State (for internal use only)
+ */
+export interface AuthState {
+  user: AuthUser | null;
+  loading: boolean;
+  error: AuthError | null;
+}
+
+/**
+ * Structured auth errors
+ */
+export interface AuthError {
+  code: string;
+  message: string;
+  timestamp: Date;
+}
+
+// ============================================
+// ✈️ TRIP & ITINERARY TYPES
+// ============================================
+
+/**
+ * Travel Destination with coordinates
+ */
+export interface Location {
+  lat: number;
+  lng: number;
+  address?: string;
+  placeId?: string;
+  name?: string;
+}
+
+/**
+ * Single Attraction/Activity
+ */
+export interface Attraction {
+  id: string;
+  day: number; // 1, 2, 3...
+  time: string; // "09:00"
+  name: string;
+  duration: number; // em minutos
+  reason: string;
+  tip?: string;
+  location: Location;
+  order?: number; // para controlar ordem de drag & drop
+  notes?: string;
+}
+
+/**
+ * Complete Travel Trip
+ */
 export interface Trip {
   id: string;
   userId: string;
@@ -18,34 +77,58 @@ export interface Trip {
   attractions: Attraction[];
   createdAt: Date;
   updatedAt: Date;
-  isSyncedToFirestore: boolean; // para controle offline
+  isSyncedToFirestore: boolean;
+  tags?: string[];
+  notes?: string;
 }
 
-// Attraction in a trip
-export interface Attraction {
-  id: string;
-  day: number; // 1, 2, 3...
-  time: string; // "09:00"
-  name: string;
-  duration: number; // em minutos
-  reason: string;
-  tip?: string;
-  location: {
-    lat: number;
-    lng: number;
-    address?: string;
-  };
-  order?: number; // para controlar ordem de drag & drop
+/**
+ * Trip creation parameters
+ */
+export interface CreateTripParams {
+  destination: string;
+  startDate: Date;
+  endDate: Date;
+  tags: string[];
+  travelStyle: TravelStyle;
+  budget: Budget;
 }
 
-// Onboarding Quiz
+// ============================================
+// 📋 ONBOARDING & PREFERENCES
+// ============================================
+
+/**
+ * Travel Style Options
+ */
+export type TravelStyle = "aventura" | "relax" | "cultura" | "gastronomia";
+
+/**
+ * Budget Level Options
+ */
+export type Budget = "econômico" | "médio" | "luxo";
+
+/**
+ * Travel Companion Type
+ */
+export type TravelCompanion = "sozinho" | "casal" | "família" | "amigos";
+
+/**
+ * User Preferences from Onboarding Quiz
+ */
 export interface QuizAnswers {
-  travelStyle: "aventura" | "relax" | "cultura" | "gastronomia";
-  budget: "econômico" | "médio" | "luxo";
-  travelWith: "sozinho" | "casal" | "família" | "amigos";
+  travelStyle: TravelStyle;
+  budget: Budget;
+  travelWith: TravelCompanion;
 }
 
-// Gemini API Response
+// ============================================
+// 🗺️ API RESPONSE TYPES
+// ============================================
+
+/**
+ * Gemini AI Generated Itinerary Item
+ */
 export interface GeminiItinerary {
   day: number;
   time: string;
@@ -53,22 +136,74 @@ export interface GeminiItinerary {
   duration: number;
   reason: string;
   tip: string;
-  location: {
-    lat: number;
-    lng: number;
-  };
+  location: Location;
 }
 
-// Google Places AutoComplete
+/**
+ * Google Places AutoComplete Prediction
+ */
 export interface PlacePrediction {
   main_text: string;
   secondary_text: string;
   place_id: string;
 }
 
-// Google Maps Direction Response
+/**
+ * Google Maps Direction Response
+ */
 export interface DirectionRoute {
   distance: string;
   duration: string;
   polyline: string;
+}
+
+/**
+ * GraphHopper Route Response
+ */
+export interface RouteResponse {
+  routes: Array<{
+    distance: number;
+    time: number;
+    points: string;
+  }>;
+}
+
+// ============================================
+// 🔧 UTILITY TYPES
+// ============================================
+
+/**
+ * API Error Response
+ */
+export interface ApiError {
+  status: number;
+  message: string;
+  code: string;
+  details?: Record<string, unknown>;
+}
+
+/**
+ * Async Operation State
+ */
+export interface AsyncState<T> {
+  data: T | null;
+  loading: boolean;
+  error: Error | null;
+}
+
+/**
+ * Pagination Parameters
+ */
+export interface PaginationParams {
+  page: number;
+  limit: number;
+}
+
+/**
+ * Cache Entry
+ */
+export interface CacheEntry<T> {
+  data: T;
+  timestamp: number;
+  ttl: number;
 }

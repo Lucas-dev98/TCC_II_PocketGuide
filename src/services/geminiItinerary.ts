@@ -1,11 +1,22 @@
 /**
- * geminiItinerary.ts - Gemini AI integration for intelligent itinerary generation
- * Uses Google's Gemini API to generate personalized travel itineraries
+ * Gemini AI Service - Intelligent Itinerary Generation
+ * 
+ * Features:
+ * - Generate personalized travel itineraries using Google Gemini API
+ * - Get travel tips for destinations
+ * - Describe destinations with AI-generated content
+ * - Robust error handling with fallback itineraries
+ * - Type-safe API responses
  */
+
+import { Location } from "../types";
 
 const GEMINI_API_KEY = process.env.EXPO_PUBLIC_GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent';
 
+/**
+ * Structured itinerary item from Gemini
+ */
 export interface ItineraryItem {
   day: number;
   time: string;
@@ -13,13 +24,13 @@ export interface ItineraryItem {
   duration: number; // in minutes
   reason: string;
   tip: string;
-  location?: {
-    lat: number;
-    lng: number;
-  };
+  location?: Location;
   category: string;
 }
 
+/**
+ * Complete generated itinerary response
+ */
 export interface GeneratedItinerary {
   destination: string;
   days: number;
@@ -28,13 +39,93 @@ export interface GeneratedItinerary {
 }
 
 /**
- * Generate an intelligent itinerary using Gemini AI
- * @param destination - Destination city
- * @param days - Number of days
- * @param tags - User preferences (e.g., ['gastronomy', 'culture', 'nightlife'])
- * @param budget - Budget level ('budget', 'mid', 'luxury')
- * @param groupType - Type of group ('solo', 'couple', 'family', 'friends')
+ * Parsed Gemini activity data
  */
+interface GeminiActivity {
+  day?: number;
+  time?: string;
+  name?: string;
+  duration?: number;
+  reason?: string;
+  tip?: string;
+  category?: string;
+  lat?: number;
+  latitude?: number;
+  lng?: number;
+  longitude?: number;
+}
+
+/**
+ * Extract coordinates from API response
+ * Handles multiple coordinate naming conventions
+ */
+const extractCoordinates = (item: GeminiActivity, destination: string): Location => {
+  let lat = item.lat !== undefined ? item.lat : item.latitude;
+  let lng = item.lng !== undefined ? item.lng : item.longitude;
+  
+  // If no coordinates provided, use defaults
+  if (lat === undefined || lng === undefined || lat === 0 || lng === 0) {
+    const defaultCoords = getDefaultCoordinates(destination);
+    lat = defaultCoords.lat;
+    lng = defaultCoords.lng;
+  }
+  
+  return {
+    lat: Number(lat) || 0,
+    lng: Number(lng) || 0,
+  };
+};
+
+/**
+ * Get default coordinates for common destinations
+ */
+const getDefaultCoordinates = (destination: string): { lat: number; lng: number } => {
+  const defaultCoords: Record<string, { lat: number; lng: number }> = {
+    'paris': { lat: 48.8566, lng: 2.3522 },
+    'london': { lat: 51.5074, lng: -0.1278 },
+    'new york': { lat: 40.7128, lng: -74.0060 },
+    'tokyo': { lat: 35.6762, lng: 139.6503 },
+    'rio de janeiro': { lat: -22.9068, lng: -43.1729 },
+    'barcelona': { lat: 41.3851, lng: 2.1734 },
+    'rome': { lat: 41.9028, lng: 12.4964 },
+    'dubai': { lat: 25.2048, lng: 55.2708 },
+    'singapore': { lat: 1.3521, lng: 103.8198 },
+    'bangkok': { lat: 13.7563, lng: 100.5018 },
+  };
+  
+  const destLower = destination.toLowerCase();
+  return defaultCoords[destLower] || { lat: 0, lng: 0 };
+};
+
+/**
+ * Parse Gemini API text response into JSON
+ */
+const parseGeminiResponse = (textContent: string): any => {
+  try {
+    // First try direct JSON parse
+    return JSON.parse(textContent);
+  } catch (parseError) {
+    console.warn('⚠️ Direct JSON parse failed, trying extraction...');
+    try {
+      // Try to extract from markdown code blocks
+      const jsonMatch = textContent.match(/```json\n?([\s\S]*?)\n?```/);
+      if (jsonMatch) {
+        return JSON.parse(jsonMatch[1]);
+      }
+      
+      // Try to find JSON object in text
+      const objectMatch = textContent.match(/\{[\s\S]*\}/);
+      if (objectMatch) {
+        return JSON.parse(objectMatch[0]);
+      }
+      
+      throw new Error('No valid JSON found in response');
+    } catch (extractError) {
+      console.error('❌ Failed to extract JSON:', extractError);
+      throw extractError;
+    }
+  }
+};
 export const generateItineraryWithGemini = async (
   destination: string,
   days: number,
@@ -132,33 +223,8 @@ Generate approximately ${days * 3} activities spread across ${days} days (3 per 
     const textContent = content.parts[0].text;
     console.log('📄 Text content:', textContent);
 
-    // Try to extract JSON from the response
-    let jsonData;
-    try {
-      // First try to parse directly
-      jsonData = JSON.parse(textContent);
-    } catch (parseError) {
-      console.warn('⚠️ Direct JSON parse failed, trying extraction...', parseError);
-      try {
-        // Try to extract JSON from markdown code blocks
-        const jsonMatch = textContent.match(/```json\n?([\s\S]*?)\n?```/);
-        if (jsonMatch) {
-          jsonData = JSON.parse(jsonMatch[1]);
-        } else {
-          // Try to find JSON object in the text
-          const objectMatch = textContent.match(/\{[\s\S]*\}/);
-          if (objectMatch) {
-            jsonData = JSON.parse(objectMatch[0]);
-          } else {
-            throw new Error('No valid JSON found in response');
-          }
-        }
-      } catch (extractError) {
-        console.error('❌ Failed to extract JSON:', extractError);
-        console.error('Full response text:', textContent);
-        throw extractError;
-      }
-    }
+    // Parse JSON from response
+    const jsonData = parseGeminiResponse(textContent);
 
     console.log('✅ Parsed JSON:', jsonData);
 
@@ -175,35 +241,8 @@ Generate approximately ${days * 3} activities spread across ${days} days (3 per 
     }
 
     const itineraryItems: ItineraryItem[] = activities.map(
-      (item: any, index: number) => {
-        // Extract coordinates - they can be named lat/lng or latitude/longitude
-        let lat = item.lat !== undefined ? item.lat : item.latitude;
-        let lng = item.lng !== undefined ? item.lng : item.longitude;
-        
-        // If still no coordinates, generate random ones for the destination
-        if (lat === undefined || lng === undefined || lat === 0 || lng === 0) {
-          console.warn(`⚠️ No coordinates for ${item.name}, using defaults`);
-          // Default coordinates for common destinations
-          const defaultCoords: { [key: string]: [number, number] } = {
-            'paris': [48.8566, 2.3522],
-            'london': [51.5074, -0.1278],
-            'new york': [40.7128, -74.0060],
-            'tokyo': [35.6762, 139.6503],
-            'rio de janeiro': [-22.9068, -43.1729],
-            'barcelona': [41.3851, 2.1734],
-            'rome': [41.9028, 12.4964],
-            'dubai': [25.2048, 55.2708],
-            'singapore': [1.3521, 103.8198],
-            'bangkok': [13.7563, 100.5018],
-          };
-          
-          const destLower = destination.toLowerCase();
-          let coords = defaultCoords[destLower] || [0, 0];
-          
-          // Add slight random offset for nearby attractions
-          lat = coords[0] + (Math.random() - 0.5) * 0.05;
-          lng = coords[1] + (Math.random() - 0.5) * 0.05;
-        }
+      (item: GeminiActivity, index: number) => {
+        const location = extractCoordinates(item, destination);
         
         return {
           day: item.day || Math.floor(index / 3) + 1,
@@ -213,10 +252,7 @@ Generate approximately ${days * 3} activities spread across ${days} days (3 per 
           reason: item.reason || 'Explore this attraction',
           tip: item.tip || 'Check opening hours',
           category: item.category || 'General',
-          location: {
-            lat: Number(lat) || 0,
-            lng: Number(lng) || 0,
-          },
+          location,
         };
       }
     );

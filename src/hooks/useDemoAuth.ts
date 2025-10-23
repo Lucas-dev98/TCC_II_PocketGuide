@@ -4,19 +4,20 @@
  */
 
 import { useState, useCallback } from "react";
-import { User } from "../types";
+import { AuthUser } from "../types";
 
-const DEMO_USER: User = {
+const DEMO_USER: AuthUser = {
   uid: "demo-user-123",
   email: "demo@pocketguide.app",
   name: "Demo User",
   photoURL: "https://via.placeholder.com/150?text=Demo",
   tags: ["culture", "gastronomy", "adventure"],
   createdAt: new Date(),
+  lastSignIn: new Date(),
 };
 
 export const useDemoAuth = () => {
-  const [user, setUser] = useState<User | null>(DEMO_USER);
+  const [user, setUser] = useState<AuthUser | null>(DEMO_USER);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
