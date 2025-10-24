@@ -155,27 +155,15 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `Generate a ${days}-day itinerary for ${destination} with budget="${budget}" and group="${groupType}". Interests: ${tags.join(',')}. 
-
-IMPORTANT: Return ONLY a valid JSON object in this exact format with NO markdown code blocks, NO explanations, NO extra text:
+    const prompt = `Generate a ${days}-day itinerary for ${destination} (budget: ${budget}).
+Return ONLY valid JSON (no markdown, no text):
 {
   "itinerary": [
-    {
-      "day": 1,
-      "time": "09:00",
-      "name": "Attraction name",
-      "duration": 120,
-      "reason": "Why visit",
-      "tip": "Local tip",
-      "category": "category",
-      "lat": latitude_number,
-      "lng": longitude_number
-    }
-  ],
-  "tips": ["tip1", "tip2"]
+    {"day": 1, "time": "09:00", "name": "Place", "duration": 120, "reason": "Why", "tip": "Tip", "category": "Food", "lat": -1, "lng": 1},
+    {"day": 1, "time": "13:00", "name": "Place2", "duration": 120, "reason": "Why2", "tip": "Tip2", "category": "Culture", "lat": -1.1, "lng": 1.1}
+  ]
 }
-
-Generate approximately ${days * 3} activities spread across ${days} days (3 per day). Each activity MUST include real coordinates (lat, lng) for places in ${destination}.`;
+Generate ${days * 3} activities with realistic ${destination} coordinates.`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
