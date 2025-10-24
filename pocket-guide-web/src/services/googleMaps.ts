@@ -47,7 +47,7 @@ export const getPlaceDetails = async (
 ): Promise<{ lat: number; lng: number; address: string }> => {
   try {
     const response = await fetch(
-      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`,
+      `https://maps.googleapis.com/maps/api/place/details/json?place_id=${placeId}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`,
       {
         method: "GET",
         headers: {
@@ -91,7 +91,7 @@ export const getOptimizedRoute = async (
     const originParam = `${origins[0].lat},${origins[0].lng}`;
     const destinationParam = `${destination.lat},${destination.lng}`;
 
-    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&key=${process.env.REACT_APP_GOOGLE_MAPS_API_KEY}`;
+    const url = `https://maps.googleapis.com/maps/api/directions/json?origin=${originParam}&destination=${destinationParam}&waypoints=${waypointsParam}&key=${import.meta.env.VITE_GOOGLE_MAPS_API_KEY}`;
 
     const response = await fetch(url);
 

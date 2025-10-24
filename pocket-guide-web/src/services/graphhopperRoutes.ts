@@ -20,7 +20,7 @@ export interface RouteSegment {
   polyline: string; // encoded polyline
 }
 
-const GRAPHHOPPER_API_KEY = process.env.EXPO_PUBLIC_GRAPHHOPPER_API_KEY;
+const GRAPHHOPPER_API_KEY = import.meta.env.VITE_GRAPHHOPPER_API_KEY;
 
 /**
  * Calculate routes between consecutive attractions for a day

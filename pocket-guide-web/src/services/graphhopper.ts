@@ -35,7 +35,7 @@ const GRAPHHOPPER_BASE_URL = 'https://graphhopper.com/api/1';
  * Get GraphHopper API key from environment
  */
 function getApiKey(): string {
-  const key = process.env.EXPO_PUBLIC_GRAPHHOPPER_API_KEY;
+  const key = import.meta.env.VITE_GRAPHHOPPER_API_KEY;
   if (!key) {
     console.warn(
       'GraphHopper API key not configured. Using demo key with limited requests.'
