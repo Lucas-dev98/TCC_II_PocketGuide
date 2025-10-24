@@ -7,7 +7,6 @@
 import { generateItineraryWithGemini } from './geminiItinerary';
 import { withRetry } from '../utils/retryService';
 import logger from './logger';
-import cacheManager from '../utils/cacheManager';
 
 export interface ItineraryItem {
   day: number;
@@ -155,16 +154,6 @@ export const generateItinerary = async (
   budget: string = 'mid',
   groupType: string = 'couple'
 ): Promise<ItineraryItem[]> => {
-  // Create cache key
-  const cacheKey = `itinerary_${destination.toLowerCase()}_${days}_${tags.join('_')}`;
-
-  // Try to get from cache first
-  const cached = await cacheManager.get<ItineraryItem[]>(cacheKey);
-  if (cached) {
-    logger.info('Itinerary retrieved from cache', { destination, days });
-    return cached;
-  }
-
   try {
     logger.info('Generating itinerary', {
       destination,
@@ -202,8 +191,6 @@ export const generateItinerary = async (
       logger.info('Itinerary generated successfully from Gemini API', {
         itemCount: geminiResult.itinerary.length,
       });
-      // Cache the result for 24 hours
-      await cacheManager.set(cacheKey, geminiResult.itinerary, 24 * 60 * 60 * 1000);
       return geminiResult.itinerary;
     }
   } catch (error) {
@@ -226,8 +213,6 @@ export const generateItinerary = async (
       destination: normalizedDestination,
       itemCount: filtered.length,
     });
-    // Cache the result for 7 days
-    await cacheManager.set(cacheKey, filtered, 7 * 24 * 60 * 60 * 1000);
     // Filter items for selected days
     return filtered;
   }
@@ -235,8 +220,6 @@ export const generateItinerary = async (
   // Last resort: return generic itinerary
   logger.info('Generating generic itinerary fallback', { destination });
   const genericResult = generateGenericItinerary(destination, days, tags);
-  // Cache the result for 24 hours
-  await cacheManager.set(cacheKey, genericResult, 24 * 60 * 60 * 1000);
   return genericResult;
 };
 
