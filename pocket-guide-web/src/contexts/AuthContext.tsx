@@ -1,17 +1,17 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth, signInWithGoogle, signOut as firebaseSignOut } from '@/services/firebase'
+import { auth, signInWithGoogle, signOut as firebaseSignOut } from '../services/firebase'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 
 interface AuthContextType {
   user: FirebaseUser | null
-  loading: boolean
+  isLoading: boolean
   error: string | null
-  signIn: () => Promise<void>
+  signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
   isAuthenticated: boolean
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined)
+export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export const useAuth = () => {
   const context = useContext(AuthContext)
@@ -27,50 +27,52 @@ interface AuthProviderProps {
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [user, setUser] = useState<FirebaseUser | null>(null)
-  const [loading, setLoading] = useState(true)
+  const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
-      setLoading(false)
+      setIsLoading(false)
     })
 
     return unsubscribe
   }, [])
 
-  const signIn = async () => {
+  const handleSignInWithGoogle = async () => {
     try {
       setError(null)
-      setLoading(true)
+      setIsLoading(true)
       await signInWithGoogle()
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to sign in'
+      const message = err instanceof Error ? err.message : 'Falha ao fazer login'
       setError(message)
-      console.error('Sign in error:', err)
+      console.error('Erro no login:', err)
+      throw err
     } finally {
-      setLoading(false)
+      setIsLoading(false)
     }
   }
 
-  const signOut = async () => {
+  const handleSignOut = async () => {
     try {
       setError(null)
-      await firebaseSignOut(auth)
+      await firebaseSignOut()
       setUser(null)
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'Failed to sign out'
+      const message = err instanceof Error ? err.message : 'Falha ao fazer logout'
       setError(message)
-      console.error('Sign out error:', err)
+      console.error('Erro no logout:', err)
+      throw err
     }
   }
 
   const value: AuthContextType = {
     user,
-    loading,
+    isLoading,
     error,
-    signIn,
-    signOut,
+    signInWithGoogle: handleSignInWithGoogle,
+    signOut: handleSignOut,
     isAuthenticated: !!user,
   }
 

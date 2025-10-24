@@ -72,14 +72,20 @@ export interface Trip {
   id: string;
   userId: string;
   destination: string;
-  startDate: Date;
-  endDate: Date;
-  attractions: Attraction[];
-  createdAt: Date;
-  updatedAt: Date;
-  isSyncedToFirestore: boolean;
+  country?: string;
+  startDate: Date | string;
+  endDate: Date | string;
+  attractions?: Attraction[];
+  createdAt?: Date | string;
+  updatedAt?: Date | string;
+  isSyncedToFirestore?: boolean;
   tags?: string[];
   notes?: string;
+  interests?: string[];
+  budget?: 'budget' | 'medium' | 'luxury';
+  description?: string;
+  imageUrl?: string;
+  itinerary?: any;
 }
 
 /**

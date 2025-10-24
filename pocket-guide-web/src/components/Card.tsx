@@ -6,6 +6,30 @@ interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   children: React.ReactNode
 }
 
+interface CardHeaderProps {
+  title?: string
+  subtitle?: string
+  action?: React.ReactNode
+  children?: React.ReactNode
+  className?: string
+}
+
+interface CardBodyProps {
+  children: React.ReactNode
+  className?: string
+}
+
+interface CardFooterProps {
+  children: React.ReactNode
+  className?: string
+}
+
+interface CardComponent extends React.FC<CardProps> {
+  Header: React.FC<CardHeaderProps>
+  Body: React.FC<CardBodyProps>
+  Footer: React.FC<CardFooterProps>
+}
+
 const elevationClasses = {
   sm: 'shadow-sm',
   md: 'shadow-md',
@@ -13,7 +37,33 @@ const elevationClasses = {
   xl: 'shadow-xl',
 }
 
-export const Card: React.FC<CardProps> = ({
+const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, action, children, className = '' }) => (
+  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700', className)}>
+    {children ? (
+      children
+    ) : (
+      <div>
+        {title && <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>}
+        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+      </div>
+    )}
+    {action && <div>{action}</div>}
+  </div>
+)
+
+const CardBodyComponent: React.FC<CardBodyProps> = ({ children, className = '' }) => (
+  <div className={className}>
+    {children}
+  </div>
+)
+
+const CardFooterComponent: React.FC<CardFooterProps> = ({ children, className = '' }) => (
+  <div className={clsx('mt-4 pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
+    {children}
+  </div>
+)
+
+const CardComponent: React.FC<CardProps> = ({
   elevation = 'md',
   className,
   children,
@@ -22,7 +72,7 @@ export const Card: React.FC<CardProps> = ({
   return (
     <div
       className={clsx(
-        'card-base',
+        'bg-white dark:bg-slate-800 rounded-lg',
         elevationClasses[elevation],
         'p-4',
         className,
@@ -34,40 +84,10 @@ export const Card: React.FC<CardProps> = ({
   )
 }
 
-interface CardHeaderProps {
-  title: string
-  subtitle?: string
-  action?: React.ReactNode
-}
+// Composição
+const Card = CardComponent as CardComponent
+Card.Header = CardHeaderComponent
+Card.Body = CardBodyComponent
+Card.Footer = CardFooterComponent
 
-export const CardHeader: React.FC<CardHeaderProps> = ({ title, subtitle, action }) => (
-  <div className="flex items-start justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700">
-    <div>
-      <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>
-      {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
-    </div>
-    {action && <div>{action}</div>}
-  </div>
-)
-
-interface CardBodyProps {
-  children: React.ReactNode
-  className?: string
-}
-
-export const CardBody: React.FC<CardBodyProps> = ({ children, className = '' }) => (
-  <div className={className}>
-    {children}
-  </div>
-)
-
-interface CardFooterProps {
-  children: React.ReactNode
-  className?: string
-}
-
-export const CardFooter: React.FC<CardFooterProps> = ({ children, className = '' }) => (
-  <div className={clsx('mt-4 pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
-    {children}
-  </div>
-)
+export { Card }

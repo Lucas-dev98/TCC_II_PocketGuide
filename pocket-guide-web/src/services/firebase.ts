@@ -10,7 +10,12 @@
  */
 
 import { initializeApp } from "firebase/app";
-import { getAuth, GoogleAuthProvider } from "firebase/auth";
+import { 
+  getAuth, 
+  GoogleAuthProvider,
+  signInWithPopup,
+  signOut as firebaseSignOut,
+} from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
@@ -126,6 +131,35 @@ export const handleAuthError = (error: unknown): string => {
     return errorMap[authError.code] || authError.message || 'Erro na autenticação';
   }
   return error instanceof Error ? error.message : 'Erro desconhecido';
+};
+
+/**
+ * Google Sign-In Function
+ */
+export const signInWithGoogle = async () => {
+  try {
+    const result = await signInWithPopup(auth, googleProvider);
+    console.info('✅ Google sign-in successful:', result.user.email);
+    return result.user;
+  } catch (error) {
+    const errorMessage = handleAuthError(error);
+    console.error('❌ Google sign-in failed:', errorMessage);
+    throw new Error(errorMessage);
+  }
+};
+
+/**
+ * Sign Out Function
+ */
+export const signOut = async () => {
+  try {
+    await firebaseSignOut(auth);
+    console.info('✅ Sign out successful');
+  } catch (error) {
+    const errorMessage = handleAuthError(error);
+    console.error('❌ Sign out failed:', errorMessage);
+    throw new Error(errorMessage);
+  }
 };
 
 export default app;
