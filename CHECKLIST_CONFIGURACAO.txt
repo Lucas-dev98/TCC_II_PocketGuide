@@ -1,0 +1,125 @@
+```
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║          🎯 ACOMPANHAMENTO - COMPLETAR CONFIGURAÇÃO                       ║
+║                                                                            ║
+║          Siga cada passo abaixo e marque conforme conclui                 ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+
+PASSO 1: REUNIR API KEYS (5 minutos)
+════════════════════════════════════════════════════════════════════════════
+
+☐ Acessei Firebase Console (console.firebase.google.com)
+☐ Copiei as 8 chaves Firebase do Project Settings
+☐ Acessei Google Cloud Console (console.cloud.google.com)
+☐ Copiei a chave Gemini API
+☐ Copiei a chave Google Maps API
+
+✓ Resultado: Tenho todas as 10 chaves copiadas
+
+
+PASSO 2: ADICIONAR NO VERCEL DASHBOARD (5 minutos)
+════════════════════════════════════════════════════════════════════════════
+
+☐ Abri https://vercel.com/dashboard
+☐ Cliquei no projeto "pocket-guide-web"
+☐ Cliquei em "Settings"
+☐ Cliquei em "Environment Variables"
+
+☐ Adicionei: VITE_FIREBASE_PROJECT_ID
+☐ Adicionei: VITE_FIREBASE_API_KEY
+☐ Adicionei: VITE_FIREBASE_AUTH_DOMAIN
+☐ Adicionei: VITE_FIREBASE_DATABASE_URL
+☐ Adicionei: VITE_FIREBASE_STORAGE_BUCKET
+☐ Adicionei: VITE_FIREBASE_MESSAGING_SENDER_ID
+☐ Adicionei: VITE_FIREBASE_APP_ID
+☐ Adicionei: VITE_FIREBASE_MEASUREMENT_ID
+☐ Adicionei: VITE_GEMINI_API_KEY
+☐ Adicionei: VITE_GOOGLE_MAPS_API_KEY
+
+☐ Cliquei "Save" para salvar todas as variáveis
+
+✓ Resultado: Todas as 10 variáveis foram adicionadas
+
+
+PASSO 3: REDEPLOY (2 minutos)
+════════════════════════════════════════════════════════════════════════════
+
+☐ Abri um terminal
+☐ Executei: cd /home/lucasbastos/TCC/TCC_II_POCKET_GUIDE/pocket-guide-web
+☐ Executei: vercel --prod
+☐ Aguardei o deploy completar (20-30 segundos)
+☐ Vi a mensagem: ✓ Production: https://pocket-guide-...vercel.app
+
+✓ Resultado: App redeployed com sucesso
+
+
+PASSO 4: WHITELIST FIREBASE (2 minutos)
+════════════════════════════════════════════════════════════════════════════
+
+☐ Abri Firebase Console (console.firebase.google.com)
+☐ Cliquei em "Authentication"
+☐ Cliquei em "Settings"
+☐ Rolei até "Authorized Domains"
+☐ Cliquei em "Add Domain"
+☐ Cole o domínio: pocket-guide-myuihuurd-lucas-bastos-projects-349d7c70.vercel.app
+☐ Cliquei "Add"
+
+✓ Resultado: Domínio foi adicionado
+
+
+PASSO 5: TESTE A APLICAÇÃO (5 minutos)
+════════════════════════════════════════════════════════════════════════════
+
+☐ Abri a URL: https://pocket-guide-myuihuurd-lucas-bastos-projects-349d7c70.vercel.app
+☐ Página carregou normalmente (não está em branco)
+☐ Cliquei "Sign in with Google"
+☐ Fiz login com minha conta Google
+☐ Fui redirecionado para a página inicial (HomeScreen)
+☐ Cliquei "Create New Trip"
+☐ Preenchi os dados (destino, dias, interesses)
+☐ Cliquei "Generate Itinerary"
+☐ Recebi resposta da IA com itinerário
+☐ Cliquei "Save"
+☐ Trip foi salvo e aparece na lista
+☐ Cliquei em uma trip para ver detalhes
+☐ Mapa carregou com sucesso
+☐ Itinerário apareceu com todos os dias/atividades
+
+✓ Resultado: App 100% funcional!
+
+
+CHECKLIST FINAL
+════════════════════════════════════════════════════════════════════════════
+
+Verifique se tudo está funcionando:
+
+☐ Google Sign-In funciona
+☐ Posso criar novas trips
+☐ Trips são salvos no banco
+☐ IA gera itinerários
+☐ Mapas carregam
+☐ Dark mode funciona
+☐ App funciona no mobile
+☐ PWA pode ser instalado
+
+✓ Resultado: Tudo OK! 🎉
+
+
+═════════════════════════════════════════════════════════════════════════════
+
+TEMPO TOTAL ESTIMADO: 20-25 MINUTOS
+
+🚀 APÓS COMPLETAR TUDO, SEU APP ESTARÁ PRONTO PARA USUÁRIOS!
+
+═════════════════════════════════════════════════════════════════════════════
+
+Qualquer problema? Consulte:
+• DEPLOYMENT_NEXT_STEPS.md (detalhes)
+• TESTING_GUIDE.md (troubleshooting)
+• SETUP_FINAL_PASSO_A_PASSO.md (este arquivo)
+
+═════════════════════════════════════════════════════════════════════════════
+```
