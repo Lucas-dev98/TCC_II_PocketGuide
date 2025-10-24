@@ -155,15 +155,9 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `Generate a ${days}-day itinerary for ${destination} (budget: ${budget}, group: ${groupType}, interests: ${tags.join(', ')}).
-Return ONLY valid JSON (no markdown, no text):
-{
-  "itinerary": [
-    {"day": 1, "time": "09:00", "name": "Place", "duration": 120, "reason": "Why", "tip": "Tip", "category": "Food", "lat": -1, "lng": 1},
-    {"day": 1, "time": "13:00", "name": "Place2", "duration": 120, "reason": "Why2", "tip": "Tip2", "category": "Culture", "lat": -1.1, "lng": 1.1}
-  ]
-}
-Generate ${days * 3} activities with realistic ${destination} coordinates.`;
+    const prompt = `${days}-day ${destination} itinerary (${budget} budget, ${groupType}, interests: ${tags.join(', ')})
+Return only JSON with ${days * 3} activities:
+{"itinerary":[{"day":1,"time":"09:00","name":"Place","duration":120,"reason":"Why","tip":"Tip","category":"Category","lat":0,"lng":0}]}`;
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -187,7 +181,7 @@ Generate ${days * 3} activities with realistic ${destination} coordinates.`;
         ],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 1024,
+          maxOutputTokens: 2048,
           topP: 0.8,
           topK: 40,
         },
