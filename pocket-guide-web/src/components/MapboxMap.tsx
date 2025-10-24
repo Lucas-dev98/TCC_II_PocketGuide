@@ -43,29 +43,29 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     });
 
     // Add attractions as markers
-    if (attractions.length > 0) {
+    if (attractions.length > 0 && map.current) {
       attractions.forEach((attraction) => {
-        if (attraction.location?.lat && attraction.location?.lng) {
-          const marker = new mapboxgl.Marker({ color: '#3B82F6' })
+        if (attraction.location?.lat && attraction.location?.lng && map.current) {
+          new mapboxgl.Marker({ color: '#3B82F6' })
             .setLngLat([attraction.location.lng, attraction.location.lat])
             .setPopup(
               new mapboxgl.Popup().setHTML(
                 `<div class="p-2"><strong>${attraction.name}</strong><p>${attraction.reason}</p></div>`
               )
             )
-            .addTo(map.current);
+            .addTo(map.current as mapboxgl.Map);
         }
       });
 
       // Fit bounds to all markers
-      if (attractions.length > 0) {
+      if (attractions.length > 0 && map.current) {
         const bounds = new mapboxgl.LngLatBounds();
         attractions.forEach((attraction) => {
           if (attraction.location?.lat && attraction.location?.lng) {
             bounds.extend([attraction.location.lng, attraction.location.lat]);
           }
         });
-        map.current.fitBounds(bounds, { padding: 50 });
+        (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 50 });
       }
     }
 
