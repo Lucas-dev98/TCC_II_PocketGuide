@@ -5,6 +5,7 @@ import { Button } from '../components/Button';
 import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
+import { MapboxMap } from '../components/MapboxMap';
 import {
   ArrowLeft,
   Calendar,
@@ -180,6 +181,28 @@ export default function TripDetailScreen() {
             </Card.Body>
           </Card>
         </div>
+
+        {/* Map */}
+        <Card className="mb-8">
+          <Card.Header>
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <MapIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+              Mapa da Viagem
+            </h2>
+          </Card.Header>
+          <Card.Body className="p-0">
+            {itinerary && itinerary.itinerary && itinerary.itinerary.length > 0 ? (
+              <MapboxMap
+                attractions={itinerary.itinerary}
+                height="400px"
+              />
+            ) : (
+              <div className="p-8 text-center text-slate-500">
+                <p>Mapa não disponível para este itinerário</p>
+              </div>
+            )}
+          </Card.Body>
+        </Card>
 
         {/* Itinerary */}
         <Card className="mb-8">
