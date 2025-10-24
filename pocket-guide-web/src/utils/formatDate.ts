@@ -4,12 +4,13 @@
 
 /**
  * Format a date to a readable string
- * @param date Date to format
+ * @param date Date to format (Date object or string)
  * @param locale Locale for formatting (default: en-US)
  * @returns Formatted date string
  */
-export const formatDate = (date: Date, locale: string = "en-US"): string => {
-  return date.toLocaleDateString(locale, {
+export const formatDate = (date: Date | string, locale: string = "en-US"): string => {
+  const dateObj = typeof date === 'string' ? new Date(date) : date;
+  return dateObj.toLocaleDateString(locale, {
     weekday: "short",
     year: "numeric",
     month: "short",

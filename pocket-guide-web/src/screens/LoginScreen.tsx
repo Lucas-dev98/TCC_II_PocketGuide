@@ -105,7 +105,7 @@ export default function LoginScreen() {
           {error && (
             <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
               <p className="text-sm text-red-700 dark:text-red-200">
-                {error}
+                {typeof error === 'string' ? error : 'Erro ao fazer login'}
               </p>
             </div>
           )}
@@ -114,7 +114,7 @@ export default function LoginScreen() {
           <Button
             onClick={handleGoogleSignIn}
             disabled={isLoading}
-            loading={isLoading}
+            isLoading={isLoading}
             className="w-full"
           >
             <div className="flex items-center justify-center gap-2">

@@ -42,9 +42,9 @@ class Logger {
 
   constructor(config: LoggerConfig = {}) {
     this.config = {
-      minLevel: config.minLevel || (__DEV__ ? 'DEBUG' : 'INFO'),
+      minLevel: config.minLevel || (process.env.NODE_ENV !== 'production' ? 'DEBUG' : 'INFO'),
       includeTimestamp: config.includeTimestamp ?? true,
-      includeStack: config.includeStack ?? __DEV__,
+      includeStack: config.includeStack ?? process.env.NODE_ENV !== 'production',
       enableConsole: config.enableConsole ?? true,
     };
   }

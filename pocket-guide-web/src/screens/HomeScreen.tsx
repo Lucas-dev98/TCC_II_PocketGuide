@@ -22,7 +22,7 @@ import { formatDate } from '../utils/formatDate';
  */
 export default function HomeScreen() {
   const navigate = useNavigate();
-  const { user, signOut: handleSignOut } = useAuth();
+  const { user, signOut } = useAuth();
   const { isDark, toggleTheme } = useTheme();
   const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore();
   const [deleting, setDeleting] = useState<string | null>(null);
@@ -36,7 +36,7 @@ export default function HomeScreen() {
 
   const handleLogout = async () => {
     try {
-      await handleSignOut();
+      await signOut();
       navigate('/login', { replace: true });
     } catch (error) {
       console.error('Erro ao fazer logout:', error);

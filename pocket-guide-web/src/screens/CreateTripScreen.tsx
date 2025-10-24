@@ -6,6 +6,7 @@ import { Button } from '../components/Button';
 import { Input } from '../components/Input';
 import { Card } from '../components/Card';
 import { generateItinerary } from '../services/itineraryGenerator';
+import { Budget } from '../types';
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react';
 
 /**
@@ -38,7 +39,7 @@ interface FormData {
   country: string;
   startDate: string;
   endDate: string;
-  budget: string;
+  budget: Budget;
   interests: string[];
   description: string;
 }
@@ -57,7 +58,7 @@ export default function CreateTripScreen() {
     country: '',
     startDate: '',
     endDate: '',
-    budget: 'medium',
+    budget: 'médio',
     interests: [],
     description: '',
   });
@@ -140,16 +141,19 @@ export default function CreateTripScreen() {
       setIsLoading(true);
       setError('');
 
+      // Calcular número de dias
+      const startDate = new Date(formData.startDate);
+      const endDate = new Date(formData.endDate);
+      const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
+
       // Gerar itinerário com IA
-      const itinerary = await generateItinerary({
-        destination: formData.destination,
-        country: formData.country,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
-        budget: formData.budget,
-        interests: formData.interests,
-        description: formData.description,
-      });
+      const itinerary = await generateItinerary(
+        formData.destination,
+        days,
+        formData.interests,
+        formData.budget,
+        'couple' // groupType padrão
+      );
 
       // Salvar viagem no store/Firestore
       await addTrip({
@@ -366,14 +370,14 @@ export default function CreateTripScreen() {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      budget: e.target.value,
+                      budget: e.target.value as Budget,
                     }))
                   }
                   className="w-full px-3 py-2 border border-slate-300 dark:border-slate-600 rounded-lg bg-white dark:bg-slate-800 text-slate-900 dark:text-white"
                 >
-                  <option value="budget">💰 Econômico (até $50/dia)</option>
-                  <option value="medium">💳 Médio ($50-150/dia)</option>
-                  <option value="luxury">💎 Luxo ($150+/dia)</option>
+                  <option value="econômico">💰 Econômico (até $50/dia)</option>
+                  <option value="médio">💳 Médio ($50-150/dia)</option>
+                  <option value="luxo">💎 Luxo ($150+/dia)</option>
                 </select>
               </div>
 
@@ -400,7 +404,7 @@ export default function CreateTripScreen() {
                 <div className="space-y-1 text-sm text-slate-600 dark:text-slate-400">
                   <p>🗺️ <strong>{formData.destination}, {formData.country}</strong></p>
                   <p>📅 {new Date(formData.startDate).toLocaleDateString('pt-BR')} a {new Date(formData.endDate).toLocaleDateString('pt-BR')}</p>
-                  <p>💰 Orçamento: {formData.budget === 'budget' ? 'Econômico' : formData.budget === 'medium' ? 'Médio' : 'Luxo'}</p>
+                  <p>💰 Orçamento: {formData.budget === 'econômico' ? 'Econômico' : formData.budget === 'médio' ? 'Médio' : 'Luxo'}</p>
                   <p>
                     ❤️ {formData.interests.length} interesse(s) selecionado(s)
                   </p>
@@ -419,7 +423,7 @@ export default function CreateTripScreen() {
                 </Button>
                 <Button
                   onClick={handleSubmit}
-                  loading={isLoading}
+                  isLoading={isLoading}
                   disabled={isLoading}
                   className="flex-1 gap-2"
                 >

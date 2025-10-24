@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTripsStore } from '../store/tripsStore';
 import { Button } from '../components/Button';
@@ -7,7 +7,6 @@ import { Badge } from '../components/Badge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import {
   ArrowLeft,
-  MapPin,
   Calendar,
   Users,
   MapIcon,
@@ -29,7 +28,7 @@ import { formatDate } from '../utils/formatDate';
 export default function TripDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { trips, loadTrips } = useTripsStore();
+  const { trips } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
 
   const trip = id ? trips.find((t) => t.id === id) : null;
@@ -120,9 +119,9 @@ export default function TripDetailScreen() {
             <div>
               <p className="text-blue-100 text-sm mb-1">Orçamento</p>
               <p className="font-semibold">
-                {trip.budget === 'budget'
+                {trip.budget === 'econômico'
                   ? '💰 Econômico'
-                  : trip.budget === 'medium'
+                  : trip.budget === 'médio'
                     ? '💳 Médio'
                     : '💎 Luxo'}
               </p>

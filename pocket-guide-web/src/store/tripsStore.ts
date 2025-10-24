@@ -36,7 +36,7 @@ interface TripsStoreState {
  * Exemplo de uso:
  * const { trips, loadTrips, addTrip } = useTripsStore();
  */
-export const useTripsStore = create<TripsStoreState>((set, get) => ({
+export const useTripsStore = create<TripsStoreState>((set) => ({
   trips: [],
   isLoading: false,
   error: null,

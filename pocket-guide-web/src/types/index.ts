@@ -82,7 +82,7 @@ export interface Trip {
   tags?: string[];
   notes?: string;
   interests?: string[];
-  budget?: 'budget' | 'medium' | 'luxury';
+  budget?: "econômico" | "médio" | "luxo";
   description?: string;
   imageUrl?: string;
   itinerary?: any;
