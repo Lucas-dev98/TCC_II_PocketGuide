@@ -135,18 +135,26 @@ export default function CreateTripScreen() {
   };
 
   const handleSubmit = async () => {
-    if (!validateStep() || !user?.uid) return;
+    if (!validateStep() || !user?.uid) {
+      console.error('Validação falhou ou user não existe:', { user: user?.uid, validated: validateStep() });
+      return;
+    }
 
     try {
       setIsLoading(true);
       setError('');
+
+      console.log('📝 Iniciando criação de viagem...', formData);
 
       // Calcular número de dias
       const startDate = new Date(formData.startDate);
       const endDate = new Date(formData.endDate);
       const days = Math.ceil((endDate.getTime() - startDate.getTime()) / (1000 * 60 * 60 * 24));
 
+      console.log('📅 Dias calculados:', days, { startDate, endDate });
+
       // Gerar itinerário com IA
+      console.log('🤖 Gerando itinerário com Gemini...');
       const itinerary = await generateItinerary(
         formData.destination,
         days,
@@ -155,7 +163,10 @@ export default function CreateTripScreen() {
         'couple' // groupType padrão
       );
 
+      console.log('✅ Itinerário gerado:', itinerary?.length || 0, 'itens');
+
       // Salvar viagem no store/Firestore
+      console.log('💾 Salvando viagem no Firestore...');
       await addTrip({
         destination: formData.destination,
         country: formData.country,
@@ -169,10 +180,13 @@ export default function CreateTripScreen() {
         createdAt: new Date().toISOString(),
       });
 
+      console.log('✅ Viagem salva com sucesso!');
+
       // Redirecionar para home
+      console.log('🏠 Redirecionando para home...');
       navigate('/home');
     } catch (err) {
-      console.error('Erro ao criar viagem:', err);
+      console.error('❌ Erro ao criar viagem:', err);
       setError(
         err instanceof Error
           ? err.message
