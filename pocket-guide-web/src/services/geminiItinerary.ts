@@ -107,21 +107,37 @@ const parseGeminiResponse = (textContent: string): any => {
   } catch (parseError) {
     console.warn('⚠️ Direct JSON parse failed, trying extraction...');
     try {
-      // Try to extract from markdown code blocks
-      const jsonMatch = textContent.match(/```json\n?([\s\S]*?)\n?```/);
+      // Clean the text - remove control characters
+      let cleanedText = textContent
+        .replace(/[\r\n]+/g, ' ') // Replace newlines with spaces
+        .replace(/\t/g, ' ') // Replace tabs with spaces
+        .replace(/\s+/g, ' ') // Collapse multiple spaces
+        .trim();
+      
+      // Try to extract from markdown code blocks first
+      const jsonMatch = textContent.match(/```(?:json)?\s*([\s\S]*?)\s*```/);
       if (jsonMatch) {
-        return JSON.parse(jsonMatch[1]);
+        cleanedText = jsonMatch[1].trim();
       }
       
-      // Try to find JSON object in text
-      const objectMatch = textContent.match(/\{[\s\S]*\}/);
-      if (objectMatch) {
-        return JSON.parse(objectMatch[0]);
+      // Try to find JSON object or array
+      let jsonStart = cleanedText.indexOf('{');
+      let jsonEnd = cleanedText.lastIndexOf('}');
+      
+      if (jsonStart === -1) {
+        jsonStart = cleanedText.indexOf('[');
+        jsonEnd = cleanedText.lastIndexOf(']');
+      }
+      
+      if (jsonStart !== -1 && jsonEnd !== -1 && jsonStart < jsonEnd) {
+        const jsonString = cleanedText.substring(jsonStart, jsonEnd + 1);
+        return JSON.parse(jsonString);
       }
       
       throw new Error('No valid JSON found in response');
     } catch (extractError) {
       console.error('❌ Failed to extract JSON:', extractError);
+      console.error('Raw content:', textContent.substring(0, 500));
       throw extractError;
     }
   }
