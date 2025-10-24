@@ -155,7 +155,7 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `Generate a ${days}-day itinerary for ${destination} (budget: ${budget}).
+    const prompt = `Generate a ${days}-day itinerary for ${destination} (budget: ${budget}, group: ${groupType}, interests: ${tags.join(', ')}).
 Return ONLY valid JSON (no markdown, no text):
 {
   "itinerary": [
