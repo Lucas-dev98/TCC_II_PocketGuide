@@ -130,8 +130,39 @@ const parseGeminiResponse = (textContent: string): any => {
       }
       
       if (jsonStart !== -1 && jsonEnd !== -1 && jsonStart < jsonEnd) {
-        const jsonString = cleanedText.substring(jsonStart, jsonEnd + 1);
-        return JSON.parse(jsonString);
+        let jsonString = cleanedText.substring(jsonStart, jsonEnd + 1);
+        
+        try {
+          return JSON.parse(jsonString);
+        } catch (truncateError) {
+          // If JSON is truncated, try to auto-fix it
+          console.warn('⚠️ JSON appears truncated, attempting auto-fix...');
+          
+          // Count braces to see if we're missing closing ones
+          const openBraces = (jsonString.match(/{/g) || []).length;
+          const closeBraces = (jsonString.match(/}/g) || []).length;
+          const openBrackets = (jsonString.match(/\[/g) || []).length;
+          const closeBrackets = (jsonString.match(/\]/g) || []).length;
+          
+          // Add missing closing braces/brackets
+          let fixedJson = jsonString;
+          const missingBraces = openBraces - closeBraces;
+          const missingBrackets = openBrackets - closeBrackets;
+          
+          if (missingBraces > 0 || missingBrackets > 0) {
+            fixedJson = jsonString + ']'.repeat(missingBrackets) + '}'.repeat(missingBraces);
+            console.warn(`⚠️ Added ${missingBraces} closing braces and ${missingBrackets} closing brackets`);
+            
+            try {
+              return JSON.parse(fixedJson);
+            } catch (stillError) {
+              console.error('❌ Auto-fix failed, original error:', truncateError);
+              throw truncateError;
+            }
+          }
+          
+          throw truncateError;
+        }
       }
       
       throw new Error('No valid JSON found in response');
@@ -181,7 +212,7 @@ Return only JSON with ${days * 3} activities:
         ],
         generationConfig: {
           temperature: 0.3,
-          maxOutputTokens: 2048,
+          maxOutputTokens: 4096,
           topP: 0.8,
           topK: 40,
         },
