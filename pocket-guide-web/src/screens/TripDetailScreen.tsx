@@ -368,21 +368,33 @@ export default function TripDetailScreen() {
                     >
                       {/* Day header */}
                       <div className="mb-4">
-                        <div className="flex items-center gap-3 mb-2">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white font-bold" aria-hidden="true">
-                            {index + 1}
+                        <div className="flex items-center justify-between gap-3 mb-2">
+                          <div className="flex items-center gap-3">
+                            <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white font-bold" aria-hidden="true">
+                              {index + 1}
+                            </div>
+                            <div>
+                              <h3 className="font-bold text-slate-900 dark:text-white text-h3">
+                                <span className="sr-only">Dia {index + 1}: </span>
+                                {day.title || `Dia ${index + 1}`}
+                              </h3>
+                              {day.date && (
+                                <p className="text-small text-slate-500 dark:text-slate-400">
+                                  {day.date}
+                                </p>
+                              )}
+                            </div>
                           </div>
-                          <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white text-h3">
-                              <span className="sr-only">Dia {index + 1}: </span>
-                              {day.title || `Dia ${index + 1}`}
-                            </h3>
-                            {day.date && (
-                              <p className="text-small text-slate-500 dark:text-slate-400">
-                                {day.date}
-                              </p>
-                            )}
-                          </div>
+                          {/* Button to view day details */}
+                          <Button
+                            variant="secondary"
+                            size="sm"
+                            onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
+                            className="whitespace-nowrap"
+                            aria-label={`Ver detalhes do dia ${index + 1}`}
+                          >
+                            Ver completo
+                          </Button>
                         </div>
 
                         {day.description && (
