@@ -89,36 +89,66 @@ export const DayDetailScreen: React.FC = () => {
     console.log("🎯 Extraindo atrações do dia", currentDay);
     console.log("📦 attractionsData:", attractionsData);
     console.log("📋 trip?.itinerary:", trip?.itinerary);
+    console.log("📋 trip?.itinerary type:", typeof trip?.itinerary);
+    console.log("📋 trip?.itinerary is array?:", Array.isArray(trip?.itinerary));
 
     // Se não houver attractions diretas, tentar extrair do itinerary
-    if (attractionsData.length === 0 && trip?.itinerary && trip.itinerary.length > 0) {
-      const dayItinerary = trip.itinerary[currentDay - 1];
-      console.log("📌 dayItinerary para o dia", currentDay, ":", dayItinerary);
+    if (attractionsData.length === 0 && trip?.itinerary) {
+      // Suportar múltiplos formatos de itinerary
+      let itineraryArray: any[] = [];
       
-      if (dayItinerary?.attractions) {
-        console.log("✅ Atrações do dia do itinerary:", dayItinerary.attractions);
-        const extracted = dayItinerary.attractions
-          .map((a: any) => ({
-            id: a.id || `${currentDay}-${Math.random()}`,
-            day: currentDay,
-            time: a.time || "00:00",
-            name: a.name || a.title || "Sem nome",
-            duration: a.duration || 60,
-            reason: a.description || a.reason || "Atração do dia",
-            tip: a.tip || a.suggestions || "",
-            location: a.location || {
-              lat: 41.9028 + Math.random() * 0.01,
-              lng: 12.4964 + Math.random() * 0.01,
-              address: "Roma, Itália",
-              name: a.name || "Localização",
-            },
-            order: a.order || 0,
-            category: a.category || "outro",
-            photos: generatePhotosForAttraction(a),
-          } as AttractionDetail));
+      if (Array.isArray(trip.itinerary)) {
+        // Formato 1: itinerary é um array direto
+        itineraryArray = trip.itinerary;
+      } else if (trip.itinerary && typeof trip.itinerary === 'object') {
+        // Formato 2: itinerary é um objeto com propriedade itinerary
+        if (Array.isArray(trip.itinerary.itinerary)) {
+          itineraryArray = trip.itinerary.itinerary;
+        }
+        // Formato 3: itinerary é um objeto com propriedade days
+        else if (trip.itinerary.days) {
+          console.log("📌 Encontrado itinerary.days");
+          itineraryArray = trip.itinerary.days;
+        }
+      }
+      
+      console.log("📌 itineraryArray extraída:", itineraryArray);
+      
+      if (itineraryArray && itineraryArray.length > 0) {
+        // Filtrar atrações do dia específico
+        let dayAttractions: any[] = [];
         
-        console.log("📸 Atrações finais extraídas:", extracted);
-        return extracted;
+        // Se itineraryArray contém dias (com propriedade day)
+        dayAttractions = itineraryArray.filter((item: any) => item.day === currentDay);
+        
+        console.log(`📌 Atrações encontradas para dia ${currentDay}:`, dayAttractions);
+        
+        if (dayAttractions && dayAttractions.length > 0) {
+          console.log("✅ Atrações do dia do itinerary:", dayAttractions);
+          const extracted = dayAttractions
+            .map((a: any) => ({
+              id: a.id || `${currentDay}-${Math.random()}`,
+              day: currentDay,
+              time: a.time || "00:00",
+              name: a.name || a.title || "Sem nome",
+              duration: a.duration || 60,
+              reason: a.description || a.reason || "Atração do dia",
+              tip: a.tip || a.suggestions || "",
+              location: a.location || {
+                lat: a.lat || 41.9028 + Math.random() * 0.01,
+                lng: a.lng || 12.4964 + Math.random() * 0.01,
+                address: "Roma, Itália",
+                name: a.name || "Localização",
+              },
+              order: a.order || 0,
+              category: a.category || "outro",
+              photos: generatePhotosForAttraction(a),
+            } as AttractionDetail))
+            .sort((a: any, b: any) => a.time.localeCompare(b.time));
+          
+          console.log("📸 Atrações finais extraídas e ordenadas:", extracted);
+          return extracted;
+        }
       }
     }
 
