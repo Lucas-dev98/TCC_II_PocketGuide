@@ -65,12 +65,31 @@ export default defineConfig({
         outDir: 'dist',
         sourcemap: false,
         minify: 'terser',
+        // Increased from 500 kB to 1500 kB to accommodate large libraries
+        // This is reasonable for a complex app with maps and multiple features
+        chunkSizeWarningLimit: 1500,
         rollupOptions: {
             output: {
-                manualChunks: {
-                    'react-vendor': ['react', 'react-dom'],
-                    'firebase': ['firebase/app', 'firebase/auth', 'firebase/firestore'],
-                    'maps': ['@react-google-maps/api'],
+                manualChunks: function (id) {
+                    // Vendor chunks for better caching
+                    if (id.includes('node_modules/react') || id.includes('node_modules/react-dom')) {
+                        return 'react-vendor';
+                    }
+                    if (id.includes('node_modules/firebase')) {
+                        return 'firebase';
+                    }
+                    if (id.includes('node_modules/mapbox')) {
+                        return 'mapbox';
+                    }
+                    if (id.includes('node_modules/@react-google-maps')) {
+                        return 'google-maps';
+                    }
+                    if (id.includes('node_modules/zustand')) {
+                        return 'zustand';
+                    }
+                    if (id.includes('node_modules/tailwindcss') || id.includes('node_modules/lucide-react')) {
+                        return 'ui-utils';
+                    }
                 }
             }
         }
