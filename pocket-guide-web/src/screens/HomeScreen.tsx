@@ -144,19 +144,21 @@ export default function HomeScreen() {
 
         {/* Empty state */}
         {!isLoading && trips.length === 0 && (
-          <EmptyState
-            icon={
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/30 mb-4">
-                <MapPin className="w-8 h-8 text-primary" />
-              </div>
-            }
-            title="Nenhuma viagem criada"
-            description="Crie sua primeira viagem e deixe a IA fazer a mágica! ✨"
-            action={{
-              label: 'Criar Primeira Viagem',
-              onClick: handleCreateTrip,
-            }}
-          />
+          <div role="status" aria-label="Nenhuma viagem encontrada">
+            <EmptyState
+              icon={
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/30 mb-4" aria-hidden="true">
+                  <MapPin className="w-8 h-8 text-primary" />
+                </div>
+              }
+              title="Nenhuma viagem criada"
+              description="Crie sua primeira viagem e deixe a IA fazer a mágica! ✨"
+              action={{
+                label: 'Criar Primeira Viagem',
+                onClick: handleCreateTrip,
+              }}
+            />
+          </div>
         )}
 
         {/* Trips grid */}

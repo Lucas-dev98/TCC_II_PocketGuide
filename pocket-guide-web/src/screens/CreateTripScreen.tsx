@@ -208,16 +208,17 @@ export default function CreateTripScreen() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4">
+    <form className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4">
       <div className="max-w-2xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <button
             onClick={handleGoBack}
-            className="flex items-center gap-2 text-primary hover:text-primary-dark dark:hover:text-blue-300 mb-4 font-medium transition"
-            aria-label="Voltar"
+            type="button"
+            className="flex items-center gap-2 text-primary hover:text-primary-dark dark:hover:text-blue-300 mb-4 font-medium transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
+            aria-label="Voltar para etapa anterior ou página inicial"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Voltar
           </button>
           
@@ -231,7 +232,7 @@ export default function CreateTripScreen() {
         </div>
 
         {/* Progress bar */}
-        <div className="mb-8 flex gap-2">
+        <div className="mb-8 flex gap-2" role="progressbar" aria-label={`Etapa ${step} de 3`} aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
           {[1, 2, 3].map((s) => (
             <div
               key={s}
@@ -240,11 +241,10 @@ export default function CreateTripScreen() {
                   ? 'bg-primary dark:bg-blue-400'
                   : 'bg-slate-200 dark:bg-slate-700'
               }`}
+              aria-hidden="true"
             />
           ))}
         </div>
-
-        {/* Error message - removed, now using Toast */}
 
         {/* Step 1: Location */}
         {step === 1 && (
@@ -325,16 +325,19 @@ export default function CreateTripScreen() {
               </Card.Header>
 
               <Card.Body>
-                <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Selecione seus interesses de viagem">
                   {INTERESTS.map((interest) => (
                     <button
                       key={interest}
+                      type="button"
                       onClick={() => toggleInterest(interest)}
-                      className={`p-3 rounded-lg border-2 transition text-sm font-medium ${
+                      className={`p-3 rounded-lg border-2 transition text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${
                         formData.interests.includes(interest)
                           ? 'border-primary dark:border-blue-400 bg-primary/10 dark:bg-blue-900/30 text-primary dark:text-blue-300 font-semibold'
                           : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
                       }`}
+                      aria-pressed={formData.interests.includes(interest)}
+                      aria-label={`${interest} - ${formData.interests.includes(interest) ? 'selecionado' : 'não selecionado'}`}
                     >
                       {interest}
                     </button>
@@ -450,6 +453,6 @@ export default function CreateTripScreen() {
           </Card>
         )}
       </div>
-    </div>
+    </form>
   )
 }
