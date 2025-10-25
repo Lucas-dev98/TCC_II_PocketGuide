@@ -1,7 +1,7 @@
 /**
  * photoService.ts
  * Gerencia geração de URLs de fotos com múltiplas estratégias
- * Usa APIs públicas que funcionam sem autenticação
+ * Usa Unsplash Source API com queries específicas de atrações
  */
 
 export interface PhotoSource {
@@ -10,6 +10,61 @@ export interface PhotoSource {
   width: number;
   height: number;
 }
+
+/**
+ * Mapeamento de tipos de atrações para queries de busca no Unsplash
+ */
+const ATTRACTION_QUERIES: { [key: string]: string[] } = {
+  // Museus e Arte
+  'museu': ['museum', 'gallery', 'art exhibition'],
+  'museo': ['museum', 'gallery', 'art exhibition'],
+  'museum': ['museum', 'gallery', 'art exhibition'],
+  'gallery': ['gallery', 'art', 'paintings'],
+  'art': ['art', 'painting', 'sculpture'],
+  
+  // Landmarks Romanos
+  'colosseum': ['rome colosseum', 'roman architecture', 'ancient rome'],
+  'colosseo': ['rome colosseum', 'roman architecture', 'ancient rome'],
+  'roman': ['roman', 'ancient rome', 'ruins'],
+  'forum': ['roman forum', 'ancient ruins', 'archaeology'],
+  'palatine': ['palatine hill', 'ancient rome', 'hills'],
+  'vatican': ['vatican', 'basilica', 'architecture'],
+  'rome': ['rome city', 'italian city', 'travel'],
+  
+  // Comida e Restaurantes
+    'pasta': ['pasta', 'italian food', 'cuisine'],
+  'café': ['coffee shop', 'cafe', 'coffee'],
+  'coffee': ['coffee', 'cafe', 'beverage'],
+  'food': ['food', 'cuisine', 'restaurant'],
+  'breakfast': ['breakfast', 'food', 'morning'],
+  'lunch': ['lunch', 'food', 'meal'],
+  'dinner': ['dinner', 'food', 'restaurant'],
+  
+  // Natureza e Parques
+  'natureza': ['nature', 'landscape', 'outdoor'],
+  'nature': ['nature', 'landscape', 'outdoor'],
+  'park': ['park', 'nature', 'landscape'],
+  'garden': ['garden', 'botanical', 'plants'],
+  'beach': ['beach', 'sea', 'coast'],
+  'ocean': ['ocean', 'sea', 'water'],
+  'mountain': ['mountain', 'hiking', 'nature'],
+  'forest': ['forest', 'trees', 'nature'],
+  'lake': ['lake', 'water', 'nature'],
+  
+  // Compras e Mercados
+  'shopping': ['shopping', 'store', 'market'],
+  'market': ['market', 'street market', 'shopping'],
+  'compra': ['shopping', 'store', 'products'],
+  'shop': ['shop', 'store', 'shopping'],
+  
+  // Padrão
+  'landmark': ['landmark', 'monument', 'travel'],
+  'travel': ['travel', 'destination', 'tourism'],
+  'trip': ['travel', 'vacation', 'tourism'],
+  'attraction': ['attraction', 'landmark', 'tourism'],
+  'city': ['city', 'urban', 'travel'],
+  'street': ['street', 'city', 'urban'],
+};
 
 /**
  * Gerador de URLs de fotos com várias estratégias de fallback
@@ -23,15 +78,16 @@ export class PhotoService {
       const width = 1200;
       const height = 600;
       
-      // Estratégia: Usar query-based search com CORS-habilitada
-      const query = this.getSearchQuery(attractionName);
+      // Obter query de busca para a atração
+      const queries = this.getQueriesForAttraction(attractionName);
+      const query = queries[index % queries.length];
       
-      // Usar loremflickr que suporta CORS e queries específicas
-      // Alternativa confiável que não bloqueia
-      const seed = Math.floor(Math.random() * 10000) + index;
-      const url = `https://loremflickr.com/${width}/${height}?lock=${seed}`;
+      console.log(`📸 Gerando URL para "${attractionName}" (query: "${query}", índice: ${index})`);
       
-      console.log(`📸 Gerando URL para "${attractionName}": ${url} (query: ${query})`);
+      // Usar Unsplash Source API com query específica
+      // Adiciona parâmetro random para variar as imagens
+      const random = Math.floor(Math.random() * 10000);
+      const url = `https://source.unsplash.com/1200x600/?${encodeURIComponent(query)}&${random}`;
       
       return {
         url,
@@ -46,68 +102,33 @@ export class PhotoService {
   }
 
   /**
-   * Converte nome da atração em query de busca para referência
+   * Retorna queries de busca para uma atração
    */
-  static getSearchQuery(attractionName: string): string {
-    const queries: { [key: string]: string } = {
-      // Itália - Roma
-      colosseum: 'ancient rome',
-      colosseo: 'ancient rome',
-      'roman forum': 'rome forum',
-      'palatine hill': 'rome hills',
-      monti: 'rome street',
-      'trevi fountain': 'fountain rome',
-      vatican: 'vatican city',
-      
-      // Comida
-      lunch: 'italian food',
-      restaurante: 'restaurant food',
-      restaurant: 'restaurant food',
-      pizza: 'pizza italy',
-      pasta: 'pasta italy',
-      café: 'coffee shop',
-      coffee: 'coffee shop',
-      food: 'food',
-      
-      // Museus
-      museu: 'museum art',
-      museo: 'museum gallery',
-      museum: 'museum gallery',
-      gallery: 'art gallery',
-      art: 'art',
-      
-      // Natureza
-      natureza: 'nature landscape',
-      nature: 'nature landscape',
-      park: 'natural park',
-      garden: 'botanical garden',
-      beach: 'beach ocean',
-      ocean: 'ocean',
-      
-      // Compras
-      shopping: 'shopping city',
-      market: 'street market',
-      compra: 'shopping',
-      
-      // Padrão
-      landmark: 'travel landmark',
-      travel: 'travel',
-      trip: 'trip',
-      attraction: 'attraction',
-    };
-
+  static getQueriesForAttraction(attractionName: string): string[] {
     const lowerName = attractionName.toLowerCase();
     
-    for (const [key, value] of Object.entries(queries)) {
-      if (lowerName.includes(key)) {
-        console.log(`   Query mapping: "${attractionName}" → "${value}"`);
-        return value;
+    // Procurar match exato ou parcial
+    for (const [key, queries] of Object.entries(ATTRACTION_QUERIES)) {
+      if (lowerName === key || lowerName.includes(key)) {
+        console.log(`   ✅ Encontrado mapeamento para "${attractionName}": ${queries.join(', ')}`);
+        return queries;
       }
     }
-
-    const fallback = lowerName.split(' ').slice(0, 3).join(' ') || 'travel';
-    console.log(`   Query fallback: "${attractionName}" → "${fallback}"`);
-    return fallback;
+    
+    // Se não encontrou, usar as 3 primeiras palavras como query
+    const customQueries = lowerName
+      .split(' ')
+      .slice(0, 3)
+      .filter(w => w.length > 2);
+    
+    if (customQueries.length > 0) {
+      console.log(`   ℹ️ Query customizado para "${attractionName}": ${customQueries.join(', ')}`);
+      return customQueries;
+    }
+    
+    // Último fallback
+    console.log(`   ⚠️ Nenhuma query encontrada, usando "travel"`);
+    return ['travel', 'tourism', 'vacation'];
   }
 
   /**
@@ -120,7 +141,7 @@ export class PhotoService {
     const color = colors[Math.abs(hash) % colors.length];
 
     const url = `https://ui-avatars.com/api/?name=${encodeURIComponent(attractionName)}&background=${color}&color=fff&size=1200`;
-    console.log(`   Placeholder: ${url}`);
+    console.log(`   📍 Placeholder para "${attractionName}": ${url}`);
     
     return {
       url,
