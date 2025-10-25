@@ -9,6 +9,7 @@ import { useDayNavigation } from "@/hooks/useDayNavigation";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
 import PhotoService from "@/services/photoService";
+import { dumpItineraryToConsole } from "@/services/debugItinerary";
 
 /**
  * Tela de detalhes de um dia específico da viagem
@@ -56,6 +57,10 @@ export const DayDetailScreen: React.FC = () => {
         console.log("✅ Trip encontrada:", foundTrip);
         console.log("📍 Itinerary:", foundTrip.itinerary);
         console.log("📍 Attractions:", foundTrip.attractions);
+        
+        // Debug: Dump complete itinerary structure
+        dumpItineraryToConsole(foundTrip.itinerary);
+        
         setTrip(foundTrip);
         setLoading(false);
       } else {
@@ -84,100 +89,140 @@ export const DayDetailScreen: React.FC = () => {
 
   // Filtrar atrações do dia
   const attractions: AttractionDetail[] = useMemo(() => {
+    if (!trip) {
+      console.warn("❌ No trip available");
+      return [];
+    }
+    
     // Tentar buscar do itinerary primeiro, depois attractions
     const attractionsData = trip?.attractions || [];
     
     console.log("🎯 Extraindo atrações do dia", currentDay);
     console.log("📦 attractionsData:", attractionsData);
     console.log("📋 trip?.itinerary:", trip?.itinerary);
-    console.log("📋 trip?.itinerary type:", typeof trip?.itinerary);
-    console.log("📋 trip?.itinerary is array?:", Array.isArray(trip?.itinerary));
 
-    // Se não houver attractions diretas, tentar extrair do itinerary
-    if (attractionsData.length === 0 && trip?.itinerary) {
-      // Suportar múltiplos formatos de itinerary
-      let itineraryArray: any[] = [];
+    // Se houver attractions diretas, usar essas
+    if (attractionsData && attractionsData.length > 0) {
+      console.log("✅ Encontrado trip.attractions direto");
+      const filtered = attractionsData
+        .filter((a) => a.day === currentDay)
+        .map((a) => ({
+          ...a,
+          category: a.reason
+            ? (a.reason.toLowerCase().includes("restaurante")
+                ? "restaurante"
+                : a.reason.toLowerCase().includes("museu")
+                  ? "museu"
+                  : a.reason.toLowerCase().includes("natureza")
+                    ? "natureza"
+                    : a.reason.toLowerCase().includes("compra")
+                      ? "compras"
+                      : "outro")
+            : "outro",
+          photos: generatePhotosForAttraction(a),
+        } as AttractionDetail));
       
-      if (Array.isArray(trip.itinerary)) {
-        // Formato 1: itinerary é um array direto
-        itineraryArray = trip.itinerary;
-      } else if (trip.itinerary && typeof trip.itinerary === 'object') {
-        // Formato 2: itinerary é um objeto com propriedade itinerary
-        if (Array.isArray(trip.itinerary.itinerary)) {
-          itineraryArray = trip.itinerary.itinerary;
-        }
-        // Formato 3: itinerary é um objeto com propriedade days
-        else if (trip.itinerary.days) {
-          console.log("📌 Encontrado itinerary.days");
-          itineraryArray = trip.itinerary.days;
-        }
+      console.log("📸 Atrações filtradas da lista:", filtered);
+      return filtered;
+    }
+
+    // Se não houver, tentar extrair do itinerary
+    if (!trip?.itinerary) {
+      console.warn("❌ Nenhum itinerary encontrado");
+      return [];
+    }
+
+    let itineraryArray: any[] = [];
+    
+    // Tentar vários formatos
+    if (Array.isArray(trip.itinerary)) {
+      console.log("📌 Formato 1: itinerary é array direto");
+      itineraryArray = trip.itinerary;
+    } else if (typeof trip.itinerary === 'object') {
+      // Verificar se tem propriedade itinerary (Gemini format)
+      if (Array.isArray(trip.itinerary.itinerary)) {
+        console.log("📌 Formato 2: itinerary.itinerary é array");
+        itineraryArray = trip.itinerary.itinerary;
       }
-      
-      console.log("📌 itineraryArray extraída:", itineraryArray);
-      
-      if (itineraryArray && itineraryArray.length > 0) {
-        // Filtrar atrações do dia específico
-        let dayAttractions: any[] = [];
+      // Verificar se tem propriedade days
+      else if (Array.isArray(trip.itinerary.days)) {
+        console.log("📌 Formato 3: itinerary.days é array");
+        itineraryArray = trip.itinerary.days;
+      }
+      // Verificar se tem propriedade attractions
+      else if (Array.isArray(trip.itinerary.attractions)) {
+        console.log("📌 Formato 4: itinerary.attractions é array");
+        itineraryArray = trip.itinerary.attractions;
+      }
+      // Se nenhuma propriedade conhecida, talvez seja um mapa de dias
+      else {
+        console.log("📌 Tentando extrair chaves como dias");
+        const keys = Object.keys(trip.itinerary);
+        console.log("   Chaves encontradas:", keys);
         
-        // Se itineraryArray contém dias (com propriedade day)
-        dayAttractions = itineraryArray.filter((item: any) => item.day === currentDay);
-        
-        console.log(`📌 Atrações encontradas para dia ${currentDay}:`, dayAttractions);
-        
-        if (dayAttractions && dayAttractions.length > 0) {
-          console.log("✅ Atrações do dia do itinerary:", dayAttractions);
-          const extracted = dayAttractions
-            .map((a: any) => ({
-              id: a.id || `${currentDay}-${Math.random()}`,
-              day: currentDay,
-              time: a.time || "00:00",
-              name: a.name || a.title || "Sem nome",
-              duration: a.duration || 60,
-              reason: a.description || a.reason || "Atração do dia",
-              tip: a.tip || a.suggestions || "",
-              location: a.location || {
-                lat: a.lat || 41.9028 + Math.random() * 0.01,
-                lng: a.lng || 12.4964 + Math.random() * 0.01,
-                address: "Roma, Itália",
-                name: a.name || "Localização",
-              },
-              order: a.order || 0,
-              category: a.category || "outro",
-              photos: generatePhotosForAttraction(a),
-            } as AttractionDetail))
-            .sort((a: any, b: any) => a.time.localeCompare(b.time));
-          
-          console.log("📸 Atrações finais extraídas e ordenadas:", extracted);
-          return extracted;
+        // Se tem chaves como "1", "2", "3" (dias como números string)
+        if (keys.some(k => /^\d+$/.test(k))) {
+          itineraryArray = keys
+            .filter(k => /^\d+$/.test(k))
+            .sort((a, b) => parseInt(a) - parseInt(b))
+            .map(k => trip.itinerary[k]);
+          console.log("   Extraído como mapa de dias");
         }
       }
     }
-
-    if (!attractionsData || attractionsData.length === 0) {
-      console.warn("⚠️ Nenhuma atração encontrada para o dia", currentDay);
+    
+    console.log(`📌 itineraryArray tem ${itineraryArray.length} items`);
+    
+    if (!itineraryArray || itineraryArray.length === 0) {
+      console.warn(`❌ Não conseguiu extrair array do itinerary para dia ${currentDay}`);
       return [];
     }
     
-    const filtered = attractionsData
-      .filter((a) => a.day === currentDay)
-      .map((a) => ({
-        ...a,
-        category: a.reason
-          ? (a.reason.toLowerCase().includes("restaurante")
-              ? "restaurante"
-              : a.reason.toLowerCase().includes("museu")
-                ? "museu"
-                : a.reason.toLowerCase().includes("natureza")
-                  ? "natureza"
-                  : a.reason.toLowerCase().includes("compra")
-                    ? "compras"
-                    : "outro")
-          : "outro",
-        photos: generatePhotosForAttraction(a),
-      } as AttractionDetail));
+    // Agora filtrar por dia
+    let dayAttractions: any[] = [];
     
-    console.log("📸 Atrações filtradas da lista:", filtered);
-    return filtered;
+    // Tipo 1: Array de atrações com propriedade 'day'
+    dayAttractions = itineraryArray.filter((item: any) => item.day === currentDay);
+    
+    if (dayAttractions.length === 0) {
+      console.log(`ℹ️ Nenhuma atração com dia=${currentDay}. Tentando índice ${currentDay - 1}...`);
+      // Tipo 2: Array de dias (cada item é um dia)
+      if (currentDay <= itineraryArray.length) {
+        dayAttractions = itineraryArray[currentDay - 1]?.attractions || [];
+      }
+    }
+    
+    console.log(`✅ Encontradas ${dayAttractions.length} atrações para dia ${currentDay}`);
+    
+    if (dayAttractions.length === 0) {
+      console.warn(`⚠️ Nenhuma atração encontrada para dia ${currentDay}`);
+      return [];
+    }
+    
+    // Extrair e ordenar atrações
+    const extracted = dayAttractions
+      .map((a: any) => ({
+        id: a.id || `${currentDay}-${Math.random()}`,
+        day: currentDay,
+        time: a.time || "00:00",
+        name: a.name || a.title || "Sem nome",
+        duration: a.duration || 60,
+        reason: a.description || a.reason || "Atração do dia",
+        tip: a.tip || a.suggestions || "",
+        location: a.location || {
+          lat: a.lat || 41.9028 + Math.random() * 0.01,
+          lng: a.lng || 12.4964 + Math.random() * 0.01,
+          address: "Roma, Itália",
+          name: a.name || "Localização",
+        },
+        order: a.order || 0,
+        category: a.category || "outro",
+        photos: generatePhotosForAttraction(a),
+      } as AttractionDetail))
+      .sort((a: any, b: any) => a.time.localeCompare(b.time));
+    
+    console.log("✅ Atrações finais extraídas e ordenadas:", extracted);
+    return extracted;
   }, [trip?.attractions, trip?.itinerary, currentDay]);
 
   // Buscar data do dia
