@@ -1,11 +1,12 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { Button, Skeleton, EmptyState, useToast } from "@/components";
+import { Button, Skeleton, EmptyState, useToast, MapboxMap } from "@/components";
 import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
+import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
 
 /**
@@ -19,8 +20,11 @@ export const DayDetailScreen: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const { showError } = useToast();
-  const [trip, setTrip] = useState<Trip | null>(null);
   const [loading, setLoading] = useState(true);
+  const [trip, setTrip] = useState<Trip | null>(null);
+  
+  // Usar Zustand store
+  const { trips } = useTripsStore();
 
   // Validar parâmetros
   if (!tripId || !dayNumber) {
@@ -40,31 +44,28 @@ export const DayDetailScreen: React.FC = () => {
 
   const currentDay = parseInt(dayNumber, 10);
 
-  // Buscar dados da viagem
+  // Buscar dados da viagem da store
   useEffect(() => {
-    const loadTrip = async () => {
-      try {
-        setLoading(true);
-        // TODO: Em produção, buscar do Firebase/API
-        // Por enquanto, vamos usar dados do localStorage
-        const storedTrips = localStorage.getItem("trips");
-        if (storedTrips) {
-          const trips = JSON.parse(storedTrips);
-          const foundTrip = trips.find((t: Trip) => t.id === tripId);
-          if (foundTrip) {
-            setTrip(foundTrip);
-          }
-        }
-      } catch (error) {
-        console.error("Erro ao carregar viagem:", error);
-        showError("Não foi possível carregar a viagem");
-      } finally {
-        setLoading(false);
+    try {
+      console.log("🔍 Buscando trip com ID:", tripId);
+      console.log("📋 Trips na store:", trips);
+      
+      const foundTrip = trips.find((t: Trip) => t.id === tripId);
+      if (foundTrip) {
+        console.log("✅ Trip encontrada:", foundTrip);
+        console.log("📍 Itinerary:", foundTrip.itinerary);
+        console.log("📍 Attractions:", foundTrip.attractions);
+        setTrip(foundTrip);
+      } else {
+        console.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
       }
-    };
-
-    loadTrip();
-  }, [tripId, showError]);
+    } catch (error) {
+      console.error("❌ Erro ao buscar viagem:", error);
+      showError("Não foi possível carregar a viagem");
+    } finally {
+      setLoading(false);
+    }
+  }, [tripId, trips, showError]);
 
   // Calcular total de dias
   const totalDays = useMemo(() => {
@@ -81,8 +82,39 @@ export const DayDetailScreen: React.FC = () => {
 
   // Filtrar atrações do dia
   const attractions: AttractionDetail[] = useMemo(() => {
-    if (!trip?.attractions) return [];
-    return trip.attractions
+    // Tentar buscar do itinerary primeiro, depois attractions
+    const attractionsData = trip?.attractions || [];
+    
+    // Se não houver attractions diretas, tentar extrair do itinerary
+    if (attractionsData.length === 0 && trip?.itinerary && trip.itinerary.length > 0) {
+      const dayItinerary = trip.itinerary[currentDay - 1];
+      if (dayItinerary?.attractions) {
+        console.log("📍 Atrações do dia do itinerary:", dayItinerary.attractions);
+        return dayItinerary.attractions
+          .map((a: any) => ({
+            id: a.id || `${currentDay}-${Math.random()}`,
+            day: currentDay,
+            time: a.time || "00:00",
+            name: a.name || a.title || "Sem nome",
+            duration: a.duration || 60,
+            reason: a.description || a.reason || "Atração do dia",
+            tip: a.tip || a.suggestions || "",
+            location: a.location || {
+              lat: 41.9028 + Math.random() * 0.01,
+              lng: 12.4964 + Math.random() * 0.01,
+              address: "Roma, Itália",
+              name: a.name || "Localização",
+            },
+            order: a.order || 0,
+            category: a.category || "outro",
+            photos: generatePhotosForAttraction(a),
+          } as AttractionDetail));
+      }
+    }
+
+    if (!attractionsData || attractionsData.length === 0) return [];
+    
+    return attractionsData
       .filter((a) => a.day === currentDay)
       .map((a) => ({
         ...a,
@@ -245,10 +277,31 @@ export const DayDetailScreen: React.FC = () => {
               }}
             />
           ) : (
-            <EmptyState
-              title="Sem atrações"
-              description="Nenhuma atração planejada para este dia."
-            />
+            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
+              <div className="mb-4">
+                <EmptyState
+                  title="Sem atrações"
+                  description="Nenhuma atração planejada para este dia."
+                />
+              </div>
+              
+              {/* Debug info */}
+              <div className="mt-6 text-xs text-gray-600 bg-white p-4 rounded border border-gray-200">
+                <p className="font-mono font-bold mb-2">📊 Debug Info:</p>
+                <p>Trip ID: {tripId}</p>
+                <p>Day: {currentDay}</p>
+                <p>Trip attractions: {trip?.attractions?.length || 0}</p>
+                <p>Trip itinerary days: {trip?.itinerary?.length || 0}</p>
+                {trip?.itinerary && trip.itinerary[currentDay - 1] && (
+                  <div className="mt-2 bg-yellow-50 p-2 rounded">
+                    <p>📌 Day {currentDay} itinerary:</p>
+                    <pre className="text-xs overflow-auto">
+                      {JSON.stringify(trip.itinerary[currentDay - 1], null, 2)}
+                    </pre>
+                  </div>
+                )}
+              </div>
+            </div>
           )}
         </section>
 
@@ -257,13 +310,20 @@ export const DayDetailScreen: React.FC = () => {
           <section aria-label="Mapa das atrações">
             <div className="bg-white rounded-lg p-6 border border-gray-200">
               <h2 className="text-lg font-bold text-gray-900 mb-4">
-                Mapa das Atrações
+                🗺️ Rota do Dia
               </h2>
-              <div className="bg-gray-100 rounded-lg h-80 flex items-center justify-center">
-                <p className="text-gray-500">
-                  🗺️ Integração com Mapbox será adicionada aqui
-                </p>
-              </div>
+              <MapboxMap
+                attractions={attractions.map((a) => ({
+                  name: a.name,
+                  reason: a.reason,
+                  lat: a.location?.lat || 0,
+                  lng: a.location?.lng || 0,
+                }))}
+                height="400px"
+                onAttractionSelect={(attraction) => {
+                  console.log("Localização selecionada:", attraction);
+                }}
+              />
             </div>
           </section>
         )}
@@ -277,18 +337,40 @@ export const DayDetailScreen: React.FC = () => {
  * Em produção, estas viriam do banco de dados ou API
  */
 function generatePhotosForAttraction(attraction: any): PhotoData[] {
-  // Mock data - em produção, viria do banco de dados
+  const queries: { [key: string]: string } = {
+    colosseum: 'colosseum rome',
+    'roman forum': 'roman forum',
+    'palatine hill': 'palatine hill',
+    monti: 'rome monti neighborhood',
+    lunch: 'italian food rome',
+    restaurante: 'restaurant rome',
+    museu: 'museum',
+    natureza: 'nature landscape',
+    compra: 'shopping city',
+  };
+
+  let query = 'attraction landmark';
+  const lowerName = attraction.name.toLowerCase();
+  
+  for (const [key, value] of Object.entries(queries)) {
+    if (lowerName.includes(key)) {
+      query = value;
+      break;
+    }
+  }
+
+  // Gerar 2 fotos diferentes
   const mockPhotos: PhotoData[] = [
     {
       id: `${attraction.id}-1`,
-      url: `https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=1200&h=600&fit=crop`,
+      url: `https://source.unsplash.com/1200x600/?${encodeURIComponent(query)}&sig=1`,
       alt: `${attraction.name} - foto 1`,
       attractionName: attraction.name,
       source: "unsplash",
     },
     {
       id: `${attraction.id}-2`,
-      url: `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=1200&h=600&fit=crop`,
+      url: `https://source.unsplash.com/1200x600/?${encodeURIComponent(query)}&sig=2`,
       alt: `${attraction.name} - foto 2`,
       attractionName: attraction.name,
       source: "unsplash",

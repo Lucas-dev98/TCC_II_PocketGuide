@@ -17,6 +17,37 @@ import {
 import { formatDate } from '../utils/formatDate';
 
 /**
+ * Gera URL de imagem do Unsplash baseado no nome da atração
+ */
+const getAttractionImage = (attractionName: string, index: number): string => {
+  const queries: { [key: string]: string } = {
+    colosseum: 'colosseum rome',
+    'roman forum': 'roman forum',
+    'palatine hill': 'palatine hill',
+    monti: 'rome monti neighborhood',
+    lunch: 'italian food rome',
+    restaurante: 'restaurant rome',
+    museu: 'museum',
+    natureza: 'nature landscape',
+    compra: 'shopping city',
+  };
+
+  let query = 'attraction landmark';
+  const lowerName = attractionName.toLowerCase();
+  
+  for (const [key, value] of Object.entries(queries)) {
+    if (lowerName.includes(key)) {
+      query = value;
+      break;
+    }
+  }
+
+  // Usar Unsplash random com query
+  const randomParam = Math.floor(Math.random() * 100) + index;
+  return `https://source.unsplash.com/400x300/?${encodeURIComponent(query)}&sig=${randomParam}`;
+};
+
+/**
  * Transform Gemini itinerary format (array of activities with day property)
  * to display format (array of days with activities)
  */
@@ -407,6 +438,54 @@ export default function TripDetailScreen() {
                       {/* Attractions */}
                       {day.attractions && day.attractions.length > 0 && (
                         <div className="space-y-3 ml-4">
+                          {/* Attractions Grid Preview */}
+                          <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
+                            {day.attractions.slice(0, 3).map((attraction: any, attrIndex: number) => (
+                              <div
+                                key={attrIndex}
+                                className="relative rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 hover:shadow-md transition-shadow group cursor-pointer"
+                                onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
+                              >
+                                {/* Image with fallback */}
+                                <img
+                                  src={getAttractionImage(attraction.name, attrIndex)}
+                                  alt={attraction.name}
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                  onError={(e) => {
+                                    // Fallback se a imagem falhar
+                                    (e.target as HTMLImageElement).style.display = 'none';
+                                  }}
+                                />
+                                
+                                {/* Overlay gradient */}
+                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                                  <div className="w-full">
+                                    <p className="text-xs font-medium text-white line-clamp-2">
+                                      {attraction.name}
+                                    </p>
+                                    <p className="text-caption text-white/80">
+                                      ⏱️ {attraction.time}
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                            {day.attractions.length > 3 && (
+                              <div className="rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 flex items-center justify-center group cursor-pointer hover:shadow-md transition-shadow"
+                                onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}>
+                                <div className="text-center">
+                                  <p className="text-sm font-semibold text-slate-600 dark:text-slate-400">
+                                    +{day.attractions.length - 3}
+                                  </p>
+                                  <p className="text-caption text-slate-500 dark:text-slate-400">
+                                    mais atrações
+                                  </p>
+                                </div>
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Attractions List */}
                           {day.attractions.map(
                             (
                               attraction: any,
