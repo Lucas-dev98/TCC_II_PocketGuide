@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Attraction } from '../types';
 
 interface MapboxMapProps {
-  attractions?: Attraction[];
+  attractions?: (Attraction | any)[];
   zoom?: number;
   center?: [number, number];
   height?: string;
@@ -50,8 +50,9 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       const bounds = new mapboxgl.LngLatBounds();
       
       attractions.forEach((attraction, index) => {
-        const lat = attraction.location?.lat || attraction.lat;
-        const lng = attraction.location?.lng || attraction.lng;
+        const attr = attraction as any;
+        const lat = attr.location?.lat || attr.lat;
+        const lng = attr.location?.lng || attr.lng;
         
         console.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
         
@@ -60,7 +61,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             .setLngLat([lng, lat])
             .setPopup(
               new mapboxgl.Popup().setHTML(
-                `<div class="p-2"><strong>${attraction.name}</strong><p>${attraction.reason || ''}</p></div>`
+                `<div class="p-2"><strong>${attraction.name}</strong><p>${attr.reason || ''}</p></div>`
               )
             )
             .addTo(map.current as mapboxgl.Map);
