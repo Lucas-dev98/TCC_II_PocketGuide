@@ -2,16 +2,10 @@
   "compilerOptions": {
     "target": "ES2020",
     "useDefineForClassFields": true,
-    "lib": [
-      "ES2020",
-      "DOM",
-      "DOM.Iterable"
-    ],
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
     "module": "ESNext",
-    "moduleResolution": "bundler",
+    "moduleResolution": "node",
     "skipLibCheck": true,
-    "esModuleInterop": true,
-    "allowSyntheticDefaultImports": true,
     "strict": true,
     "noImplicitAny": true,
     "strictNullChecks": true,
@@ -24,46 +18,20 @@
     "noImplicitReturns": true,
     "noFallthroughCasesInSwitch": true,
     "resolveJsonModule": true,
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "jsx": "react-native",
+    "jsx": "react-jsx",
     "baseUrl": ".",
     "paths": {
-      "@/*": [
-        "./src/*"
-      ],
-      "@components/*": [
-        "./src/components/*"
-      ],
-      "@screens/*": [
-        "./src/screens/*"
-      ],
-      "@services/*": [
-        "./src/services/*"
-      ],
-      "@hooks/*": [
-        "./src/hooks/*"
-      ],
-      "@store/*": [
-        "./src/store/*"
-      ],
-      "@types/*": [
-        "./src/types/*"
-      ],
-      "@utils/*": [
-        "./src/utils/*"
-      ]
+      "@/*": ["./pocket-guide-web/src/*"],
+      "@components/*": ["./pocket-guide-web/src/components/*"],
+      "@screens/*": ["./pocket-guide-web/src/screens/*"],
+      "@services/*": ["./pocket-guide-web/src/services/*"],
+      "@hooks/*": ["./pocket-guide-web/src/hooks/*"],
+      "@store/*": ["./pocket-guide-web/src/store/*"],
+      "@types/*": ["./pocket-guide-web/src/types/*"],
+      "@utils/*": ["./pocket-guide-web/src/utils/*"]
     }
   },
-  "include": [
-    "src",
-    "node_modules/react-native/types/**/*"
-  ],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "build"
-  ],
-  "extends": "expo/tsconfig.base"
+  "include": ["pocket-guide-web/src"],
+  "exclude": ["node_modules", "dist", "build"],
+  "references": [{ "path": "./pocket-guide-web/tsconfig.json" }]
 }
