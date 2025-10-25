@@ -17,6 +17,63 @@ import {
 import { formatDate } from '../utils/formatDate';
 
 /**
+ * Transform Gemini itinerary format (array of activities with day property)
+ * to display format (array of days with activities)
+ */
+const transformItinerary = (itinerary: any) => {
+  if (!itinerary) return null;
+  
+  // If it's already in the correct format
+  if (itinerary.days && Array.isArray(itinerary.days)) {
+    return itinerary;
+  }
+  
+  // If it's the Gemini format: { itinerary: [...], tips: [...] }
+  if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
+    const activities = itinerary.itinerary;
+    const daysMap = new Map<number, any[]>();
+    
+    // Group activities by day
+    activities.forEach((activity: any) => {
+      const day = activity.day || 1;
+      if (!daysMap.has(day)) {
+        daysMap.set(day, []);
+      }
+      daysMap.get(day)!.push(activity);
+    });
+    
+    // Convert to days array
+    const days = Array.from({ length: daysMap.size }, (_, index) => {
+      const dayNum = index + 1;
+      const dayActivities = daysMap.get(dayNum) || [];
+      
+      return {
+        title: `Dia ${dayNum}`,
+        attractions: dayActivities.map((activity: any) => ({
+          name: activity.name,
+          description: activity.reason,
+          time: activity.time,
+          emoji: '📍',
+          duration: activity.duration,
+          category: activity.category,
+          location: activity.location,
+          lat: activity.lat,
+          lng: activity.lng,
+        })),
+      };
+    });
+    
+    return {
+      days,
+      tips: itinerary.tips || [],
+      destination: itinerary.destination,
+    };
+  }
+  
+  return itinerary;
+};
+
+/**
  * TripDetailScreen - Detalhes da viagem e itinerário
  * 
  * Fluxo:
@@ -88,10 +145,13 @@ export default function TripDetailScreen() {
   );
 
   // Parse itinerary se for string JSON
-  const itinerary =
+  let rawItinerary =
     typeof trip.itinerary === 'string'
       ? JSON.parse(trip.itinerary)
       : trip.itinerary;
+
+  // Transform itinerary to the correct format
+  const itinerary = transformItinerary(rawItinerary);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12">
