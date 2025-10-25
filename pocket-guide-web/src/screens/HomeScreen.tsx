@@ -1,74 +1,81 @@
-import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { useTripsStore } from '../store/tripsStore';
-import { Button } from '../components/Button';
-import { Card } from '../components/Card';
-import { LoadingSpinner } from '../components/LoadingSpinner';
-import { Plus, MapPin, Calendar, Trash2, LogOut, Sun, Moon } from 'lucide-react';
-import { useTheme } from '../contexts/ThemeContext';
-import { formatDate } from '../utils/formatDate';
+import { useEffect, useState } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useTripsStore } from '../store/tripsStore'
+import { useToast } from '../components/Toast'
+import { Button } from '../components/Button'
+import { Card } from '../components/Card'
+import { EmptyState } from '../components/EmptyState'
+import { SkeletonCard } from '../components/Skeleton'
+import { Plus, MapPin, Calendar, Trash2, LogOut, Sun, Moon } from 'lucide-react'
+import { useTheme } from '../contexts/ThemeContext'
+import { formatDate } from '../utils/formatDate'
 
 /**
  * HomeScreen - Listagem de viagens do usuário
  * 
  * Fluxo:
  * 1. Carregar viagens do Zustand store
- * 2. Exibir lista de cards com viagens
- * 3. Botão para criar nova viagem
- * 4. Clique no card → TripDetailScreen
- * 5. Botão delete → remover viagem
- * 6. Logout → volta para LoginScreen
+ * 2. Exibir lista de cards com viagens (SkeletonCard durante loading)
+ * 3. EmptyState quando não há viagens
+ * 4. Botão para criar nova viagem
+ * 5. Clique no card → TripDetailScreen
+ * 6. Toast feedback para deleção
+ * 7. Logout → volta para LoginScreen
  */
 export default function HomeScreen() {
-  const navigate = useNavigate();
-  const { user, signOut } = useAuth();
-  const { isDark, toggleTheme } = useTheme();
-  const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore();
-  const [deleting, setDeleting] = useState<string | null>(null);
+  const navigate = useNavigate()
+  const { user, signOut } = useAuth()
+  const { isDark, toggleTheme } = useTheme()
+  const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore()
+  const { showError, showSuccess } = useToast()
+  const [deleting, setDeleting] = useState<string | null>(null)
 
   // Carregar viagens ao montar
   useEffect(() => {
     if (user?.uid) {
-      console.log('🏠 HomeScreen: Loading trips for user:', user.uid);
-      loadTrips(user.uid);
+      console.log('🏠 HomeScreen: Loading trips for user:', user.uid)
+      loadTrips(user.uid)
     }
-  }, [user?.uid, loadTrips]);
+  }, [user?.uid, loadTrips])
 
-  console.log('🏠 HomeScreen: Current trips:', trips);
-  console.log('🏠 HomeScreen: isLoading:', isLoading);
+  console.log('🏠 HomeScreen: Current trips:', trips)
+  console.log('🏠 HomeScreen: isLoading:', isLoading)
 
   const handleLogout = async () => {
     try {
-      await signOut();
-      navigate('/login', { replace: true });
+      await signOut()
+      navigate('/login', { replace: true })
     } catch (error) {
-      console.error('Erro ao fazer logout:', error);
+      console.error('Erro ao fazer logout:', error)
+      showError('Erro ao fazer logout')
     }
-  };
+  }
 
   const handleCreateTrip = () => {
-    navigate('/create-trip');
-  };
+    navigate('/create-trip')
+  }
 
   const handleViewTrip = (tripId: string) => {
-    navigate(`/trip/${tripId}`);
-  };
+    navigate(`/trip/${tripId}`)
+  }
 
   const handleDeleteTrip = async (tripId: string) => {
     if (!window.confirm('Tem certeza que deseja deletar esta viagem?')) {
-      return;
+      return
     }
 
     try {
-      setDeleting(tripId);
-      await deleteTrip(tripId);
+      setDeleting(tripId)
+      await deleteTrip(tripId)
+      showSuccess('Viagem deletada com sucesso!')
     } catch (error) {
-      console.error('Erro ao deletar viagem:', error);
+      console.error('Erro ao deletar viagem:', error)
+      showError('Erro ao deletar viagem. Tente novamente.')
     } finally {
-      setDeleting(null);
+      setDeleting(null)
     }
-  };
+  }
 
   return (
     <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 pb-8">
@@ -76,10 +83,10 @@ export default function HomeScreen() {
       <div className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+            <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
               Minhas Viagens
             </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">
+            <p className="text-small text-slate-600 dark:text-slate-400">
               Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
             </p>
           </div>
@@ -90,6 +97,7 @@ export default function HomeScreen() {
               onClick={toggleTheme}
               className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition"
               title={isDark ? 'Modo claro' : 'Modo escuro'}
+              aria-label={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
             >
               {isDark ? (
                 <Sun className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -125,30 +133,30 @@ export default function HomeScreen() {
           </Button>
         </div>
 
-        {/* Loading state */}
+        {/* Loading state - Skeleton cards */}
         {isLoading && (
-          <div className="flex justify-center items-center py-12">
-            <LoadingSpinner size="lg" />
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {Array.from({ length: 3 }).map((_, i) => (
+              <SkeletonCard key={i} />
+            ))}
           </div>
         )}
 
         {/* Empty state */}
         {!isLoading && trips.length === 0 && (
-          <div className="text-center py-12">
-            <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-blue-100 dark:bg-blue-900 mb-4">
-              <MapPin className="w-8 h-8 text-blue-600 dark:text-blue-300" />
-            </div>
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
-              Nenhuma viagem criada
-            </h2>
-            <p className="text-slate-600 dark:text-slate-400 mb-6">
-              Crie sua primeira viagem e deixe a IA fazer a mágica! ✨
-            </p>
-            <Button onClick={handleCreateTrip} className="gap-2">
-              <Plus className="w-4 h-4" />
-              Criar Primeira Viagem
-            </Button>
-          </div>
+          <EmptyState
+            icon={
+              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/30 mb-4">
+                <MapPin className="w-8 h-8 text-primary" />
+              </div>
+            }
+            title="Nenhuma viagem criada"
+            description="Crie sua primeira viagem e deixe a IA fazer a mágica! ✨"
+            action={{
+              label: 'Criar Primeira Viagem',
+              onClick: handleCreateTrip,
+            }}
+          />
         )}
 
         {/* Trips grid */}
@@ -157,8 +165,10 @@ export default function HomeScreen() {
             {trips.map((trip) => (
               <Card
                 key={trip.id}
-                className="hover:shadow-lg transition cursor-pointer overflow-hidden group"
+                elevation="md"
+                isInteractive
                 onClick={() => handleViewTrip(trip.id)}
+                className="overflow-hidden group"
               >
                 {/* Imagem de preview */}
                 {trip.imageUrl && (
@@ -174,19 +184,19 @@ export default function HomeScreen() {
                 <Card.Body>
                   {/* Destination */}
                   <div className="flex items-start gap-2 mb-3">
-                    <MapPin className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-0.5" />
+                    <MapPin className="w-5 h-5 text-primary flex-shrink-0 mt-0.5" />
                     <div>
                       <h3 className="font-semibold text-slate-900 dark:text-white">
                         {trip.destination}
                       </h3>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                      <p className="text-small text-slate-500 dark:text-slate-400">
                         {trip.country}
                       </p>
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center gap-2 text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  <div className="flex items-center gap-2 text-small text-slate-600 dark:text-slate-400 mb-4">
                     <Calendar className="w-4 h-4" />
                     <span>
                       {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
@@ -194,7 +204,7 @@ export default function HomeScreen() {
                   </div>
 
                   {/* Duration */}
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                  <p className="text-small text-slate-600 dark:text-slate-400 mb-4">
                     {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} dias de aventura
                   </p>
 
@@ -204,13 +214,13 @@ export default function HomeScreen() {
                       {trip.interests.slice(0, 2).map((interest) => (
                         <span
                           key={interest}
-                          className="px-2 py-1 bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300 rounded-full text-xs font-medium"
+                          className="badge-base bg-primary/20 dark:bg-primary/30 text-primary dark:text-blue-300 text-xs font-medium"
                         >
                           {interest}
                         </span>
                       ))}
                       {trip.interests.length > 2 && (
-                        <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 rounded-full text-xs font-medium">
+                        <span className="badge-base bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-medium">
                           +{trip.interests.length - 2}
                         </span>
                       )}
@@ -218,19 +228,19 @@ export default function HomeScreen() {
                   )}
 
                   {/* Delete button */}
-                  <button
+                  <Button
                     onClick={(e) => {
-                      e.stopPropagation();
-                      handleDeleteTrip(trip.id);
+                      e.stopPropagation()
+                      handleDeleteTrip(trip.id)
                     }}
                     disabled={deleting === trip.id}
-                    className="w-full py-2 px-3 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition disabled:opacity-50"
+                    variant="outline"
+                    size="sm"
+                    className="w-full gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
                   >
-                    <div className="flex items-center justify-center gap-2">
-                      <Trash2 className="w-4 h-4" />
-                      {deleting === trip.id ? 'Deletando...' : 'Deletar'}
-                    </div>
-                  </button>
+                    <Trash2 className="w-4 h-4" />
+                    {deleting === trip.id ? 'Deletando...' : 'Deletar'}
+                  </Button>
                 </Card.Body>
               </Card>
             ))}
@@ -238,5 +248,5 @@ export default function HomeScreen() {
         )}
       </div>
     </div>
-  );
+  )
 }

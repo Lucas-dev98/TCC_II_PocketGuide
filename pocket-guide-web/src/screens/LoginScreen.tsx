@@ -1,8 +1,10 @@
-import { useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useAuth } from '../hooks/useAuth';
-import { Button } from '../components/Button';
-import { Compass } from 'lucide-react';
+import { useEffect } from 'react'
+import { useNavigate } from 'react-router-dom'
+import { useAuth } from '../hooks/useAuth'
+import { useToast } from '../components/Toast'
+import { Button } from '../components/Button'
+import { Card } from '../components/Card'
+import { Compass } from 'lucide-react'
 
 /**
  * LoginScreen - Autenticação com Google via Firebase
@@ -12,61 +14,70 @@ import { Compass } from 'lucide-react';
  * 2. Botão "Entrar com Google"
  * 3. Após login → redirect para /home
  * 4. Se já autenticado → redirect imediato
+ * 5. Toast feedback para sucesso/erro
  */
 export default function LoginScreen() {
-  const navigate = useNavigate();
-  const { user, signInWithGoogle, isLoading, error } = useAuth();
+  const navigate = useNavigate()
+  const { user, signInWithGoogle, isLoading, error } = useAuth()
+  const { showError } = useToast()
 
   // Se já autenticado, redireciona para home
   useEffect(() => {
     if (user) {
-      navigate('/home', { replace: true });
+      navigate('/home', { replace: true })
     }
-  }, [user, navigate]);
+  }, [user, navigate])
+
+  // Mostrar erro via Toast
+  useEffect(() => {
+    if (error) {
+      showError(typeof error === 'string' ? error : 'Erro ao fazer login. Tente novamente.')
+    }
+  }, [error, showError])
 
   const handleGoogleSignIn = async () => {
     try {
-      await signInWithGoogle();
+      await signInWithGoogle()
       // AuthContext já dispara o redirect em useEffect acima
     } catch (err) {
-      console.error('Erro ao fazer login:', err);
+      console.error('Erro ao fazer login:', err)
     }
-  };
+  }
 
   return (
-    <div className="min-h-screen w-full bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
+    <div className="min-h-screen w-full bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 flex items-center justify-center p-4">
       {/* Container central */}
       <div className="w-full max-w-md">
         {/* Logo e título */}
         <div className="text-center mb-8">
           <div className="flex justify-center mb-4">
-            <div className="bg-gradient-to-br from-blue-500 to-indigo-600 rounded-full p-4 shadow-lg">
+            <div className="bg-gradient-to-br from-primary to-blue-600 rounded-full p-4 shadow-lg hover:shadow-glow transition-shadow duration-300">
               <Compass className="w-12 h-12 text-white" />
             </div>
           </div>
           
-          <h1 className="text-4xl font-bold text-slate-900 dark:text-white mb-2">
+          <h1 className="text-h1 font-bold text-slate-900 dark:text-white mb-2">
             Pocket Guide
           </h1>
           
-          <p className="text-lg text-slate-600 dark:text-slate-300 mb-2">
+          <p className="text-body text-slate-600 dark:text-slate-300 mb-2">
             Crie suas viagens perfeitas
           </p>
           
-          <p className="text-sm text-slate-500 dark:text-slate-400">
+          <p className="text-small text-slate-500 dark:text-slate-400">
             Planejamento de roteiros inteligente com IA
           </p>
         </div>
 
         {/* Card de login */}
-        <div className="bg-white dark:bg-slate-800 rounded-2xl shadow-xl p-8 mb-6">
+        <Card elevation="lg" className="mb-6 p-8">
           {/* Descrição */}
           <div className="mb-8">
-            <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-3">
+            <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-3">
               Bem-vindo! 👋
             </h2>
             
-            <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed">
+            <p className="text-body text-slate-600 dark:text-slate-300 leading-relaxed">
               Comece a criar roteiros inteligentes para suas viagens. Deixe nossa IA fazer o trabalho pesado.
             </p>
           </div>
@@ -74,41 +85,32 @@ export default function LoginScreen() {
           {/* Features rápidas */}
           <div className="space-y-3 mb-8">
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mt-0.5">
-                <span className="text-xs font-bold text-green-600 dark:text-green-200">✓</span>
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-success/20 dark:bg-success/30 flex items-center justify-center mt-0.5">
+                <span className="text-xs font-bold text-success">✓</span>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-small text-slate-600 dark:text-slate-300">
                 Roteiros personalizados em segundos
               </p>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mt-0.5">
-                <span className="text-xs font-bold text-green-600 dark:text-green-200">✓</span>
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-success/20 dark:bg-success/30 flex items-center justify-center mt-0.5">
+                <span className="text-xs font-bold text-success">✓</span>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-small text-slate-600 dark:text-slate-300">
                 Mapas interativos e rotas otimizadas
               </p>
             </div>
 
             <div className="flex items-start gap-3">
-              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-green-100 dark:bg-green-900 flex items-center justify-center mt-0.5">
-                <span className="text-xs font-bold text-green-600 dark:text-green-200">✓</span>
+              <div className="flex-shrink-0 w-5 h-5 rounded-full bg-success/20 dark:bg-success/30 flex items-center justify-center mt-0.5">
+                <span className="text-xs font-bold text-success">✓</span>
               </div>
-              <p className="text-sm text-slate-600 dark:text-slate-300">
+              <p className="text-small text-slate-600 dark:text-slate-300">
                 Sincronização em todos seus dispositivos
               </p>
             </div>
           </div>
-
-          {/* Erro (se houver) */}
-          {error && (
-            <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/30 rounded-lg border border-red-200 dark:border-red-800">
-              <p className="text-sm text-red-700 dark:text-red-200">
-                {typeof error === 'string' ? error : 'Erro ao fazer login'}
-              </p>
-            </div>
-          )}
 
           {/* Botão Google Sign-In */}
           <Button
@@ -139,16 +141,16 @@ export default function LoginScreen() {
               {isLoading ? 'Entrando...' : 'Entrar com Google'}
             </div>
           </Button>
-        </div>
+        </Card>
 
         {/* Footer */}
-        <p className="text-center text-xs text-slate-500 dark:text-slate-400">
+        <p className="text-center text-caption text-slate-500 dark:text-slate-400">
           Ao entrar, você concorda com nossos{' '}
-          <a href="#" className="text-blue-600 dark:text-blue-400 hover:underline">
+          <a href="#" className="text-primary hover:underline font-medium">
             Termos de Serviço
           </a>
         </p>
       </div>
     </div>
-  );
+  )
 }
