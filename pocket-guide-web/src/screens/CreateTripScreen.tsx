@@ -167,7 +167,7 @@ export default function CreateTripScreen() {
 
       // Salvar viagem no store/Firestore
       console.log('💾 Salvando viagem no Firestore...');
-      await addTrip({
+      const tripData = {
         destination: formData.destination,
         country: formData.country,
         startDate: formData.startDate,
@@ -178,9 +178,10 @@ export default function CreateTripScreen() {
         itinerary: itinerary ? { itinerary } : null,
         userId: user.uid,
         createdAt: new Date().toISOString(),
-      });
-
-      console.log('✅ Viagem salva com sucesso!');
+      };
+      console.log('🔍 Trip data before saving:', tripData);
+      console.log('🔍 Trip itinerary:', tripData.itinerary?.itinerary?.[0]);
+      await addTrip(tripData);
 
       // Redirecionar para home
       console.log('🏠 Redirecionando para home...');

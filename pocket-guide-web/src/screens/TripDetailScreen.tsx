@@ -64,6 +64,10 @@ const transformItinerary = (itinerary: any) => {
       return {
         title: `Dia ${dayNum}`,
         attractions: dayActivities.map((activity: any) => {
+          // Extract lat/lng from either direct properties or location object
+          const lat = activity.lat || activity.location?.lat;
+          const lng = activity.lng || activity.location?.lng;
+          
           const transformed = {
             name: activity.name,
             description: activity.reason,
@@ -72,15 +76,15 @@ const transformItinerary = (itinerary: any) => {
             duration: activity.duration,
             category: activity.category,
             location: activity.location,
-            lat: activity.lat,
-            lng: activity.lng,
+            lat: lat,
+            lng: lng,
           };
           
           // Debug first attraction of first day
           if (dayNum === 1 && dayActivities[0] === activity) {
             console.log('🔍 First transformed attraction (Day 1):', transformed);
-            console.log('  - lat:', activity.lat, 'type:', typeof activity.lat);
-            console.log('  - lng:', activity.lng, 'type:', typeof activity.lng);
+            console.log('  - activity.lat:', activity.lat, 'activity.location?.lat:', activity.location?.lat);
+            console.log('  - Resolved lat:', lat, 'lng:', lng);
           }
           
           return transformed;
@@ -318,8 +322,8 @@ export default function TripDetailScreen() {
                     (day.attractions || []).map((attr: any) => ({
                       name: attr.name,
                       reason: attr.description,
-                      lat: attr.lat,
-                      lng: attr.lng,
+                      lat: attr.lat !== undefined ? attr.lat : attr.location?.lat,
+                      lng: attr.lng !== undefined ? attr.lng : attr.location?.lng,
                     }))
                   )}
                   height="400px"
