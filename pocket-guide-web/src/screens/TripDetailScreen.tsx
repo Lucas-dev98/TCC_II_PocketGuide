@@ -122,6 +122,7 @@ export default function TripDetailScreen() {
   const navigate = useNavigate();
   const { trips } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
+  const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
 
   const trip = id ? trips.find((t) => t.id === id) : null;
 
@@ -327,6 +328,10 @@ export default function TripDetailScreen() {
                     }))
                   )}
                   height="400px"
+                  onAttractionSelect={(attraction, index) => {
+                    setSelectedAttractionIndex(index);
+                    console.log('🗺️ Atração selecionada no mapa:', attraction, 'índice:', index);
+                  }}
                 />
               </>
             ) : (
