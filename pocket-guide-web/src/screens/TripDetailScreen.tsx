@@ -140,7 +140,7 @@ export default function TripDetailScreen() {
 
   if (isLoadingScreen) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-slate-50 dark:bg-slate-900">
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <LoadingSpinner size="lg" />
       </div>
     );
@@ -148,11 +148,12 @@ export default function TripDetailScreen() {
 
   if (!trip) {
     return (
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 p-4">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 p-4">
         <div className="max-w-4xl mx-auto">
           <button
             onClick={() => navigate('/home')}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 mb-4 font-medium"
+            className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity"
+            aria-label="Voltar para viagens"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
@@ -161,10 +162,10 @@ export default function TripDetailScreen() {
           <Card>
             <Card.Body className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
-              <h2 className="text-xl font-semibold text-slate-900 dark:text-white mb-2">
+              <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-2">
                 Viagem não encontrada
               </h2>
-              <p className="text-slate-600 dark:text-slate-400 mb-6">
+              <p className="text-body text-slate-600 dark:text-slate-400 mb-6">
                 Esta viagem pode ter sido deletada
               </p>
               <Button onClick={() => navigate('/home')}>
@@ -196,32 +197,33 @@ export default function TripDetailScreen() {
   console.log('🔍 final itinerary after transform:', itinerary);
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-12">
       {/* Header com fundo gradiente */}
-      <div className="bg-gradient-to-r from-blue-600 to-indigo-600 dark:from-blue-900 dark:to-indigo-900 text-white">
+      <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <button
             onClick={() => navigate('/home')}
-            className="flex items-center gap-2 text-blue-100 hover:text-white mb-4 font-medium"
+            className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity"
+            aria-label="Voltar para viagens"
           >
             <ArrowLeft className="w-4 h-4" />
             Voltar
           </button>
 
-          <h1 className="text-4xl font-bold mb-2">{trip.destination}</h1>
-          <p className="text-blue-100 mb-6">{trip.country}</p>
+          <h1 className="text-h1 font-bold mb-2 text-slate-900 dark:text-white">{trip.destination}</h1>
+          <p className="text-body text-slate-600 dark:text-slate-400 mb-6">{trip.country}</p>
 
           {/* Quick info */}
           <div className="grid grid-cols-3 gap-4 mt-8">
             <div>
-              <p className="text-blue-100 text-sm mb-1">Data</p>
-              <p className="font-semibold">
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Data</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
                 {daysCount} dias
               </p>
             </div>
             <div>
-              <p className="text-blue-100 text-sm mb-1">Orçamento</p>
-              <p className="font-semibold">
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Orçamento</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
                 {trip.budget === 'econômico'
                   ? '💰 Econômico'
                   : trip.budget === 'médio'
@@ -230,8 +232,8 @@ export default function TripDetailScreen() {
               </p>
             </div>
             <div>
-              <p className="text-blue-100 text-sm mb-1">Interesses</p>
-              <p className="font-semibold">{trip.interests?.length || 0}</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Interesses</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{trip.interests?.length || 0}</p>
             </div>
           </div>
         </div>
@@ -242,19 +244,19 @@ export default function TripDetailScreen() {
         {/* Trip Info Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Dates */}
-          <Card>
+          <Card elevation="lg">
             <Card.Body>
               <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+                <Calendar className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" />
                 <div>
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
+                  <p className="text-small text-slate-600 dark:text-slate-400 mb-1">
                     Data da viagem
                   </p>
                   <p className="font-semibold text-slate-900 dark:text-white">
                     {formatDate(trip.startDate)} até{' '}
                     {formatDate(trip.endDate)}
                   </p>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 mt-1">
+                  <p className="text-small text-slate-500 dark:text-slate-400 mt-1">
                     {daysCount} dias de aventura
                   </p>
                 </div>
@@ -263,12 +265,12 @@ export default function TripDetailScreen() {
           </Card>
 
           {/* Interests */}
-          <Card>
+          <Card elevation="lg">
             <Card.Body>
               <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-blue-600 dark:text-blue-400 flex-shrink-0 mt-1" />
+                <Users className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" />
                 <div className="w-full">
-                  <p className="text-sm text-slate-600 dark:text-slate-400 mb-2">
+                  <p className="text-small text-slate-600 dark:text-slate-400 mb-2">
                     Seus interesses
                   </p>
                   <div className="flex flex-wrap gap-2">
@@ -285,10 +287,10 @@ export default function TripDetailScreen() {
         </div>
 
         {/* Map */}
-        <Card className="mb-8">
+        <Card elevation="lg" className="mb-8">
           <Card.Header>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <MapIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-h2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <MapIcon className="w-6 h-6 text-primary dark:text-primary" />
               Mapa da Viagem
             </h2>
           </Card.Header>
@@ -343,10 +345,10 @@ export default function TripDetailScreen() {
         </Card>
 
         {/* Itinerary */}
-        <Card className="mb-8">
+        <Card elevation="lg" className="mb-8">
           <Card.Header>
-            <h2 className="text-2xl font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <MapIcon className="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            <h2 className="text-h2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
+              <MapIcon className="w-6 h-6 text-primary dark:text-primary" />
               Seu Itinerário
             </h2>
           </Card.Header>
@@ -363,15 +365,15 @@ export default function TripDetailScreen() {
                       {/* Day header */}
                       <div className="mb-4">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-blue-600 dark:bg-blue-500 flex items-center justify-center text-white font-bold">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white font-bold">
                             {index + 1}
                           </div>
                           <div>
-                            <h3 className="font-bold text-slate-900 dark:text-white text-lg">
+                            <h3 className="font-bold text-slate-900 dark:text-white text-h3">
                               {day.title || `Dia ${index + 1}`}
                             </h3>
                             {day.date && (
-                              <p className="text-sm text-slate-500 dark:text-slate-400">
+                              <p className="text-small text-slate-500 dark:text-slate-400">
                                 {day.date}
                               </p>
                             )}
@@ -379,7 +381,7 @@ export default function TripDetailScreen() {
                         </div>
 
                         {day.description && (
-                          <p className="text-slate-600 dark:text-slate-300 ml-13">
+                          <p className="text-body text-slate-600 dark:text-slate-300 ml-13">
                             {day.description}
                           </p>
                         )}
@@ -395,7 +397,7 @@ export default function TripDetailScreen() {
                             ) => (
                               <div
                                 key={attrIndex}
-                                className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg"
+                                className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
                               >
                                 <div className="flex-shrink-0 text-xl">
                                   {attraction.emoji || '📍'}
@@ -405,12 +407,12 @@ export default function TripDetailScreen() {
                                     {attraction.name}
                                   </p>
                                   {attraction.description && (
-                                    <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                                    <p className="text-small text-slate-600 dark:text-slate-400 mt-1">
                                       {attraction.description}
                                     </p>
                                   )}
                                   {attraction.time && (
-                                    <p className="text-xs text-slate-500 dark:text-slate-500 mt-1">
+                                    <p className="text-caption text-slate-500 dark:text-slate-500 mt-1">
                                       ⏱️ {attraction.time}
                                     </p>
                                   )}
@@ -425,17 +427,17 @@ export default function TripDetailScreen() {
                       {day.meals && (
                         <div className="mt-4 space-y-2 ml-4">
                           {day.meals.breakfast && (
-                            <p className="text-sm text-slate-600 dark:text-slate-300">
+                            <p className="text-small text-slate-600 dark:text-slate-300">
                               🍳 <strong>Café:</strong> {day.meals.breakfast}
                             </p>
                           )}
                           {day.meals.lunch && (
-                            <p className="text-sm text-slate-600 dark:text-slate-300">
+                            <p className="text-small text-slate-600 dark:text-slate-300">
                               🍝 <strong>Almoço:</strong> {day.meals.lunch}
                             </p>
                           )}
                           {day.meals.dinner && (
-                            <p className="text-sm text-slate-600 dark:text-slate-300">
+                            <p className="text-small text-slate-600 dark:text-slate-300">
                               🍽️ <strong>Jantar:</strong> {day.meals.dinner}
                             </p>
                           )}
@@ -458,16 +460,16 @@ export default function TripDetailScreen() {
 
         {/* Additional Info */}
         {trip.description && (
-          <Card>
+          <Card elevation="lg">
             <Card.Header>
-              <h3 className="text-lg font-semibold text-slate-900 dark:text-white flex items-center gap-2">
-                <FileText className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <FileText className="w-5 h-5 text-primary dark:text-primary" />
                 Informações Adicionais
               </h3>
             </Card.Header>
 
             <Card.Body>
-              <p className="text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
+              <p className="text-body text-slate-700 dark:text-slate-300 whitespace-pre-wrap">
                 {trip.description}
               </p>
             </Card.Body>
