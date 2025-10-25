@@ -40,6 +40,9 @@ const transformItinerary = (itinerary: any) => {
     const activities = itinerary.itinerary;
     console.log(`📊 Found ${activities.length} activities`);
     
+    // Debug: Show first activity raw data
+    console.log('🔍 First raw activity from Gemini:', activities[0]);
+    
     const daysMap = new Map<number, any[]>();
     
     // Group activities by day
@@ -60,17 +63,28 @@ const transformItinerary = (itinerary: any) => {
       
       return {
         title: `Dia ${dayNum}`,
-        attractions: dayActivities.map((activity: any) => ({
-          name: activity.name,
-          description: activity.reason,
-          time: activity.time,
-          emoji: '📍',
-          duration: activity.duration,
-          category: activity.category,
-          location: activity.location,
-          lat: activity.lat,
-          lng: activity.lng,
-        })),
+        attractions: dayActivities.map((activity: any) => {
+          const transformed = {
+            name: activity.name,
+            description: activity.reason,
+            time: activity.time,
+            emoji: '📍',
+            duration: activity.duration,
+            category: activity.category,
+            location: activity.location,
+            lat: activity.lat,
+            lng: activity.lng,
+          };
+          
+          // Debug first attraction of first day
+          if (dayNum === 1 && dayActivities[0] === activity) {
+            console.log('🔍 First transformed attraction (Day 1):', transformed);
+            console.log('  - lat:', activity.lat, 'type:', typeof activity.lat);
+            console.log('  - lng:', activity.lng, 'type:', typeof activity.lng);
+          }
+          
+          return transformed;
+        }),
       };
     });
     
@@ -81,6 +95,7 @@ const transformItinerary = (itinerary: any) => {
     };
     
     console.log('✅ transformItinerary result:', result);
+    console.log('✅ First day attractions after transform:', result.days[0]?.attractions);
     return result;
   }
   
@@ -276,18 +291,26 @@ export default function TripDetailScreen() {
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
               <>
                 {(() => {
-                  const attractions = itinerary.days.flatMap((day: any) =>
-                    (day.attractions || []).map((attr: any) => ({
-                      name: attr.name,
-                      reason: attr.description,
-                      lat: attr.lat,
-                      lng: attr.lng,
-                    }))
-                  );
-                  console.log('🗺️ MapSection - Attractions para mapa:', attractions);
-                  console.log('🗺️ MapSection - First attraction detail:', attractions[0]);
-                  console.log('🗺️ MapSection - itinerary.days:', itinerary.days);
-                  console.log('🗺️ MapSection - First day attractions:', itinerary.days[0]?.attractions);
+                  console.log('\n🗺️ MAP DEBUG - Input itinerary.days[0]:', itinerary.days[0]);
+                  console.log('🗺️ MAP DEBUG - Input itinerary.days[0].attractions[0]:', itinerary.days[0]?.attractions?.[0]);
+                  
+                  const attractions = itinerary.days.flatMap((day: any) => {
+                    return (day.attractions || []).map((attr: any) => {
+                      console.log('🗺️ MAP DEBUG - Raw attr object:', attr);
+                      console.log('  Keys:', Object.keys(attr));
+                      console.log('  lat value:', attr.lat, 'type:', typeof attr.lat);
+                      console.log('  lng value:', attr.lng, 'type:', typeof attr.lng);
+                      
+                      return {
+                        name: attr.name,
+                        reason: attr.description,
+                        lat: attr.lat,
+                        lng: attr.lng,
+                      };
+                    });
+                  });
+                  
+                  console.log('🗺️ MAP DEBUG - Final mapped attractions[0]:', attractions[0]);
                   return null;
                 })()}
                 <MapboxMap

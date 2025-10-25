@@ -34,6 +34,10 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     if (!mapContainer.current) return;
 
     console.log('🗺️ MapboxMap: Initializing with', attractions.length, 'attractions');
+    if (attractions.length > 0) {
+      console.log('🗺️ MapboxMap: First attraction received:', attractions[0]);
+      console.log('🗺️ MapboxMap: Keys in first attraction:', Object.keys(attractions[0]));
+    }
 
     mapboxgl.accessToken = mapboxToken;
 
@@ -54,6 +58,16 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         const attr = attraction as any;
         const lat = attr.location?.lat || attr.lat;
         const lng = attr.location?.lng || attr.lng;
+        
+        if (index === 0) {
+          console.log('🗺️ MapboxMap: FIRST MARKER DEBUG');
+          console.log('  attr:', attr);
+          console.log('  attr.lat:', attr.lat);
+          console.log('  attr.lng:', attr.lng);
+          console.log('  attr.location:', attr.location);
+          console.log('  Resolved lat:', lat);
+          console.log('  Resolved lng:', lng);
+        }
         
         console.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
         
