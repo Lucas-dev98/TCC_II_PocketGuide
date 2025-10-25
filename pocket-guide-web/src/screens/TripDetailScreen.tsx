@@ -199,14 +199,15 @@ export default function TripDetailScreen() {
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-12">
       {/* Header com fundo gradiente */}
-      <div className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
+      <header className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <button
             onClick={() => navigate('/home')}
-            className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity"
-            aria-label="Voltar para viagens"
+            type="button"
+            className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
+            aria-label="Voltar para a lista de viagens"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
             Voltar
           </button>
 
@@ -214,7 +215,7 @@ export default function TripDetailScreen() {
           <p className="text-body text-slate-600 dark:text-slate-400 mb-6">{trip.country}</p>
 
           {/* Quick info */}
-          <div className="grid grid-cols-3 gap-4 mt-8">
+          <div className="grid grid-cols-3 gap-4 mt-8" role="region" aria-label="Informações rápidas da viagem">
             <div>
               <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Data</p>
               <p className="font-semibold text-slate-900 dark:text-white">
@@ -237,17 +238,17 @@ export default function TripDetailScreen() {
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
       {/* Main content */}
-      <div className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-4xl mx-auto px-4 py-8">
         {/* Trip Info Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Dates */}
           <Card elevation="lg">
             <Card.Body>
               <div className="flex items-start gap-3">
-                <Calendar className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" />
+                <Calendar className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" aria-hidden="true" />
                 <div>
                   <p className="text-small text-slate-600 dark:text-slate-400 mb-1">
                     Data da viagem
@@ -268,16 +269,18 @@ export default function TripDetailScreen() {
           <Card elevation="lg">
             <Card.Body>
               <div className="flex items-start gap-3">
-                <Users className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" />
+                <Users className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" aria-hidden="true" />
                 <div className="w-full">
                   <p className="text-small text-slate-600 dark:text-slate-400 mb-2">
                     Seus interesses
                   </p>
-                  <div className="flex flex-wrap gap-2">
+                  <div className="flex flex-wrap gap-2" role="list" aria-label={`Lista de ${trip.interests?.length || 0} interesse(s)`}>
                     {trip.interests?.map((interest) => (
-                      <Badge key={interest} variant="primary">
-                        {interest}
-                      </Badge>
+                      <span key={interest} role="listitem">
+                        <Badge variant="primary">
+                          {interest}
+                        </Badge>
+                      </span>
                     ))}
                   </div>
                 </div>
@@ -348,28 +351,30 @@ export default function TripDetailScreen() {
         <Card elevation="lg" className="mb-8">
           <Card.Header>
             <h2 className="text-h2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
-              <MapIcon className="w-6 h-6 text-primary dark:text-primary" />
+              <MapIcon className="w-6 h-6 text-primary dark:text-primary" aria-hidden="true" />
               Seu Itinerário
             </h2>
           </Card.Header>
 
           <Card.Body>
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
-              <div className="space-y-6">
+              <div role="list" aria-label={`Itinerário de ${itinerary.days.length} dia(s)`} className="space-y-6">
                 {itinerary.days.map(
                   (day: any, index: number) => (
                     <div
                       key={index}
+                      role="listitem"
                       className="pb-6 border-b border-slate-200 dark:border-slate-700 last:border-b-0 last:pb-0"
                     >
                       {/* Day header */}
                       <div className="mb-4">
                         <div className="flex items-center gap-3 mb-2">
-                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white font-bold">
+                          <div className="flex-shrink-0 w-10 h-10 rounded-full bg-primary dark:bg-primary flex items-center justify-center text-white font-bold" aria-hidden="true">
                             {index + 1}
                           </div>
                           <div>
                             <h3 className="font-bold text-slate-900 dark:text-white text-h3">
+                              <span className="sr-only">Dia {index + 1}: </span>
                               {day.title || `Dia ${index + 1}`}
                             </h3>
                             {day.date && (
@@ -399,7 +404,7 @@ export default function TripDetailScreen() {
                                 key={attrIndex}
                                 className="flex gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg hover:bg-primary/5 dark:hover:bg-primary/10 transition-colors"
                               >
-                                <div className="flex-shrink-0 text-xl">
+                                <div className="flex-shrink-0 text-xl" aria-hidden="true">
                                   {attraction.emoji || '📍'}
                                 </div>
                                 <div className="flex-1">
@@ -449,7 +454,7 @@ export default function TripDetailScreen() {
               </div>
             ) : (
               <div className="text-center py-8">
-                <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" />
+                <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" aria-hidden="true" />
                 <p className="text-slate-600 dark:text-slate-400">
                   Itinerário ainda não foi gerado
                 </p>
@@ -475,7 +480,7 @@ export default function TripDetailScreen() {
             </Card.Body>
           </Card>
         )}
-      </div>
+      </main>
     </div>
   );
 }
