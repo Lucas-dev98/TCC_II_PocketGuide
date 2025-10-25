@@ -274,17 +274,32 @@ export default function TripDetailScreen() {
           </Card.Header>
           <Card.Body className="p-0">
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
-              <MapboxMap
-                attractions={itinerary.days.flatMap((day: any) => 
-                  (day.attractions || []).map((attr: any) => ({
-                    name: attr.name,
-                    reason: attr.description,
-                    lat: attr.lat,
-                    lng: attr.lng,
-                  }))
-                )}
-                height="400px"
-              />
+              <>
+                {(() => {
+                  const attractions = itinerary.days.flatMap((day: any) => 
+                    (day.attractions || []).map((attr: any) => ({
+                      name: attr.name,
+                      reason: attr.description,
+                      lat: attr.lat,
+                      lng: attr.lng,
+                    }))
+                  );
+                  console.log('🗺️ MapSection - Attractions para mapa:', attractions);
+                  console.log('🗺️ MapSection - itinerary.days:', itinerary.days);
+                  return null;
+                })()}
+                <MapboxMap
+                  attractions={itinerary.days.flatMap((day: any) => 
+                    (day.attractions || []).map((attr: any) => ({
+                      name: attr.name,
+                      reason: attr.description,
+                      lat: attr.lat,
+                      lng: attr.lng,
+                    }))
+                  )}
+                  height="400px"
+                />
+              </>
             ) : (
               <div className="p-8 text-center text-slate-500">
                 <p>Mapa não disponível para este itinerário</p>
