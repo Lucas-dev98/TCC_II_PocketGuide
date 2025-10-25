@@ -276,7 +276,7 @@ export default function TripDetailScreen() {
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
               <>
                 {(() => {
-                  const attractions = itinerary.days.flatMap((day: any) => 
+                  const attractions = itinerary.days.flatMap((day: any) =>
                     (day.attractions || []).map((attr: any) => ({
                       name: attr.name,
                       reason: attr.description,
@@ -285,7 +285,9 @@ export default function TripDetailScreen() {
                     }))
                   );
                   console.log('🗺️ MapSection - Attractions para mapa:', attractions);
+                  console.log('🗺️ MapSection - First attraction detail:', attractions[0]);
                   console.log('🗺️ MapSection - itinerary.days:', itinerary.days);
+                  console.log('🗺️ MapSection - First day attractions:', itinerary.days[0]?.attractions);
                   return null;
                 })()}
                 <MapboxMap
