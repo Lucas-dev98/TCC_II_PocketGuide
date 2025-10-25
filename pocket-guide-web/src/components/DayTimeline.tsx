@@ -60,16 +60,35 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
               onClick={() => onAttractionClick?.(attraction)}
             >
               {/* Foto da atração */}
-              {attraction.photos && attraction.photos.length > 0 && (
-                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 overflow-hidden relative group">
+              {attraction.photos && attraction.photos.length > 0 ? (
+                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 overflow-hidden relative group flex items-center justify-center">
                   <img
                     src={attraction.photos[0].url}
                     alt={attraction.photos[0].alt}
                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                     onError={(e) => {
-                      (e.target as HTMLImageElement).style.display = 'none';
+                      const img = e.target as HTMLImageElement;
+                      console.warn(`❌ Erro carregando imagem: ${img.src}`);
+                      // Tentar segunda URL se disponível
+                      const photos = attraction.photos;
+                      if (photos && photos.length > 1) {
+                        img.src = photos[1].url;
+                      } else {
+                        // Se falhar, mostrar apenas fallback
+                        img.style.display = 'none';
+                      }
+                    }}
+                    onLoad={() => {
+                      console.log(`✅ Imagem carregada: ${attraction.name}`);
                     }}
                   />
+                </div>
+              ) : (
+                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
+                  <div className="text-center">
+                    <MapPin className="w-8 h-8 text-indigo-300 mx-auto mb-2" />
+                    <p className="text-sm text-indigo-600">{attraction.name}</p>
+                  </div>
                 </div>
               )}
 

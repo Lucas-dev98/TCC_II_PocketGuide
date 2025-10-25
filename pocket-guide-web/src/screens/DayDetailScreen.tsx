@@ -8,6 +8,7 @@ import { DayTimeline } from "@/components/DayTimeline";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
+import PhotoService from "@/services/photoService";
 
 /**
  * Tela de detalhes de um dia específico da viagem
@@ -380,50 +381,39 @@ export const DayDetailScreen: React.FC = () => {
 
 /**
  * Função auxiliar para gerar fotos de demonstração
- * Em produção, estas viriam do banco de dados ou API
+ * Usa PhotoService com múltiplas estratégias
  */
 function generatePhotosForAttraction(attraction: any): PhotoData[] {
-  const queries: { [key: string]: string } = {
-    colosseum: 'colosseum rome',
-    'roman forum': 'roman forum',
-    'palatine hill': 'palatine hill',
-    monti: 'rome monti neighborhood',
-    lunch: 'italian food rome',
-    restaurante: 'restaurant rome',
-    museu: 'museum',
-    natureza: 'nature landscape',
-    compra: 'shopping city',
-  };
+  console.log(`📸 Gerando fotos para atração: "${attraction.name}"`);
 
-  let query = 'attraction landmark';
-  const lowerName = attraction.name.toLowerCase();
-  
-  for (const [key, value] of Object.entries(queries)) {
-    if (lowerName.includes(key)) {
-      query = value;
-      break;
+  const photos: PhotoData[] = [];
+
+  // Gerar 2 URLs diferentes usando PhotoService
+  for (let i = 0; i < 2; i++) {
+    try {
+      const photoSource = PhotoService.generatePhotoUrl(attraction.name, i);
+      
+      photos.push({
+        id: `${attraction.id || 'attraction'}-${i}`,
+        url: photoSource.url,
+        alt: `${attraction.name} - foto ${i + 1}`,
+        attractionName: attraction.name,
+        source: photoSource.source,
+      });
+      
+      console.log(`✅ Foto ${i + 1} gerada para "${attraction.name}":`);
+      console.log(`   URL: ${photoSource.url}`);
+      console.log(`   Source: ${photoSource.source}`);
+    } catch (error) {
+      console.error(`❌ Erro gerando foto ${i + 1} para "${attraction.name}":`, error);
     }
   }
 
-  // Gerar 2 fotos diferentes
-  const mockPhotos: PhotoData[] = [
-    {
-      id: `${attraction.id}-1`,
-      url: `https://source.unsplash.com/1200x600/?${encodeURIComponent(query)}&sig=1`,
-      alt: `${attraction.name} - foto 1`,
-      attractionName: attraction.name,
-      source: "unsplash",
-    },
-    {
-      id: `${attraction.id}-2`,
-      url: `https://source.unsplash.com/1200x600/?${encodeURIComponent(query)}&sig=2`,
-      alt: `${attraction.name} - foto 2`,
-      attractionName: attraction.name,
-      source: "unsplash",
-    },
-  ];
+  if (photos.length === 0) {
+    console.warn(`⚠️ Nenhuma foto foi gerada para "${attraction.name}"`);
+  }
 
-  return mockPhotos;
+  return photos;
 }
 
 export default DayDetailScreen;
