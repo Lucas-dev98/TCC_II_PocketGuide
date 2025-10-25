@@ -32,6 +32,5 @@
     }
   },
   "include": ["pocket-guide-web/src"],
-  "exclude": ["node_modules", "dist", "build"],
-  "references": [{ "path": "./pocket-guide-web/tsconfig.json" }]
+  "exclude": ["node_modules", "dist", "build"]
 }
