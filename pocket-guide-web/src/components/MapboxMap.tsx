@@ -48,6 +48,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     if (attractions.length > 0 && map.current) {
       console.log('🗺️ MapboxMap: Adding markers');
       const bounds = new mapboxgl.LngLatBounds();
+      let hasValidMarkers = false;
       
       attractions.forEach((attraction, index) => {
         const attr = attraction as any;
@@ -56,7 +57,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         
         console.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
         
-        if (lat && lng && map.current) {
+        if (lat !== undefined && lng !== undefined && lat !== null && lng !== null && map.current) {
           new mapboxgl.Marker({ color: '#3B82F6' })
             .setLngLat([lng, lat])
             .setPopup(
@@ -67,13 +68,20 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
             .addTo(map.current as mapboxgl.Map);
           
           bounds.extend([lng, lat]);
+          hasValidMarkers = true;
         }
       });
 
-      // Fit bounds to all markers
-      if (map.current) {
-        console.log('🗺️ MapboxMap: Fitting bounds');
-        (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 50 });
+      // Fit bounds to all markers only if we have valid markers
+      if (map.current && hasValidMarkers) {
+        try {
+          console.log('🗺️ MapboxMap: Fitting bounds');
+          (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 50 });
+        } catch (error) {
+          console.error('❌ MapboxMap: Error fitting bounds:', error);
+        }
+      } else if (map.current && !hasValidMarkers) {
+        console.warn('⚠️ MapboxMap: No valid markers to display');
       }
     }
 

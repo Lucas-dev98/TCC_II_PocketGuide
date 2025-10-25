@@ -279,10 +279,8 @@ export default function TripDetailScreen() {
                   (day.attractions || []).map((attr: any) => ({
                     name: attr.name,
                     reason: attr.description,
-                    location: {
-                      lat: attr.lat,
-                      lng: attr.lng,
-                    },
+                    lat: attr.lat,
+                    lng: attr.lng,
                   }))
                 )}
                 height="400px"
