@@ -30,9 +30,13 @@ export default function HomeScreen() {
   // Carregar viagens ao montar
   useEffect(() => {
     if (user?.uid) {
+      console.log('🏠 HomeScreen: Loading trips for user:', user.uid);
       loadTrips(user.uid);
     }
   }, [user?.uid, loadTrips]);
+
+  console.log('🏠 HomeScreen: Current trips:', trips);
+  console.log('🏠 HomeScreen: isLoading:', isLoading);
 
   const handleLogout = async () => {
     try {

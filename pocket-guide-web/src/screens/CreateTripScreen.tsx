@@ -175,7 +175,7 @@ export default function CreateTripScreen() {
         budget: formData.budget,
         interests: formData.interests,
         description: formData.description,
-        itinerary,
+        itinerary: itinerary ? { itinerary } : null,
         userId: user.uid,
         createdAt: new Date().toISOString(),
       });

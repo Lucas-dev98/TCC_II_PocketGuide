@@ -21,16 +21,25 @@ import { formatDate } from '../utils/formatDate';
  * to display format (array of days with activities)
  */
 const transformItinerary = (itinerary: any) => {
-  if (!itinerary) return null;
+  console.log('📍 transformItinerary input:', itinerary);
+  
+  if (!itinerary) {
+    console.warn('⚠️ transformItinerary: itinerary is null/undefined');
+    return null;
+  }
   
   // If it's already in the correct format
   if (itinerary.days && Array.isArray(itinerary.days)) {
+    console.log('✅ transformItinerary: Already in correct format (has days array)');
     return itinerary;
   }
   
   // If it's the Gemini format: { itinerary: [...], tips: [...] }
   if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
+    console.log('✅ transformItinerary: Converting from Gemini format');
     const activities = itinerary.itinerary;
+    console.log(`📊 Found ${activities.length} activities`);
+    
     const daysMap = new Map<number, any[]>();
     
     // Group activities by day
@@ -41,6 +50,8 @@ const transformItinerary = (itinerary: any) => {
       }
       daysMap.get(day)!.push(activity);
     });
+    
+    console.log(`📊 Grouped into ${daysMap.size} days`);
     
     // Convert to days array
     const days = Array.from({ length: daysMap.size }, (_, index) => {
@@ -63,13 +74,17 @@ const transformItinerary = (itinerary: any) => {
       };
     });
     
-    return {
+    const result = {
       days,
       tips: itinerary.tips || [],
       destination: itinerary.destination,
     };
+    
+    console.log('✅ transformItinerary result:', result);
+    return result;
   }
   
+  console.warn('⚠️ transformItinerary: Unknown format', itinerary);
   return itinerary;
 };
 
@@ -90,6 +105,9 @@ export default function TripDetailScreen() {
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
 
   const trip = id ? trips.find((t) => t.id === id) : null;
+
+  console.log('🔍 TripDetailScreen - Trip:', trip);
+  console.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
 
   useEffect(() => {
     // Simular carregamento
@@ -150,8 +168,12 @@ export default function TripDetailScreen() {
       ? JSON.parse(trip.itinerary)
       : trip.itinerary;
 
+  console.log('🔍 rawItinerary after parse:', rawItinerary);
+
   // Transform itinerary to the correct format
   const itinerary = transformItinerary(rawItinerary);
+  
+  console.log('🔍 final itinerary after transform:', itinerary);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-12">

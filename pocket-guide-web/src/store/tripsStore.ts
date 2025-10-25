@@ -59,16 +59,21 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
       const snapshot = await getDocs(q);
       const trips: Trip[] = [];
 
+      console.log('📚 tripsStore.loadTrips: Found', snapshot.size, 'trips');
+
       snapshot.forEach((doc) => {
-        trips.push({
+        const tripData = {
           id: doc.id,
           ...doc.data(),
-        } as Trip);
+        } as Trip;
+        console.log('📚 tripsStore.loadTrips: Trip:', tripData);
+        trips.push(tripData);
       });
 
+      console.log('📚 tripsStore.loadTrips: Setting trips:', trips);
       set({ trips });
     } catch (error) {
-      console.error('Erro ao carregar viagens:', error);
+      console.error('❌ Erro ao carregar viagens:', error);
       set({
         error:
           error instanceof Error
