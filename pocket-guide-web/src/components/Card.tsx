@@ -3,6 +3,7 @@ import clsx from 'clsx'
 
 interface CardProps extends React.HTMLAttributes<HTMLDivElement> {
   elevation?: 'sm' | 'md' | 'lg' | 'xl'
+  isInteractive?: boolean
   children: React.ReactNode
 }
 
@@ -38,13 +39,13 @@ const elevationClasses = {
 }
 
 const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, action, children, className = '' }) => (
-  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700', className)}>
+  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-border dark:border-border-dark', className)}>
     {children ? (
       children
     ) : (
       <div>
-        {title && <h3 className="text-lg font-semibold text-slate-900 dark:text-white">{title}</h3>}
-        {subtitle && <p className="text-sm text-slate-500 dark:text-slate-400">{subtitle}</p>}
+        {title && <h3 className="text-h3 font-semibold text-slate-900 dark:text-white">{title}</h3>}
+        {subtitle && <p className="text-small text-slate-500 dark:text-slate-400">{subtitle}</p>}
       </div>
     )}
     {action && <div>{action}</div>}
@@ -58,13 +59,14 @@ const CardBodyComponent: React.FC<CardBodyProps> = ({ children, className = '' }
 )
 
 const CardFooterComponent: React.FC<CardFooterProps> = ({ children, className = '' }) => (
-  <div className={clsx('mt-4 pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
+  <div className={clsx('mt-4 pt-4 border-t border-border dark:border-border-dark', className)}>
     {children}
   </div>
 )
 
 const CardComponent: React.FC<CardProps> = ({
   elevation = 'md',
+  isInteractive = false,
   className,
   children,
   ...props
@@ -72,9 +74,14 @@ const CardComponent: React.FC<CardProps> = ({
   return (
     <div
       className={clsx(
-        'bg-white dark:bg-slate-800 rounded-lg',
+        'card-base',
+        'bg-white dark:bg-slate-800',
+        'rounded-lg',
+        'border border-border dark:border-border-dark',
         elevationClasses[elevation],
         'p-4',
+        isInteractive && 'card-interactive',
+        isInteractive && 'hover:shadow-lg hover:-translate-y-1 active:shadow-md active:translate-y-0',
         className,
       )}
       {...props}
