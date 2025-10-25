@@ -1,62 +1,37 @@
 {
-  "name": "pocket-guide",
+  "name": "pocket-guide-monorepo",
   "version": "1.0.0",
-  "description": "AI-powered travel itinerary app",
-  "main": "node_modules/expo/AppEntry.js",
+  "description": "AI-powered travel itinerary app - React Web",
   "private": true,
-  "scripts": {
-    "start": "expo start --clear",
-    "android": "expo start --android --clear",
-    "ios": "expo start --ios --clear",
-    "web": "expo start --web --clear",
-    "build": "expo build",
-    "type-check": "tsc --noEmit",
-    "test": "jest",
-    "test:watch": "jest --watch",
-    "test:coverage": "jest --coverage"
-  },
-  "dependencies": {
-    "@expo/metro-runtime": "~6.1.2",
-    "@react-native-async-storage/async-storage": "^2.2.0",
-    "@react-native-google-signin/google-signin": "^16.0.0",
-    "@react-navigation/bottom-tabs": "^6.5.0",
-    "@react-navigation/native": "^6.1.18",
-    "@react-navigation/native-stack": "^6.11.0",
-    "expo": "~54.0.17",
-    "expo-auth-session": "^7.0.8",
-    "expo-constants": "~18.0.10",
-    "expo-font": "~14.0.9",
-    "expo-linking": "~8.0.8",
-    "expo-splash-screen": "~31.0.10",
-    "expo-status-bar": "~3.0.8",
-    "expo-web-browser": "^15.0.8",
-    "firebase": "^10.7.0",
-    "polyline-encoded": "^0.0.9",
-    "react": "19.1.0",
-    "react-dom": "19.1.0",
-    "react-native": "0.81.5",
-    "react-native-gesture-handler": "^2.18.0",
-    "react-native-maps": "1.20.1",
-    "react-native-safe-area-context": "~5.6.0",
-    "react-native-screens": "~4.16.0",
-    "react-native-web": "^0.21.0",
-    "zod": "^4.1.12",
-    "zustand": "4.4.7"
-  },
-  "devDependencies": {
-    "@babel/preset-typescript": "^7.27.1",
-    "@jest/globals": "^30.2.0",
-    "@testing-library/jest-native": "^5.4.3",
-    "@testing-library/react-native": "^13.3.3",
-    "@types/jest": "^30.0.0",
-    "@types/react": "~19.1.10",
-    "babel-jest": "^30.2.0",
-    "jest": "^30.2.0",
-    "jest-environment-jsdom": "^30.2.0",
-    "typescript": "~5.9.2"
-  },
   "engines": {
-    "node": ">=16.0.0",
-    "npm": ">=8.0.0"
+    "node": ">=18.0.0",
+    "npm": ">=9.0.0"
+  },
+  "scripts": {
+    "dev": "cd pocket-guide-web && npm run dev",
+    "build": "cd pocket-guide-web && npm run build",
+    "preview": "cd pocket-guide-web && npm run preview",
+    "type-check": "cd pocket-guide-web && npm run type-check",
+    "lint": "cd pocket-guide-web && npm run lint",
+    "test": "cd pocket-guide-web && npm run test",
+    "test:watch": "cd pocket-guide-web && npm run test:watch",
+    "test:coverage": "cd pocket-guide-web && npm run test:coverage",
+    "install:web": "cd pocket-guide-web && npm install",
+    "deploy": "cd pocket-guide-web && vercel --prod"
+  },
+  "keywords": [
+    "travel",
+    "itinerary",
+    "ai",
+    "gemini",
+    "mapbox",
+    "react",
+    "typescript"
+  ],
+  "author": "Lucas Bastos",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/Lucas-dev98/TCC_II_PocketGuide.git"
   }
 }
