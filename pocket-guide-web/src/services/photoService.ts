@@ -19,14 +19,16 @@ export class PhotoService {
    * Gera URL de foto para uma atração com múltiplas estratégias
    */
   static generatePhotoUrl(attractionName: string, index: number = 0): PhotoSource {
-    // Estratégia 1: Unsplash Images API (mais confiável)
+    // Estratégia 1: Unsplash Source API (mais confiável e simples)
     try {
       const query = this.getSearchQuery(attractionName);
       const width = 1200;
       const height = 600;
       
-      // Usando a API de imagens do Unsplash que não requer autenticação
-      const url = `https://images.unsplash.com/photo-${this.getPhotoIds(query)[index % this.getPhotoIds(query).length]}?w=${width}&h=${height}&fit=crop&crop=entropy&q=80&fm=webp`;
+      // Usar source.unsplash.com que é mais confiável
+      // Adiciona um parâmetro unique baseado no índice para variar as imagens
+      const sig = Math.floor(Math.random() * 10000) + index;
+      const url = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)}&sig=${sig}`;
       
       console.log(`📸 Gerando URL para "${attractionName}": ${url}`);
       
@@ -101,41 +103,10 @@ export class PhotoService {
   /**
    * Retorna IDs de fotos pré-selecionadas do Unsplash
    * Estas são IDs reais de fotos públicas com permissão
+   * NOTA: Já não usado - usando source.unsplash.com ao invés
    */
-  static getPhotoIds(query: string): string[] {
-    const photoIdMap: { [key: string]: string[] } = {
-      'ancient rome': ['1571232857-19e4486ae64a', '1548732328-d06e3d306f02', '1566073051-e192b24b5b8f'],
-      'rome forum': ['1491554176-e8c0e2c6d3a4', '1548732201-4e1fa8e1e5d7', '1467844864-4b7f2b5a1e7d'],
-      'rome hills': ['1532274323-e3a8c2d4e9f7', '1548731638-e8c0e2c6d3a4', '1467844864-4b7f2b5a1e7d'],
-      'rome street': ['1517604930-0f8434a53f2e', '1548732323-e8c0e2c6d3a4', '1467844864-4b7f2b5a1e7d'],
-      'fountain rome': ['1533105792-f8d73c62e97a', '1548732201-4e1fa8e1e5d7', '1467844864-4b7f2b5a1e7d'],
-      'vatican city': ['1491554894-8f2a0d7eb8d4', '1548732328-d06e3d306f02', '1467844864-4b7f2b5a1e7d'],
-      'italian food': ['1473093051-e3cf2d7eb8d4', '1546069901-ba9599a7e72c', '1495521821-7ad8dd3c43c5'],
-      'restaurant food': ['1504674900-e77aaadba960', '1546069901-ba9599a7e72c', '1504674900-e77aaadba960'],
-      'pizza italy': ['1628840042-cfb747b8c0ab', '1546069901-ba9599a7e72c', '1628840042-cfb747b8c0ab'],
-      'pasta italy': ['1627308261-55eea4c69dab', '1546069901-ba9599a7e72c', '1627308261-55eea4c69dab'],
-      'coffee shop': ['1509042239-8ac07e3a5e3f', '1495521821-7ad8dd3c43c5', '1509042239-8ac07e3a5e3f'],
-      'museum art': ['1564399579-ab7501b1d4d5', '1580136579312-94651dfd596d', '1564399579-ab7501b1d4d5'],
-      'museum gallery': ['1564399579-ab7501b1d4d5', '1580136579312-94651dfd596d', '1564399579-ab7501b1d4d5'],
-      'art gallery': ['1578321286-94d440642117', '1580136579312-94651dfd596d', '1578321286-94d440642117'],
-      'nature landscape': ['1506905925-2a4edeaf7ee3', '1441974231531-c6227db76b6e', '1506905925-2a4edeaf7ee3'],
-      'natural park': ['1441974231531-c6227db76b6e', '1506905925-2a4edeaf7ee3', '1441974231531-c6227db76b6e'],
-      'botanical garden': ['1510531173d71-b2c1e1d3e4f5', '1441974231531-c6227db76b6e', '1506905925-2a4edeaf7ee3'],
-      'beach ocean': ['1507003188-3ebaaf87b84f', '1507525428034-956a0db534d3', '1507003188-3ebaaf87b84f'],
-      'shopping city': ['1555637534-46c5b814cc4b', '1478926716170-98b6b7c5f21f', '1555637534-46c5b814cc4b'],
-      'mall city': ['1555637534-46c5b814cc4b', '1478926716170-98b6b7c5f21f', '1555637534-46c5b814cc4b'],
-      'street market': ['1500595046-63b36417ef48', '1478926716170-98b6b7c5f21f', '1500595046-63b36417ef48'],
-      'travel landmark': ['1488646953-5b8cb4a31e4b', '1488549897206-d61d8fb8e7ae', '1488646953-5b8cb4a31e4b'],
-      'travel destination': ['1503391614556-6f75a16b8e3c', '1488549897206-d61d8fb8e7ae', '1503391614556-6f75a16b8e3c'],
-      'travel landscape': ['1506905925-2a4edeaf7ee3', '1488549897206-d61d8fb8e7ae', '1506905925-2a4edeaf7ee3'],
-    };
-
-    const ids = photoIdMap[query];
-    if (ids && ids.length > 0) {
-      return ids;
-    }
-
-    // Fallback para algumas fotos genéricas
+  static getPhotoIds(): string[] {
+    // Mantido para compatibilidade, mas não é usado mais
     return [
       '1488646953-5b8cb4a31e4b',
       '1488549897206-d61d8fb8e7ae',
