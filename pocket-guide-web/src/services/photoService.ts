@@ -1,7 +1,7 @@
 /**
  * photoService.ts
  * Gerencia geração de URLs de fotos com múltiplas estratégias
- * Usa Unsplash com fallbacks robustos
+ * Tenta várias APIs de fallback para máxima confiabilidade
  */
 
 export interface PhotoSource {
@@ -19,16 +19,14 @@ export class PhotoService {
    * Gera URL de foto para uma atração com múltiplas estratégias
    */
   static generatePhotoUrl(attractionName: string, index: number = 0): PhotoSource {
-    // Estratégia 1: Unsplash Source API (mais confiável e simples)
     try {
-      const query = this.getSearchQuery(attractionName);
       const width = 1200;
       const height = 600;
       
-      // Usar source.unsplash.com que é mais confiável
-      // Adiciona um parâmetro unique baseado no índice para variar as imagens
-      const sig = Math.floor(Math.random() * 10000) + index;
-      const url = `https://source.unsplash.com/${width}x${height}/?${encodeURIComponent(query)}&sig=${sig}`;
+      // Estratégia 1: picsum.photos (mais confiável que source.unsplash.com)
+      // Usa seed baseado no nome e índice para consistência
+      const seed = this.hashCode(attractionName + index);
+      const url = `https://picsum.photos/${width}/${height}?random=${Math.abs(seed) % 10000}`;
       
       console.log(`📸 Gerando URL para "${attractionName}": ${url}`);
       
@@ -101,21 +99,7 @@ export class PhotoService {
   }
 
   /**
-   * Retorna IDs de fotos pré-selecionadas do Unsplash
-   * Estas são IDs reais de fotos públicas com permissão
-   * NOTA: Já não usado - usando source.unsplash.com ao invés
-   */
-  static getPhotoIds(): string[] {
-    // Mantido para compatibilidade, mas não é usado mais
-    return [
-      '1488646953-5b8cb4a31e4b',
-      '1488549897206-d61d8fb8e7ae',
-      '1503391614556-6f75a16b8e3c',
-    ];
-  }
-
-  /**
-   * Retorna foto placeholder quando Unsplash falha
+   * Retorna foto placeholder quando APIs falham
    */
   static getPlaceholderPhoto(attractionName: string): PhotoSource {
     // Gerar cor consistente baseado no nome
@@ -132,7 +116,7 @@ export class PhotoService {
   }
 
   /**
-   * Hash simples para gerar cores consistentes
+   * Hash simples para gerar valores consistentes
    */
   static hashCode(str: string): number {
     let hash = 0;
