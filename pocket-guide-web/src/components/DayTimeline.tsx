@@ -56,10 +56,24 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
           {/* Conteúdo da atração */}
           <div className="flex-1 pt-1">
             <Card
-              className="hover:shadow-lg transition-shadow cursor-pointer"
+              className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
               onClick={() => onAttractionClick?.(attraction)}
             >
-              <div className="space-y-3">
+              {/* Foto da atração */}
+              {attraction.photos && attraction.photos.length > 0 && (
+                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 overflow-hidden relative group">
+                  <img
+                    src={attraction.photos[0].url}
+                    alt={attraction.photos[0].alt}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).style.display = 'none';
+                    }}
+                  />
+                </div>
+              )}
+
+              <div className="space-y-3 p-4">
                 {/* Header: Hora e Nome */}
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1">

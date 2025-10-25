@@ -56,13 +56,14 @@ export const DayDetailScreen: React.FC = () => {
         console.log("📍 Itinerary:", foundTrip.itinerary);
         console.log("📍 Attractions:", foundTrip.attractions);
         setTrip(foundTrip);
+        setLoading(false);
       } else {
         console.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
+        setLoading(false);
       }
     } catch (error) {
       console.error("❌ Erro ao buscar viagem:", error);
       showError("Não foi possível carregar a viagem");
-    } finally {
       setLoading(false);
     }
   }, [tripId, trips, showError]);
@@ -85,12 +86,18 @@ export const DayDetailScreen: React.FC = () => {
     // Tentar buscar do itinerary primeiro, depois attractions
     const attractionsData = trip?.attractions || [];
     
+    console.log("🎯 Extraindo atrações do dia", currentDay);
+    console.log("📦 attractionsData:", attractionsData);
+    console.log("📋 trip?.itinerary:", trip?.itinerary);
+
     // Se não houver attractions diretas, tentar extrair do itinerary
     if (attractionsData.length === 0 && trip?.itinerary && trip.itinerary.length > 0) {
       const dayItinerary = trip.itinerary[currentDay - 1];
+      console.log("📌 dayItinerary para o dia", currentDay, ":", dayItinerary);
+      
       if (dayItinerary?.attractions) {
-        console.log("📍 Atrações do dia do itinerary:", dayItinerary.attractions);
-        return dayItinerary.attractions
+        console.log("✅ Atrações do dia do itinerary:", dayItinerary.attractions);
+        const extracted = dayItinerary.attractions
           .map((a: any) => ({
             id: a.id || `${currentDay}-${Math.random()}`,
             day: currentDay,
@@ -109,12 +116,18 @@ export const DayDetailScreen: React.FC = () => {
             category: a.category || "outro",
             photos: generatePhotosForAttraction(a),
           } as AttractionDetail));
+        
+        console.log("📸 Atrações finais extraídas:", extracted);
+        return extracted;
       }
     }
 
-    if (!attractionsData || attractionsData.length === 0) return [];
+    if (!attractionsData || attractionsData.length === 0) {
+      console.warn("⚠️ Nenhuma atração encontrada para o dia", currentDay);
+      return [];
+    }
     
-    return attractionsData
+    const filtered = attractionsData
       .filter((a) => a.day === currentDay)
       .map((a) => ({
         ...a,
@@ -131,7 +144,10 @@ export const DayDetailScreen: React.FC = () => {
           : "outro",
         photos: generatePhotosForAttraction(a),
       } as AttractionDetail));
-  }, [trip?.attractions, currentDay]);
+    
+    console.log("📸 Atrações filtradas da lista:", filtered);
+    return filtered;
+  }, [trip?.attractions, trip?.itinerary, currentDay]);
 
   // Buscar data do dia
   const dayDate = useMemo(() => {
