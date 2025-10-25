@@ -26,12 +26,14 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
   useEffect(() => {
     if (!mapboxToken) {
-      console.warn('Mapbox token not configured');
+      console.warn('🗺️ Mapbox token not configured');
       return;
     }
 
     if (map.current) return; // initialize map only once
     if (!mapContainer.current) return;
+
+    console.log('🗺️ MapboxMap: Initializing with', attractions.length, 'attractions');
 
     mapboxgl.accessToken = mapboxToken;
 
@@ -44,27 +46,32 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
     // Add attractions as markers
     if (attractions.length > 0 && map.current) {
-      attractions.forEach((attraction) => {
-        if (attraction.location?.lat && attraction.location?.lng && map.current) {
+      console.log('🗺️ MapboxMap: Adding markers');
+      const bounds = new mapboxgl.LngLatBounds();
+      
+      attractions.forEach((attraction, index) => {
+        const lat = attraction.location?.lat || attraction.lat;
+        const lng = attraction.location?.lng || attraction.lng;
+        
+        console.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
+        
+        if (lat && lng && map.current) {
           new mapboxgl.Marker({ color: '#3B82F6' })
-            .setLngLat([attraction.location.lng, attraction.location.lat])
+            .setLngLat([lng, lat])
             .setPopup(
               new mapboxgl.Popup().setHTML(
-                `<div class="p-2"><strong>${attraction.name}</strong><p>${attraction.reason}</p></div>`
+                `<div class="p-2"><strong>${attraction.name}</strong><p>${attraction.reason || ''}</p></div>`
               )
             )
             .addTo(map.current as mapboxgl.Map);
+          
+          bounds.extend([lng, lat]);
         }
       });
 
       // Fit bounds to all markers
-      if (attractions.length > 0 && map.current) {
-        const bounds = new mapboxgl.LngLatBounds();
-        attractions.forEach((attraction) => {
-          if (attraction.location?.lat && attraction.location?.lng) {
-            bounds.extend([attraction.location.lng, attraction.location.lat]);
-          }
-        });
+      if (map.current) {
+        console.log('🗺️ MapboxMap: Fitting bounds');
         (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 50 });
       }
     }

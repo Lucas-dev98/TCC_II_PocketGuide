@@ -273,9 +273,18 @@ export default function TripDetailScreen() {
             </h2>
           </Card.Header>
           <Card.Body className="p-0">
-            {itinerary && itinerary.itinerary && itinerary.itinerary.length > 0 ? (
+            {itinerary && itinerary.days && itinerary.days.length > 0 ? (
               <MapboxMap
-                attractions={itinerary.itinerary}
+                attractions={itinerary.days.flatMap((day: any) => 
+                  (day.attractions || []).map((attr: any) => ({
+                    name: attr.name,
+                    reason: attr.description,
+                    location: {
+                      lat: attr.lat,
+                      lng: attr.lng,
+                    },
+                  }))
+                )}
                 height="400px"
               />
             ) : (
