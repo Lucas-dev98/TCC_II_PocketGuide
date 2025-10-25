@@ -213,3 +213,85 @@ export interface CacheEntry<T> {
   timestamp: number;
   ttl: number;
 }
+
+// ============================================
+// 📅 DAY DETAIL FEATURE TYPES
+// ============================================
+
+/**
+ * Photo for a location/attraction
+ */
+export interface PhotoData {
+  id: string;
+  url: string;
+  alt: string;
+  attractionName: string;
+  source?: "gemini" | "google" | "unsplash" | "local";
+  width?: number;
+  height?: number;
+}
+
+/**
+ * Detailed information for an attraction on a specific day
+ */
+export interface AttractionDetail extends Attraction {
+  photos?: PhotoData[];
+  fullDescription?: string;
+  tips?: string[];
+  category?: "museu" | "restaurante" | "natureza" | "compras" | "cultura" | "outro";
+  openingHours?: string;
+  website?: string;
+  phone?: string;
+  address?: string;
+  averageRating?: number;
+  reviews?: number;
+}
+
+/**
+ * Complete day itinerary with all details
+ */
+export interface DayDetail {
+  dayNumber: number;
+  date?: string;
+  title: string;
+  description?: string;
+  
+  // Attractions for this day
+  attractions: AttractionDetail[];
+  
+  // Navigation/Route between attractions
+  route?: {
+    startPoint: Location;
+    waypoints: Location[];
+    estimatedTime: string;
+    transportMode: "walking" | "car" | "public" | "bike";
+    distance?: string;
+  };
+  
+  // Meals
+  meals?: {
+    breakfast?: string;
+    lunch?: string;
+    dinner?: string;
+  };
+  
+  // Tips and info
+  weatherForecast?: {
+    condition: string;
+    temperature: number;
+    humidity: number;
+  };
+  
+  localTips?: string[];
+}
+
+/**
+ * Navigation state for day detail
+ */
+export interface DayNavigationState {
+  currentDayNumber: number;
+  totalDays: number;
+  hasPrevious: boolean;
+  hasNext: boolean;
+}
+

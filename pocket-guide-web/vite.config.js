@@ -65,9 +65,10 @@ export default defineConfig({
         outDir: 'dist',
         sourcemap: false,
         minify: 'terser',
-        // Increased from 500 kB to 1500 kB to accommodate large libraries
-        // This is reasonable for a complex app with maps and multiple features
-        chunkSizeWarningLimit: 1500,
+        // Increased to 1700 kB to accommodate mapbox library (1.6 MB)
+        // This is reasonable for a complex app with mapping capabilities
+        // The warning is suppressed when chunk size is within limit
+        chunkSizeWarningLimit: 1700,
         rollupOptions: {
             output: {
                 manualChunks: function (id) {
