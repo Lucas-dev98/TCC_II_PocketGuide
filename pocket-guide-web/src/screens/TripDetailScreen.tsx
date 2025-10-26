@@ -18,9 +18,9 @@ import { formatDate } from '../utils/formatDate';
 
 /**
  * Gera URL de imagem do Unsplash baseado no nome da atração
- * Usa PhotoService para gerenciar cache e fallbacks
+ * Usa a API do Unsplash com fallback para cores
  */
-const getAttractionImage = (attractionName: string): string => {
+const getAttractionImage = async (attractionName: string): Promise<string> => {
   // Mapeamento de queries otimizadas por tipo de atração
   const queries: { [key: string]: string } = {
     colosseum: 'colosseum rome',
@@ -82,9 +82,66 @@ const getAttractionImage = (attractionName: string): string => {
     }
   }
 
-  // Usar URL direta do Unsplash (mais rápido e confiável)
-  // source.unsplash.com é mais rápido que a API
-  return `https://source.unsplash.com/400x300/?${encodeURIComponent(query)}&sig=${Date.now()}`;
+  try {
+    // Usar API do Unsplash diretamente
+    const apiKey = import.meta.env.VITE_UNSPLASH_API_KEY;
+    if (!apiKey) {
+      console.warn('⚠️ VITE_UNSPLASH_API_KEY não configurada');
+      return getPlaceholderImage(query);
+    }
+
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${apiKey}`
+    );
+
+    if (!response.ok) {
+      console.warn(`⚠️ API Unsplash retornou ${response.status}`);
+      return getPlaceholderImage(query);
+    }
+
+    const data = await response.json();
+    if (data.results && data.results.length > 0) {
+      const imageUrl = data.results[0].urls.small;
+      console.log(`✅ Imagem encontrada para "${query}": ${imageUrl.substring(0, 60)}...`);
+      return imageUrl;
+    }
+
+    console.warn(`⚠️ Nenhuma imagem encontrada para "${query}"`);
+    return getPlaceholderImage(query);
+  } catch (error) {
+    console.error(`❌ Erro ao buscar imagem para "${query}":`, error);
+    return getPlaceholderImage(query);
+  }
+};
+
+/**
+ * Retorna URL de imagem placeholder com cor baseada no query
+ */
+const getPlaceholderImage = (query: string): string => {
+  // Cores para diferentes tipos de queries
+  const colors: { [key: string]: string } = {
+    rome: '8B4513', // Brown
+    restaurant: 'FF6B6B', // Red
+    coffee: '6F4E37', // Brown
+    museum: '4169E1', // Royal Blue
+    park: '228B22', // Forest Green
+    beach: 'FFD700', // Gold
+    mountain: '696969', // Dim Gray
+    shop: 'FF1493', // Deep Pink
+    spa: 'DDA0DD', // Plum
+    landmark: 'DC143C', // Crimson
+  };
+
+  // Encontrar cor baseada na query
+  let color = 'A9A9A9'; // Default gray
+  for (const [key, colorCode] of Object.entries(colors)) {
+    if (query.toLowerCase().includes(key)) {
+      color = colorCode;
+      break;
+    }
+  }
+
+  return `https://via.placeholder.com/400x300/${color}/FFFFFF?text=${encodeURIComponent(query.substring(0, 20))}`;
 };
 
 /**
@@ -203,41 +260,73 @@ export default function TripDetailScreen() {
 
   // Carregar imagens das atrações
   useEffect(() => {
-    if (!trip?.itinerary?.days) {
-      console.log('⚠️ Sem atrações para carregar imagens');
+    console.log('🖼️ [useEffect] Iniciando carregamento de imagens...');
+    console.log('🖼️ trip:', trip?.id, 'itinerary:', !!trip?.itinerary);
+    
+    if (!trip?.itinerary) {
+      console.log('⚠️ Sem itinerary para carregar imagens');
       return;
     }
 
-    const imageMap = new Map<string, string>();
-    const itinerary = transformItinerary(trip.itinerary);
-
-    if (!itinerary?.days) {
-      console.log('⚠️ Itinerary vazio');
-      return;
-    }
-
-    for (const day of itinerary.days) {
-      if (!day.attractions) continue;
-      
-      for (const attraction of day.attractions) {
-        const cacheKey = attraction.name.toLowerCase();
-        
-        // Se já tem em cache, pular
-        if (imageMap.has(cacheKey)) continue;
-        
-        try {
-          const imageUrl = getAttractionImage(attraction.name);
-          imageMap.set(cacheKey, imageUrl);
-          console.log(`📸 URL gerada para: ${attraction.name}`);
-        } catch (error) {
-          console.warn(`⚠️ Erro ao gerar imagem para: ${attraction.name}`, error);
-        }
+    let itinerary = trip.itinerary;
+    
+    // Se for string, fazer parse
+    if (typeof itinerary === 'string') {
+      try {
+        itinerary = JSON.parse(itinerary);
+      } catch (error) {
+        console.error('❌ Erro ao fazer parse do itinerary:', error);
+        return;
       }
     }
+    
+    // Transformar se necessário
+    itinerary = transformItinerary(itinerary);
 
-    console.log(`✅ ${imageMap.size} imagens carregadas`);
-    setAttractionImages(imageMap);
-  }, [trip?.itinerary]);
+    if (!itinerary?.days || itinerary.days.length === 0) {
+      console.log('⚠️ Itinerary sem dias');
+      return;
+    }
+
+    console.log(`🖼️ Processando ${itinerary.days.length} dias...`);
+
+    // Carregar imagens de forma assíncrona
+    const loadImages = async () => {
+      const imageMap = new Map<string, string>();
+
+      for (const day of itinerary.days) {
+        if (!day.attractions || day.attractions.length === 0) {
+          console.log(`🖼️ Dia sem atrações`);
+          continue;
+        }
+        
+        console.log(`🖼️ Dia com ${day.attractions.length} atrações`);
+        
+        for (const attraction of day.attractions) {
+          const cacheKey = attraction.name.toLowerCase();
+          
+          // Se já tem em cache, pular
+          if (imageMap.has(cacheKey)) {
+            console.log(`  ♻️ Já em cache: ${attraction.name}`);
+            continue;
+          }
+          
+          try {
+            const imageUrl = await getAttractionImage(attraction.name);
+            imageMap.set(cacheKey, imageUrl);
+            console.log(`  ✅ URL obtida para: ${attraction.name}`);
+          } catch (error) {
+            console.warn(`  ❌ Erro ao obter imagem para: ${attraction.name}`, error);
+          }
+        }
+      }
+
+      console.log(`🖼️ ✅ TOTAL: ${imageMap.size} imagens carregadas`);
+      setAttractionImages(new Map(imageMap)); // Force update
+    };
+
+    loadImages();
+  }, [trip?.id, trip?.itinerary]);
 
   useEffect(() => {
     // Simular carregamento
@@ -520,7 +609,11 @@ export default function TripDetailScreen() {
                           {/* Attractions Grid Preview */}
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
                             {day.attractions.slice(0, 3).map((attraction: any, attrIndex: number) => {
-                              const imageUrl = attractionImages.get(attraction.name.toLowerCase());
+                              // Obter URL do mapa de cache carregado
+                              const cachedImageUrl = attractionImages.get(attraction.name.toLowerCase());
+                              
+                              // Usar fallback com placeholder
+                              const imageUrl = cachedImageUrl || `https://via.placeholder.com/400x300/A9A9A9/FFFFFF?text=${encodeURIComponent(attraction.name.substring(0, 20))}`;
                               
                               return (
                                 <div
@@ -528,22 +621,20 @@ export default function TripDetailScreen() {
                                   className="relative rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 hover:shadow-md transition-shadow group cursor-pointer"
                                   onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
                                 >
-                                  {/* Image with fallback */}
-                                  {imageUrl ? (
-                                    <img
-                                      src={imageUrl}
-                                      alt={attraction.name}
-                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                      onError={(e) => {
-                                        // Fallback se a imagem falhar
-                                        (e.target as HTMLImageElement).style.display = 'none';
-                                      }}
-                                    />
-                                  ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center animate-pulse">
-                                      <span className="text-slate-500 dark:text-slate-400 text-sm">📸 Carregando...</span>
-                                    </div>
-                                  )}
+                                  {/* Image */}
+                                  <img
+                                    src={imageUrl}
+                                    alt={attraction.name}
+                                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                    onLoad={() => {
+                                      console.log(`✅ Imagem carregada: ${attraction.name}`);
+                                    }}
+                                    onError={(e) => {
+                                      console.warn(`❌ Erro ao carregar: ${attraction.name}`);
+                                      // Fallback com SVG
+                                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e2e8f0" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%2364748b" text-anchor="middle" dominant-baseline="middle"%3E📸 Sem imagem%3C/text%3E%3C/svg%3E';
+                                    }}
+                                  />
                                   
                                   {/* Overlay gradient */}
                                   <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
