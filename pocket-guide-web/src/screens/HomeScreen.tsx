@@ -7,9 +7,10 @@ import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { SkeletonCard } from '../components/Skeleton'
-import { Plus, MapPin, Calendar, Trash2, LogOut, Sun, Moon } from 'lucide-react'
-import { useTheme } from '../contexts/ThemeContext'
+import { Plus, MapPin, Calendar, Trash2, LogOut } from 'lucide-react'
+import { ThemeToggle } from '../components/ThemeToggle'
 import { formatDate } from '../utils/formatDate'
+import { debug } from '../utils/debug'
 
 /**
  * HomeScreen - Listagem de viagens do usuário
@@ -26,7 +27,6 @@ import { formatDate } from '../utils/formatDate'
 export default function HomeScreen() {
   const navigate = useNavigate()
   const { user, signOut } = useAuth()
-  const { isDark, toggleTheme } = useTheme()
   const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore()
   const { showError, showSuccess } = useToast()
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -34,20 +34,20 @@ export default function HomeScreen() {
   // Carregar viagens ao montar
   useEffect(() => {
     if (user?.uid) {
-      console.log('🏠 HomeScreen: Loading trips for user:', user.uid)
+      debug.log('🏠 HomeScreen: Loading trips for user:', user.uid)
       loadTrips(user.uid)
     }
   }, [user?.uid, loadTrips])
 
-  console.log('🏠 HomeScreen: Current trips:', trips)
-  console.log('🏠 HomeScreen: isLoading:', isLoading)
+  debug.log('🏠 HomeScreen: Current trips:', trips)
+  debug.log('🏠 HomeScreen: isLoading:', isLoading)
 
   const handleLogout = async () => {
     try {
       await signOut()
       navigate('/login', { replace: true })
     } catch (error) {
-      console.error('Erro ao fazer logout:', error)
+      debug.error('Erro ao fazer logout:', error)
       showError('Erro ao fazer logout')
     }
   }
@@ -70,7 +70,7 @@ export default function HomeScreen() {
       await deleteTrip(tripId)
       showSuccess('Viagem deletada com sucesso!')
     } catch (error) {
-      console.error('Erro ao deletar viagem:', error)
+      debug.error('Erro ao deletar viagem:', error)
       showError('Erro ao deletar viagem. Tente novamente.')
     } finally {
       setDeleting(null)
@@ -93,18 +93,7 @@ export default function HomeScreen() {
 
           <div className="flex items-center gap-3">
             {/* Toggle tema */}
-            <button
-              onClick={toggleTheme}
-              className="p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-700 transition"
-              title={isDark ? 'Modo claro' : 'Modo escuro'}
-              aria-label={isDark ? 'Ativar modo claro' : 'Ativar modo escuro'}
-            >
-              {isDark ? (
-                <Sun className="w-5 h-5 text-slate-600 dark:text-slate-400" />
-              ) : (
-                <Moon className="w-5 h-5 text-slate-600" />
-              )}
-            </button>
+            <ThemeToggle />
 
             {/* Logout */}
             <Button
