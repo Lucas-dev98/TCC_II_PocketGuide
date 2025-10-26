@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { Button, Skeleton, EmptyState, useToast, MapboxMap } from "@/components";
+import { Button, Skeleton, EmptyState, useToast, MapboxMap, Card } from "@/components";
 import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
@@ -296,14 +296,14 @@ export const DayDetailScreen: React.FC = () => {
   // Skeleton loading
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50">
-        <div className="sticky top-0 z-10 bg-white border-b border-gray-200 p-4">
-          <Skeleton className="w-32 h-8" />
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
+        <div className="sticky top-0 z-10 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 p-4">
+          <Skeleton className="w-32 h-10" />
         </div>
-        <div className="max-w-4xl mx-auto p-4 space-y-6">
+        <div className="max-w-6xl mx-auto p-4 space-y-6">
           <Skeleton className="w-full h-96" />
-          <Skeleton className="w-full h-32" />
-          <Skeleton className="w-full h-64" />
+          <Skeleton className="w-full h-40" />
+          <Skeleton className="w-full h-80" />
         </div>
       </div>
     );
@@ -312,39 +312,43 @@ export const DayDetailScreen: React.FC = () => {
   // Validar se o dia existe
   if (currentDay < 1 || currentDay > totalDays) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <EmptyState
-          title="Dia inválido"
-          description={`A viagem tem apenas ${totalDays} dia(s).`}
-          action={{
-            label: "Voltar para viagem",
-            onClick: handleBackToTrip,
-          }}
-        />
+      <div className="flex items-center justify-center min-h-screen bg-slate-50 dark:bg-slate-900">
+        <Card className="max-w-md shadow-lg border-slate-200 dark:border-slate-700">
+          <Card.Body>
+            <EmptyState
+              title="Dia inválido"
+              description={`A viagem tem apenas ${totalDays} dia(s).`}
+              action={{
+                label: "Voltar para viagem",
+                onClick: handleBackToTrip,
+              }}
+            />
+          </Card.Body>
+        </Card>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-900">
       {/* Header com navegação */}
-      <header className="sticky top-0 z-20 bg-white border-b border-gray-200">
-        <div className="max-w-4xl mx-auto px-4 py-3 flex items-center gap-3">
+      <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
+        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBackToTrip}
-            className="rounded-full"
+            className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
             aria-label="Voltar para detalhes da viagem"
           >
-            <ArrowLeft className="w-5 h-5" />
+            <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
           </Button>
           <div className="flex-1">
-            <h1 className="text-xl font-bold text-gray-900">
+            <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
               {trip?.destination || "Viagem"}
             </h1>
-            <p className="text-sm text-gray-600">
-              Dia {currentDay} de {totalDays}
+            <p className="text-small text-slate-600 dark:text-slate-400">
+              📅 Dia {currentDay} de {totalDays}
             </p>
           </div>
         </div>
@@ -359,108 +363,103 @@ export const DayDetailScreen: React.FC = () => {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="max-w-4xl mx-auto px-4 py-6 space-y-8">
+      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
         {/* Galeria de fotos (primeira atração ou placeholder) */}
-        {attractions.length > 0 && attractions[0].photos && attractions[0].photos.length > 0 ? (
-          <section aria-label="Galeria de fotos do dia">
+        <section aria-label="Galeria de fotos do dia">
+          {attractions.length > 0 && attractions[0].photos && attractions[0].photos.length > 0 ? (
             <DayGallery
               photos={attractions[0].photos}
               attractionName={attractions[0].name}
             />
-          </section>
-        ) : (
-          <div className="w-full h-96 bg-gradient-to-br from-indigo-100 to-indigo-50 rounded-lg flex items-center justify-center">
-            <div className="text-center">
-              <MapPin className="w-12 h-12 text-indigo-300 mx-auto mb-2" />
-              <p className="text-indigo-700 font-medium">
-                {trip?.destination || "Seu destino"}
-              </p>
-            </div>
-          </div>
-        )}
-
-        {/* Info do destino */}
-        {trip && (
-          <section className="bg-white rounded-lg p-6 border border-gray-200">
-            <h2 className="text-lg font-bold text-gray-900 mb-4">
-              Dia {currentDay} em {trip.destination}
-            </h2>
-
-            {trip.country && (
-              <p className="text-sm text-gray-600 mb-2">📍 {trip.country}</p>
-            )}
-
-            {/* Informações do dia da viagem Gemini se disponível */}
-            {trip.itinerary && trip.itinerary[currentDay - 1] && (
-              <div className="space-y-2 mt-4">
-                <p className="text-sm text-gray-700">
-                  {trip.itinerary[currentDay - 1].description}
-                </p>
-              </div>
-            )}
-          </section>
-        )}
-
-        {/* Timeline de atrações */}
-        <section aria-label="Atrações do dia">
-          <div className="mb-4">
-            <h2 className="text-lg font-bold text-gray-900">
-              Atrações ({attractions.length})
-            </h2>
-          </div>
-
-          {attractions.length > 0 ? (
-            <>
-              {photosLoading && (
-                <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg flex items-center gap-2">
-                  <div className="animate-spin rounded-full h-4 w-4 border-2 border-blue-500 border-t-transparent" />
-                  <p className="text-sm text-blue-600">Carregando fotos das atrações...</p>
-                </div>
-              )}
-              <DayTimeline
-                attractions={attractions}
-                onAttractionClick={(attraction) => {
-                  // TODO: Abrir modal com detalhes completos da atração
-                  console.log("Atração clicada:", attraction);
-                }}
-              />
-            </>
           ) : (
-            <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-              <div className="mb-4">
-                <EmptyState
-                  title="Sem atrações"
-                  description="Nenhuma atração planejada para este dia."
-                />
-              </div>
-              
-              {/* Debug info */}
-              <div className="mt-6 text-xs text-gray-600 bg-white p-4 rounded border border-gray-200">
-                <p className="font-mono font-bold mb-2">📊 Debug Info:</p>
-                <p>Trip ID: {tripId}</p>
-                <p>Day: {currentDay}</p>
-                <p>Trip attractions: {trip?.attractions?.length || 0}</p>
-                <p>Trip itinerary days: {trip?.itinerary?.length || 0}</p>
-                {trip?.itinerary && trip.itinerary[currentDay - 1] && (
-                  <div className="mt-2 bg-yellow-50 p-2 rounded">
-                    <p>📌 Day {currentDay} itinerary:</p>
-                    <pre className="text-xs overflow-auto">
-                      {JSON.stringify(trip.itinerary[currentDay - 1], null, 2)}
-                    </pre>
-                  </div>
-                )}
+            <div className="w-full h-96 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900 dark:to-blue-900 rounded-lg shadow-md flex items-center justify-center">
+              <div className="text-center">
+                <MapPin className="w-12 h-12 text-indigo-400 dark:text-indigo-300 mx-auto mb-3" />
+                <p className="text-indigo-700 dark:text-indigo-200 font-semibold text-lg">
+                  {trip?.destination || "Seu destino"}
+                </p>
+                <p className="text-indigo-600 dark:text-indigo-300 text-sm mt-1">
+                  Explore as atrações do dia
+                </p>
               </div>
             </div>
           )}
         </section>
 
+        {/* Info do destino */}
+        {trip && (
+          <Card className="shadow-md border-slate-200 dark:border-slate-700">
+            <Card.Header
+              title={`📍 Dia ${currentDay} em ${trip.destination}`}
+              subtitle={trip.country}
+            />
+            <Card.Body>
+              {/* Informações do dia da viagem Gemini se disponível */}
+              {trip.itinerary && trip.itinerary[currentDay - 1] && (
+                <div className="space-y-3">
+                  <p className="text-small text-slate-700 dark:text-slate-300 leading-relaxed">
+                    {trip.itinerary[currentDay - 1].description}
+                  </p>
+                </div>
+              )}
+              {!trip.itinerary && (
+                <p className="text-small text-slate-600 dark:text-slate-400">
+                  Explore as atrações planejadas para este dia da sua viagem.
+                </p>
+              )}
+            </Card.Body>
+          </Card>
+        )}
+
+        {/* Timeline de atrações */}
+        <section aria-label="Atrações do dia">
+          <div className="mb-6">
+            <h2 className="text-h2 font-bold text-slate-900 dark:text-white">
+              ✈️ Atrações
+            </h2>
+            <p className="text-small text-slate-600 dark:text-slate-400 mt-1">
+              {attractions.length} {attractions.length === 1 ? "atração" : "atrações"} planejadas
+            </p>
+          </div>
+
+          {attractions.length > 0 ? (
+            <>
+              {photosLoading && (
+                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
+                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
+                  <p className="text-small text-blue-700 dark:text-blue-300">
+                    ⏳ Carregando fotos das atrações...
+                  </p>
+                </div>
+              )}
+              <DayTimeline
+                attractions={attractions}
+                onAttractionClick={(attraction) => {
+                  console.log("Atração clicada:", attraction);
+                }}
+              />
+            </>
+          ) : (
+            <Card className="shadow-md border-slate-200 dark:border-slate-700">
+              <Card.Body>
+                <EmptyState
+                  title="Sem atrações planejadas"
+                  description="Nenhuma atração foi adicionada para este dia da viagem."
+                  action={{
+                    label: "Voltar à viagem",
+                    onClick: handleBackToTrip,
+                  }}
+                />
+              </Card.Body>
+            </Card>
+          )}
+        </section>
+
         {/* Mapa com localizações do dia */}
         {attractions.length > 0 && (
-          <section aria-label="Mapa das atrações">
-            <div className="bg-white rounded-lg p-6 border border-gray-200">
-              <h2 className="text-lg font-bold text-gray-900 mb-4">
-                🗺️ Rota do Dia
-              </h2>
+          <Card className="shadow-md border-slate-200 dark:border-slate-700">
+            <Card.Header title="🗺️ Rota do Dia" />
+            <Card.Body>
               <MapboxMap
                 attractions={attractions.map((a) => ({
                   name: a.name,
@@ -473,8 +472,8 @@ export const DayDetailScreen: React.FC = () => {
                   console.log("Localização selecionada:", attraction);
                 }}
               />
-            </div>
-          </section>
+            </Card.Body>
+          </Card>
         )}
       </main>
     </div>
