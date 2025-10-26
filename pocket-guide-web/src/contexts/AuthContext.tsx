@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
 import { auth, signInWithGoogle, signOut as firebaseSignOut } from '../services/firebase'
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import * as tokenStorage from '../services/tokenStorage'
+import { debug } from '../utils/debug'
 
 interface AuthContextType {
   user: FirebaseUser | null
@@ -31,8 +33,44 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    // Tenta recuperar sessão persistida
+    const recoverSession = async () => {
+      try {
+        const storedUser = tokenStorage.getStoredUser()
+        
+        if (storedUser && tokenStorage.hasValidSession()) {
+          // Se tem sessão válida no localStorage, tenta revalidar com Firebase
+          debug.log('Sessão encontrada no localStorage, revalidando...')
+        }
+      } catch (err) {
+        debug.error('Erro ao recuperar sessão:', err)
+      }
+    }
+    
+    recoverSession()
+
+    // Monitora mudanças de autenticação do Firebase
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
       setUser(currentUser)
+      
+      // Se usuário fez login, salva no localStorage
+      if (currentUser) {
+        const idToken = currentUser.getIdToken()
+        idToken.then((token) => {
+          tokenStorage.saveToken(token)
+          tokenStorage.saveUser({
+            uid: currentUser.uid,
+            email: currentUser.email,
+            displayName: currentUser.displayName,
+            photoURL: currentUser.photoURL,
+          })
+          debug.log('Token salvo no localStorage')
+        })
+      } else {
+        // Se usuário fez logout, limpa localStorage
+        tokenStorage.clearToken()
+      }
+      
       setIsLoading(false)
     })
 
@@ -44,10 +82,11 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setError(null)
       setIsLoading(true)
       await signInWithGoogle()
+      // Token será salvo no onAuthStateChanged acima
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha ao fazer login'
       setError(message)
-      console.error('Erro no login:', err)
+      debug.error('Erro no login:', err)
       throw err
     } finally {
       setIsLoading(false)
@@ -57,12 +96,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const handleSignOut = async () => {
     try {
       setError(null)
+      // Limpa token do localStorage antes de fazer logout no Firebase
+      tokenStorage.clearToken()
       await firebaseSignOut()
       setUser(null)
+      debug.log('Logout realizado, sessão limpa')
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha ao fazer logout'
       setError(message)
-      console.error('Erro no logout:', err)
+      debug.error('Erro no logout:', err)
       throw err
     }
   }
