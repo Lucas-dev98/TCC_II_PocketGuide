@@ -226,7 +226,7 @@ export interface PhotoData {
   url: string;
   alt: string;
   attractionName: string;
-  source?: "gemini" | "google" | "unsplash" | "local" | "placeholder";
+  source?: "gemini" | "google" | "unsplash" | "pexels" | "fallback" | "local" | "placeholder";
   width?: number;
   height?: number;
 }

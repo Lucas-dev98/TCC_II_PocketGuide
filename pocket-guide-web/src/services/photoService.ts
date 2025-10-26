@@ -1,179 +1,226 @@
 export interface PhotoSource {
   url: string;
-  source: 'unsplash' | 'placeholder';
+  source: 'unsplash' | 'pexels' | 'fallback';
   width: number;
   height: number;
 }
 
-const ATTRACTION_STYLES: { [key: string]: { gradient: string; emoji: string } } = {
+interface UnsplashImage {
+  urls: {
+    regular: string;
+  };
+  user: {
+    name: string;
+  };
+}
+
+interface UnsplashResponse {
+  results: UnsplashImage[];
+  total: number;
+}
+
+const ATTRACTION_SEARCH_QUERIES: { [key: string]: string } = {
+  'colosseum': 'colosseum rome',
+  'colosseo': 'colosseum rome',
+  'roman forum': 'roman forum rome',
+  'palatine hill': 'palatine hill rome',
+  'monti': 'monti rome',
+  'trevi fountain': 'trevi fountain',
+  'vatican': 'vatican city',
+  'vatican city': 'vatican city',
+  'restaurante': 'italian restaurant',
+  'restaurant': 'italian restaurant',
+  'pizza': 'pizza italian',
+  'pasta': 'pasta italian',
+  'café': 'coffee shop',
+  'coffee': 'coffee shop',
+  'lunch': 'food meal',
+  'dinner': 'food dining',
+  'breakfast': 'breakfast food',
+  'museu': 'museum rome',
+  'museo': 'museum rome',
+  'museum': 'museum rome',
+  'gallery': 'art gallery',
+  'art': 'art exhibition',
+  'nature': 'nature landscape',
+  'natureza': 'nature landscape',
+  'park': 'park nature',
+  'garden': 'garden flowers',
+  'beach': 'beach coast',
+  'ocean': 'ocean seascape',
+  'mountain': 'mountain landscape',
+  'hiking': 'hiking trail',
+  'shopping': 'shopping mall',
+  'market': 'market street',
+  'compra': 'shopping',
+  'compras': 'shopping mall',
+  'leisure': 'leisure activity',
+  'entertainment': 'entertainment',
+  'relax': 'relaxation spa',
+  'spa': 'spa wellness',
+  'landmark': 'landmark historic',
+  'travel': 'travel destination',
+  'trip': 'travel adventure',
+  'attraction': 'tourist attraction',
+  'tour': 'guided tour',
+  'walk': 'walking tour',
+};
+
+const FALLBACK_GRADIENTS: { [key: string]: { gradient: string; emoji: string } } = {
   'colosseum': { gradient: 'from-amber-600 to-orange-600', emoji: '🏛️' },
-  'colosseo': { gradient: 'from-amber-600 to-orange-600', emoji: '🏛️' },
-  'roman forum': { gradient: 'from-amber-700 to-yellow-600', emoji: '🏛️' },
-  'palatine hill': { gradient: 'from-green-600 to-emerald-600', emoji: '⛰️' },
-  'monti': { gradient: 'from-slate-600 to-gray-700', emoji: '🏘️' },
-  'trevi fountain': { gradient: 'from-blue-400 to-cyan-500', emoji: '⛲' },
-  'vatican': { gradient: 'from-purple-600 to-pink-600', emoji: '⛪' },
-  'vatican city': { gradient: 'from-purple-600 to-pink-600', emoji: '⛪' },
-  'lunch': { gradient: 'from-red-500 to-orange-500', emoji: '🍝' },
-  'restaurante': { gradient: 'from-red-600 to-rose-600', emoji: '🍽️' },
   'restaurant': { gradient: 'from-red-600 to-rose-600', emoji: '🍽️' },
   'pizza': { gradient: 'from-orange-500 to-red-600', emoji: '🍕' },
-  'pasta': { gradient: 'from-yellow-600 to-orange-500', emoji: '🍝' },
-  'café': { gradient: 'from-amber-700 to-yellow-700', emoji: '☕' },
-  'coffee': { gradient: 'from-amber-700 to-yellow-700', emoji: '☕' },
-  'food': { gradient: 'from-orange-500 to-red-500', emoji: '🍴' },
-  'dinner': { gradient: 'from-indigo-600 to-purple-700', emoji: '🌙' },
-  'breakfast': { gradient: 'from-yellow-500 to-orange-400', emoji: '🥐' },
-  'museu': { gradient: 'from-purple-600 to-indigo-700', emoji: '🎨' },
-  'museo': { gradient: 'from-purple-600 to-indigo-700', emoji: '🎨' },
   'museum': { gradient: 'from-purple-600 to-indigo-700', emoji: '🎨' },
-  'gallery': { gradient: 'from-indigo-600 to-blue-700', emoji: '🖼️' },
-  'art': { gradient: 'from-pink-600 to-purple-600', emoji: '🎭' },
-  'natureza': { gradient: 'from-green-500 to-teal-600', emoji: '🌿' },
-  'nature': { gradient: 'from-green-500 to-teal-600', emoji: '🌿' },
   'park': { gradient: 'from-green-600 to-emerald-700', emoji: '🌳' },
-  'garden': { gradient: 'from-green-400 to-emerald-500', emoji: '🌺' },
   'beach': { gradient: 'from-blue-400 to-cyan-400', emoji: '🏖️' },
-  'ocean': { gradient: 'from-blue-600 to-teal-600', emoji: '🌊' },
-  'mountain': { gradient: 'from-gray-600 to-slate-700', emoji: '⛰️' },
-  'hiking': { gradient: 'from-green-700 to-emerald-800', emoji: '🥾' },
-  'shopping': { gradient: 'from-pink-500 to-rose-600', emoji: '🛍️' },
-  'market': { gradient: 'from-yellow-500 to-orange-600', emoji: '🏪' },
-  'compra': { gradient: 'from-pink-500 to-rose-600', emoji: '🛍️' },
-  'compras': { gradient: 'from-pink-500 to-rose-600', emoji: '🛍️' },
-  'leisure': { gradient: 'from-blue-500 to-purple-600', emoji: '🎪' },
-  'entertainment': { gradient: 'from-pink-500 to-orange-500', emoji: '🎉' },
-  'relax': { gradient: 'from-cyan-400 to-blue-500', emoji: '🧘' },
-  'spa': { gradient: 'from-purple-500 to-pink-500', emoji: '🛀' },
   'landmark': { gradient: 'from-slate-600 to-gray-700', emoji: '🗺️' },
-  'travel': { gradient: 'from-blue-600 to-indigo-700', emoji: '✈️' },
-  'trip': { gradient: 'from-indigo-600 to-purple-700', emoji: '🧳' },
-  'attraction': { gradient: 'from-amber-600 to-orange-600', emoji: '🎯' },
-  'tour': { gradient: 'from-orange-600 to-red-600', emoji: '🚌' },
-  'walk': { gradient: 'from-green-500 to-teal-500', emoji: '🚶' },
 };
 
 export class PhotoService {
-  static generatePhotoUrl(attractionName: string): PhotoSource {
+  private static readonly UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_API_KEY || '';
+  private static readonly UNSPLASH_BASE_URL = 'https://api.unsplash.com';
+  private static readonly CACHE = new Map<string, PhotoSource>();
+
+  static async generatePhotoUrl(attractionName: string): Promise<PhotoSource> {
     try {
-      const width = 1200;
-      const height = 600;
-      
-      const style = this.getAttractionStyle(attractionName);
-      const svg = this.generateGradientSvg(style.gradient, style.emoji, width, height);
-      const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
-      
-      console.log(`📸 Gerando imagem para "${attractionName}": ${style.emoji}`);
-      
-      return {
-        url: dataUrl,
-        source: 'unsplash',
-        width,
-        height,
-      };
+      const cacheKey = attractionName.toLowerCase();
+      if (this.CACHE.has(cacheKey)) {
+        return this.CACHE.get(cacheKey)!;
+      }
+
+      if (this.UNSPLASH_API_KEY) {
+        console.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"`);
+        const photo = await this.fetchFromUnsplash(attractionName);
+        if (photo) {
+          this.CACHE.set(cacheKey, photo);
+          return photo;
+        }
+      } else {
+        console.log(`⚠️ Sem chave Unsplash API - usando fallback para: "${attractionName}"`);
+      }
+
+      console.log(`📸 Usando fallback gradient para: "${attractionName}"`);
+      return this.getFallbackPhoto(attractionName);
     } catch (error) {
-      console.warn(`⚠️ Erro gerando imagem para "${attractionName}":`, error);
-      return this.getPlaceholderPhoto(attractionName);
+      console.error(`❌ Erro gerando foto para "${attractionName}":`, error);
+      return this.getFallbackPhoto(attractionName);
     }
   }
 
-  static getAttractionStyle(attractionName: string): { gradient: string; emoji: string } {
-    const lowerName = attractionName.toLowerCase();
-    
-    if (ATTRACTION_STYLES[lowerName]) {
-      return ATTRACTION_STYLES[lowerName];
+  private static async fetchFromUnsplash(attractionName: string): Promise<PhotoSource | null> {
+    try {
+      const query = this.getSearchQuery(attractionName);
+      console.log(`   → Query de busca: "${query}"`);
+
+      const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
+      url.searchParams.set('query', query);
+      url.searchParams.set('client_id', this.UNSPLASH_API_KEY);
+      url.searchParams.set('per_page', '1');
+      url.searchParams.set('orientation', 'landscape');
+
+      const response = await fetch(url.toString());
+
+      if (!response.ok) {
+        console.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
+        return null;
+      }
+
+      const data: UnsplashResponse = await response.json();
+
+      if (data.results.length === 0) {
+        console.warn(`⚠️ Nenhuma imagem encontrada para: "${query}"`);
+        return null;
+      }
+
+      const image = data.results[0];
+      const photo: PhotoSource = {
+        url: image.urls.regular,
+        source: 'unsplash',
+        width: 1200,
+        height: 600,
+      };
+
+      console.log(`✅ Imagem encontrada: ${image.user.name}`);
+      return photo;
+    } catch (error) {
+      console.error(`❌ Erro ao buscar Unsplash:`, error);
+      return null;
     }
-    
-    for (const [key, style] of Object.entries(ATTRACTION_STYLES)) {
-      if (lowerName.includes(key) || key.includes(lowerName.split(' ')[0])) {
-        return style;
+  }
+
+  private static getSearchQuery(attractionName: string): string {
+    const lowerName = attractionName.toLowerCase().trim();
+
+    if (ATTRACTION_SEARCH_QUERIES[lowerName]) {
+      return ATTRACTION_SEARCH_QUERIES[lowerName];
+    }
+
+    for (const [key, query] of Object.entries(ATTRACTION_SEARCH_QUERIES)) {
+      if (lowerName.includes(key)) {
+        return query;
       }
     }
-    
-    return ATTRACTION_STYLES['landmark'] || { gradient: 'from-slate-600 to-gray-700', emoji: '🗺️' };
+
+    return attractionName;
   }
 
-  static generateGradientSvg(gradient: string, emoji: string, width: number, height: number): string {
-    const colors = this.getGradientColors(gradient);
-    const [fromColor, toColor] = colors;
+  private static getFallbackPhoto(attractionName: string): PhotoSource {
+    const lowerName = attractionName.toLowerCase();
     
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${fromColor};stop-opacity:1" /><stop offset="100%" style="stop-color:${toColor};stop-opacity:1" /></linearGradient></defs><rect width="${width}" height="${height}" fill="url(#grad)"/><text x="50%" y="50%" font-size="120" text-anchor="middle" dominant-baseline="central" font-family="Arial">${emoji}</text></svg>`;
-  }
-
-  static getGradientColors(gradient: string): [string, string] {
-    const colorMap: { [key: string]: string } = {
-      'red-500': '#ef4444',
-      'red-600': '#dc2626',
-      'orange-400': '#fb923c',
-      'orange-500': '#f97316',
-      'orange-600': '#ea580c',
-      'amber-600': '#b45309',
-      'amber-700': '#92400e',
-      'yellow-500': '#eab308',
-      'yellow-600': '#ca8a04',
-      'yellow-700': '#a16207',
-      'green-400': '#4ade80',
-      'green-500': '#22c55e',
-      'green-600': '#16a34a',
-      'green-700': '#15803d',
-      'emerald-500': '#10b981',
-      'emerald-600': '#059669',
-      'emerald-700': '#047857',
-      'emerald-800': '#065f46',
-      'teal-500': '#14b8a6',
-      'teal-600': '#0d9488',
-      'cyan-400': '#22d3ee',
-      'cyan-500': '#06b6d4',
-      'blue-400': '#60a5fa',
-      'blue-500': '#3b82f6',
-      'blue-600': '#2563eb',
-      'blue-700': '#1d4ed8',
-      'indigo-600': '#4f46e5',
-      'indigo-700': '#4338ca',
-      'purple-500': '#a855f7',
-      'purple-600': '#9333ea',
-      'purple-700': '#7e22ce',
-      'pink-500': '#ec4899',
-      'pink-600': '#db2777',
-      'rose-600': '#e11d48',
-      'slate-600': '#475569',
-      'slate-700': '#334155',
-      'gray-600': '#4b5563',
-      'gray-700': '#374151',
-    };
-    
-    const matches = gradient.match(/from-(\S+)\s+to-(\S+)/);
-    if (!matches) {
-      return ['#475569', '#374151'];
-    }
-    
-    const from = colorMap[matches[1]] || '#475569';
-    const to = colorMap[matches[2]] || '#374151';
-    
-    return [from, to];
-  }
-
-  static getPlaceholderPhoto(attractionName: string): PhotoSource {
-    const hash = this.hashCode(attractionName);
-    const colors = ['3B82F6', '8B5CF6', 'EC4899', 'F97316', '14B8A6', 'EAB308'];
-    const color = colors[Math.abs(hash) % colors.length];
+    const fallback = FALLBACK_GRADIENTS[lowerName] || FALLBACK_GRADIENTS['landmark'];
+    const svg = this.generateGradientSvg(fallback.gradient, fallback.emoji, 1200, 600);
+    const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
 
     return {
-      url: `https://ui-avatars.com/api/?name=${encodeURIComponent(attractionName)}&background=${color}&color=fff&size=1200`,
-      source: 'placeholder',
+      url: dataUrl,
+      source: 'fallback',
       width: 1200,
       height: 600,
     };
   }
 
-  static hashCode(str: string): number {
-    let hash = 0;
-    for (let i = 0; i < str.length; i++) {
-      const char = str.charCodeAt(i);
-      hash = ((hash << 5) - hash) + char;
-      hash = hash & hash;
+  private static generateGradientSvg(
+    gradient: string,
+    emoji: string,
+    width: number,
+    height: number
+  ): string {
+    const colors = this.getGradientColors(gradient);
+    const [fromColor, toColor] = colors;
+
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${fromColor};stop-opacity:1" /><stop offset="100%" style="stop-color:${toColor};stop-opacity:1" /></linearGradient></defs><rect width="${width}" height="${height}" fill="url(#grad)"/><text x="50%" y="50%" font-size="120" text-anchor="middle" dominant-baseline="central" font-family="Arial">${emoji}</text></svg>`;
+  }
+
+  private static getGradientColors(gradient: string): [string, string] {
+    const colorMap: { [key: string]: string } = {
+      'red-500': '#ef4444',
+      'red-600': '#dc2626',
+      'orange-500': '#f97316',
+      'orange-600': '#ea580c',
+      'amber-600': '#b45309',
+      'yellow-600': '#ca8a04',
+      'green-600': '#16a34a',
+      'emerald-700': '#047857',
+      'teal-600': '#0d9488',
+      'blue-400': '#60a5fa',
+      'blue-600': '#2563eb',
+      'indigo-700': '#4338ca',
+      'purple-600': '#9333ea',
+      'pink-600': '#db2777',
+      'rose-600': '#e11d48',
+      'slate-600': '#475569',
+      'gray-700': '#374151',
+    };
+
+    const matches = gradient.match(/from-(\S+)\s+to-(\S+)/);
+    if (!matches) {
+      return ['#475569', '#334155'];
     }
-    return hash;
+
+    const from = colorMap[matches[1]] || '#475569';
+    const to = colorMap[matches[2]] || '#334155';
+
+    return [from, to];
   }
 }
 
