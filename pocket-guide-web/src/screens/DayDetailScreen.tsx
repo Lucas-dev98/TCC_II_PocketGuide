@@ -1,7 +1,7 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin } from "lucide-react";
-import { Button, Skeleton, EmptyState, useToast, MapboxMap, Card } from "@/components";
+import { Button, Skeleton, EmptyState, useToast, Card } from "@/components";
 import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
@@ -10,6 +10,9 @@ import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
 import { debug } from "@/utils/debug";
 import PhotoService from "@/services/photoService";
+
+// Lazy load MapboxMap to reduce initial bundle size
+const MapboxMap = lazy(() => import("@/components/MapboxMap").then(m => ({ default: m.MapboxMap })));
 
 /**
  * Tela de detalhes de um dia específico da viagem
@@ -457,18 +460,20 @@ export const DayDetailScreen: React.FC = () => {
           <Card className="shadow-md border-slate-200 dark:border-slate-700">
             <Card.Header title="🗺️ Rota do Dia" />
             <Card.Body>
-              <MapboxMap
-                attractions={attractions.map((a) => ({
-                  name: a.name,
-                  reason: a.reason,
-                  lat: a.location?.lat || 0,
-                  lng: a.location?.lng || 0,
-                }))}
-                height="400px"
-                onAttractionSelect={(attraction) => {
-                  debug.log("Localização selecionada:", attraction);
-                }}
-              />
+              <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
+                <MapboxMap
+                  attractions={attractions.map((a) => ({
+                    name: a.name,
+                    reason: a.reason,
+                    lat: a.location?.lat || 0,
+                    lng: a.location?.lng || 0,
+                  }))}
+                  height="400px"
+                  onAttractionSelect={(attraction) => {
+                    debug.log("Localização selecionada:", attraction);
+                  }}
+                />
+              </Suspense>
             </Card.Body>
           </Card>
         )}
