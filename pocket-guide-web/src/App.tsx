@@ -4,6 +4,7 @@ import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RouteLoadingFallback } from './components/RouteLoadingFallback'
+import { OfflineIndicator } from './components/OfflineIndicator'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))
@@ -28,6 +29,7 @@ function App() {
     <ThemeProvider>
       <AuthProvider>
         <Router>
+          <OfflineIndicator />
           <Suspense fallback={<RouteLoadingFallback />}>
             <Routes>
               {/* Public routes */}
