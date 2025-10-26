@@ -15,21 +15,76 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { formatDate } from '../utils/formatDate';
-import PhotoService from '../services/photoService';
 
 /**
  * Gera URL de imagem do Unsplash baseado no nome da atração
  * Usa PhotoService para gerenciar cache e fallbacks
  */
-const getAttractionImage = async (attractionName: string): Promise<string> => {
-  try {
-    const photoSource = await PhotoService.generatePhotoUrl(attractionName);
-    return photoSource.url;
-  } catch (error) {
-    console.error(`❌ Erro ao gerar foto para "${attractionName}":`, error);
-    // Fallback: usar Unsplash com query genérica
-    return `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop`;
+const getAttractionImage = (attractionName: string): string => {
+  // Mapeamento de queries otimizadas por tipo de atração
+  const queries: { [key: string]: string } = {
+    colosseum: 'colosseum rome',
+    'roman forum': 'roman forum rome',
+    'palatine hill': 'palatine hill rome',
+    monti: 'monti rome neighborhood',
+    'trevi fountain': 'trevi fountain rome',
+    vatican: 'vatican city basilica',
+    restaurante: 'restaurant italy',
+    restaurant: 'restaurant italy',
+    pizza: 'pizza italian traditional',
+    pasta: 'pasta italian food',
+    café: 'coffee cafe italian',
+    coffee: 'coffee shop italy',
+    lunch: 'lunch italian food',
+    dinner: 'dinner restaurant',
+    breakfast: 'breakfast food',
+    museu: 'museum rome gallery',
+    museo: 'museum rome',
+    museum: 'museum rome',
+    gallery: 'art gallery exhibition',
+    art: 'art museum paintings',
+    natureza: 'nature landscape',
+    nature: 'nature landscape',
+    park: 'park garden nature',
+    garden: 'garden flowers botanical',
+    beach: 'beach seaside coast',
+    ocean: 'ocean seascape marine',
+    mountain: 'mountain landscape alpine',
+    hiking: 'hiking trail mountain',
+    shopping: 'shopping mall retail',
+    market: 'market street marketplace',
+    compras: 'shopping commercial',
+    leisure: 'leisure activity tourism',
+    entertainment: 'entertainment venue fun',
+    relax: 'relaxation spa wellness',
+    spa: 'spa massage wellness',
+    landmark: 'landmark historic famous',
+    travel: 'travel destination sightseeing',
+    trip: 'travel adventure tourism',
+    attraction: 'tourist attraction landmark',
+    tour: 'guided tour sightseeing',
+    walk: 'walking tour city',
+  };
+
+  const lowerName = attractionName.toLowerCase().trim();
+  let query = 'attraction landmark tourist';
+
+  // Buscar query exata
+  if (queries[lowerName]) {
+    query = queries[lowerName];
+  } else {
+    // Buscar por substring
+    for (const [key, value] of Object.entries(queries)) {
+      if (lowerName.includes(key) || key.includes(lowerName.split(' ')[0])) {
+        query = value;
+        break;
+      }
+    }
   }
+
+  // Usar URL direta do Unsplash (mais rápido e confiável)
+  // source.unsplash.com é mais rápido que a API
+  return `https://source.unsplash.com/400x300/?${encodeURIComponent(query)}&sig=${Date.now()}`;
 };
 
 /**
@@ -148,37 +203,40 @@ export default function TripDetailScreen() {
 
   // Carregar imagens das atrações
   useEffect(() => {
-    if (!trip?.itinerary?.days) return;
+    if (!trip?.itinerary?.days) {
+      console.log('⚠️ Sem atrações para carregar imagens');
+      return;
+    }
 
-    const loadAttractionImages = async () => {
-      const imageMap = new Map<string, string>();
-      const itinerary = transformItinerary(trip.itinerary);
+    const imageMap = new Map<string, string>();
+    const itinerary = transformItinerary(trip.itinerary);
 
-      if (!itinerary?.days) return;
+    if (!itinerary?.days) {
+      console.log('⚠️ Itinerary vazio');
+      return;
+    }
 
-      for (const day of itinerary.days) {
-        if (!day.attractions) continue;
+    for (const day of itinerary.days) {
+      if (!day.attractions) continue;
+      
+      for (const attraction of day.attractions) {
+        const cacheKey = attraction.name.toLowerCase();
         
-        for (const attraction of day.attractions) {
-          const cacheKey = attraction.name.toLowerCase();
-          
-          // Se já tem em cache, pular
-          if (imageMap.has(cacheKey)) continue;
-          
-          try {
-            const imageUrl = await getAttractionImage(attraction.name);
-            imageMap.set(cacheKey, imageUrl);
-            console.log(`📸 Imagem carregada para: ${attraction.name}`);
-          } catch (error) {
-            console.warn(`⚠️ Erro ao carregar imagem para: ${attraction.name}`);
-          }
+        // Se já tem em cache, pular
+        if (imageMap.has(cacheKey)) continue;
+        
+        try {
+          const imageUrl = getAttractionImage(attraction.name);
+          imageMap.set(cacheKey, imageUrl);
+          console.log(`📸 URL gerada para: ${attraction.name}`);
+        } catch (error) {
+          console.warn(`⚠️ Erro ao gerar imagem para: ${attraction.name}`, error);
         }
       }
+    }
 
-      setAttractionImages(imageMap);
-    };
-
-    loadAttractionImages();
+    console.log(`✅ ${imageMap.size} imagens carregadas`);
+    setAttractionImages(imageMap);
   }, [trip?.itinerary]);
 
   useEffect(() => {
