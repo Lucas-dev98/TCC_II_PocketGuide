@@ -8,8 +8,8 @@ import { DayTimeline } from "@/components/DayTimeline";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
+import { debug } from "@/utils/debug";
 import PhotoService from "@/services/photoService";
-import { dumpItineraryToConsole } from "@/services/debugItinerary";
 
 /**
  * Tela de detalhes de um dia específico da viagem
@@ -51,26 +51,23 @@ export const DayDetailScreen: React.FC = () => {
   // Buscar dados da viagem da store
   useEffect(() => {
     try {
-      console.log("🔍 Buscando trip com ID:", tripId);
-      console.log("📋 Trips na store:", trips);
+      debug.log("🔍 Buscando trip com ID:", tripId);
+      debug.log("📋 Trips na store:", trips);
       
       const foundTrip = trips.find((t: Trip) => t.id === tripId);
       if (foundTrip) {
-        console.log("✅ Trip encontrada:", foundTrip);
-        console.log("📍 Itinerary:", foundTrip.itinerary);
-        console.log("📍 Attractions:", foundTrip.attractions);
-        
-        // Debug: Dump complete itinerary structure
-        dumpItineraryToConsole(foundTrip.itinerary);
+        debug.log("✅ Trip encontrada:", foundTrip);
+        debug.log("📍 Itinerary:", foundTrip.itinerary);
+        debug.log("📍 Attractions:", foundTrip.attractions);
         
         setTrip(foundTrip);
         setLoading(false);
       } else {
-        console.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
+        debug.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
         setLoading(false);
       }
     } catch (error) {
-      console.error("❌ Erro ao buscar viagem:", error);
+      debug.error("❌ Erro ao buscar viagem:", error);
       showError("Não foi possível carregar a viagem");
       setLoading(false);
     }
@@ -104,15 +101,15 @@ export const DayDetailScreen: React.FC = () => {
         // Tentar buscar do itinerary primeiro, depois attractions
         const attractionsData = trip?.attractions || [];
         
-        console.log("🎯 Extraindo atrações do dia", currentDay);
-        console.log("📦 attractionsData:", attractionsData);
-        console.log("📋 trip?.itinerary:", trip?.itinerary);
+        debug.log("🎯 Extraindo atrações do dia", currentDay);
+        debug.log("📦 attractionsData:", attractionsData);
+        debug.log("📋 trip?.itinerary:", trip?.itinerary);
 
         let filtered: AttractionDetail[] = [];
 
         // Se houver attractions diretas, usar essas
         if (attractionsData && attractionsData.length > 0) {
-          console.log("✅ Encontrado trip.attractions direto");
+          debug.log("✅ Encontrado trip.attractions direto");
           const baseAttrs = attractionsData
             .filter((a) => a.day === currentDay)
             .map((a) => ({
@@ -138,7 +135,7 @@ export const DayDetailScreen: React.FC = () => {
             }))
           );
           
-          console.log("📸 Atrações filtradas da lista:", filtered);
+          debug.log("📸 Atrações filtradas da lista:", filtered);
           if (isMounted) {
             setAttractions(filtered);
           }
@@ -147,7 +144,7 @@ export const DayDetailScreen: React.FC = () => {
 
         // Se não houver, tentar extrair do itinerary
         if (!trip?.itinerary) {
-          console.warn("❌ Nenhum itinerary encontrado");
+          debug.warn("❌ Nenhum itinerary encontrado");
           if (isMounted) {
             setAttractions([]);
           }
@@ -158,29 +155,29 @@ export const DayDetailScreen: React.FC = () => {
         
         // Tentar vários formatos
         if (Array.isArray(trip.itinerary)) {
-          console.log("📌 Formato 1: itinerary é array direto");
+          debug.log("📌 Formato 1: itinerary é array direto");
           itineraryArray = trip.itinerary;
         } else if (typeof trip.itinerary === 'object') {
           // Verificar se tem propriedade itinerary (Gemini format)
           if (Array.isArray(trip.itinerary.itinerary)) {
-            console.log("📌 Formato 2: itinerary.itinerary é array");
+            debug.log("📌 Formato 2: itinerary.itinerary é array");
             itineraryArray = trip.itinerary.itinerary;
           }
           // Verificar se tem propriedade days
           else if (Array.isArray(trip.itinerary.days)) {
-            console.log("📌 Formato 3: itinerary.days é array");
+            debug.log("📌 Formato 3: itinerary.days é array");
             itineraryArray = trip.itinerary.days;
           }
           // Verificar se tem propriedade attractions
           else if (Array.isArray(trip.itinerary.attractions)) {
-            console.log("📌 Formato 4: itinerary.attractions é array");
+            debug.log("📌 Formato 4: itinerary.attractions é array");
             itineraryArray = trip.itinerary.attractions;
           }
           // Se nenhuma propriedade conhecida, talvez seja um mapa de dias
           else {
-            console.log("📌 Tentando extrair chaves como dias");
+            debug.log("📌 Tentando extrair chaves como dias");
             const keys = Object.keys(trip.itinerary);
-            console.log("   Chaves encontradas:", keys);
+            debug.log("   Chaves encontradas:", keys);
             
             // Se tem chaves como "1", "2", "3" (dias como números string)
             if (keys.some(k => /^\d+$/.test(k))) {
@@ -188,15 +185,15 @@ export const DayDetailScreen: React.FC = () => {
                 .filter(k => /^\d+$/.test(k))
                 .sort((a, b) => parseInt(a) - parseInt(b))
                 .map(k => trip.itinerary[k]);
-              console.log("   Extraído como mapa de dias");
+              debug.log("   Extraído como mapa de dias");
             }
           }
         }
         
-        console.log(`📌 itineraryArray tem ${itineraryArray.length} items`);
+        debug.log(`📌 itineraryArray tem ${itineraryArray.length} items`);
         
         if (!itineraryArray || itineraryArray.length === 0) {
-          console.warn(`❌ Não conseguiu extrair array do itinerary para dia ${currentDay}`);
+          debug.warn(`❌ Não conseguiu extrair array do itinerary para dia ${currentDay}`);
           if (isMounted) {
             setAttractions([]);
           }
@@ -210,17 +207,17 @@ export const DayDetailScreen: React.FC = () => {
         dayAttractions = itineraryArray.filter((item: any) => item.day === currentDay);
         
         if (dayAttractions.length === 0) {
-          console.log(`ℹ️ Nenhuma atração com dia=${currentDay}. Tentando índice ${currentDay - 1}...`);
+          debug.log(`ℹ️ Nenhuma atração com dia=${currentDay}. Tentando índice ${currentDay - 1}...`);
           // Tipo 2: Array de dias (cada item é um dia)
           if (currentDay <= itineraryArray.length) {
             dayAttractions = itineraryArray[currentDay - 1]?.attractions || [];
           }
         }
         
-        console.log(`✅ Encontradas ${dayAttractions.length} atrações para dia ${currentDay}`);
+        debug.log(`✅ Encontradas ${dayAttractions.length} atrações para dia ${currentDay}`);
         
         if (dayAttractions.length === 0) {
-          console.warn(`⚠️ Nenhuma atração encontrada para dia ${currentDay}`);
+          debug.warn(`⚠️ Nenhuma atração encontrada para dia ${currentDay}`);
           if (isMounted) {
             setAttractions([]);
           }
@@ -256,7 +253,7 @@ export const DayDetailScreen: React.FC = () => {
           }))
         );
         
-        console.log("✅ Atrações finais extraídas e ordenadas:", filtered);
+        debug.log("✅ Atrações finais extraídas e ordenadas:", filtered);
         if (isMounted) {
           setAttractions(filtered);
         }
@@ -435,7 +432,7 @@ export const DayDetailScreen: React.FC = () => {
               <DayTimeline
                 attractions={attractions}
                 onAttractionClick={(attraction) => {
-                  console.log("Atração clicada:", attraction);
+                  debug.log("Atração clicada:", attraction);
                 }}
               />
             </>
@@ -469,7 +466,7 @@ export const DayDetailScreen: React.FC = () => {
                 }))}
                 height="400px"
                 onAttractionSelect={(attraction) => {
-                  console.log("Localização selecionada:", attraction);
+                  debug.log("Localização selecionada:", attraction);
                 }}
               />
             </Card.Body>
@@ -481,14 +478,10 @@ export const DayDetailScreen: React.FC = () => {
 };
 
 /**
- * Função auxiliar para gerar fotos de demonstração
- * Usa PhotoService com múltiplas estratégias
- */
-/**
  * Gera URLs de fotos para uma atração (função assíncrona)
  */
 async function generatePhotosForAttraction(attraction: any): Promise<PhotoData[]> {
-  console.log(`📸 Gerando fotos para atração: "${attraction.name}"`);
+  debug.log(`📸 Gerando fotos para atração: "${attraction.name}"`);
 
   const photos: PhotoData[] = [];
 
@@ -505,16 +498,16 @@ async function generatePhotosForAttraction(attraction: any): Promise<PhotoData[]
         source: photoSource.source,
       });
       
-      console.log(`✅ Foto ${i + 1} gerada para "${attraction.name}":`);
-      console.log(`   URL: ${photoSource.url}`);
-      console.log(`   Source: ${photoSource.source}`);
+      debug.log(`✅ Foto ${i + 1} gerada para "${attraction.name}":`);
+      debug.log(`   URL: ${photoSource.url}`);
+      debug.log(`   Source: ${photoSource.source}`);
     } catch (error) {
-      console.error(`❌ Erro gerando foto ${i + 1} para "${attraction.name}":`, error);
+      debug.error(`❌ Erro gerando foto ${i + 1} para "${attraction.name}":`, error);
     }
   }
 
   if (photos.length === 0) {
-    console.warn(`⚠️ Nenhuma foto foi gerada para "${attraction.name}"`);
+    debug.warn(`⚠️ Nenhuma foto foi gerada para "${attraction.name}"`);
   }
 
   return photos;

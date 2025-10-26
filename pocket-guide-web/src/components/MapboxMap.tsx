@@ -3,6 +3,7 @@ import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import { Attraction } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { debug } from '../utils/debug';
 
 interface MapboxMapProps {
   attractions?: (Attraction | any)[];
@@ -31,17 +32,17 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
   useEffect(() => {
     if (!mapboxToken) {
-      console.warn('🗺️ Mapbox token not configured');
+      debug.warn('🗺️ Mapbox token not configured');
       return;
     }
 
     if (map.current) return; // initialize map only once
     if (!mapContainer.current) return;
 
-    console.log('🗺️ MapboxMap: Initializing with', attractions.length, 'attractions');
+    debug.log('🗺️ MapboxMap: Initializing with', attractions.length, 'attractions');
     if (attractions.length > 0) {
-      console.log('🗺️ MapboxMap: First attraction received:', attractions[0]);
-      console.log('🗺️ MapboxMap: Keys in first attraction:', Object.keys(attractions[0]));
+      debug.log('🗺️ MapboxMap: First attraction received:', attractions[0]);
+      debug.log('🗺️ MapboxMap: Keys in first attraction:', Object.keys(attractions[0]));
     }
 
     mapboxgl.accessToken = mapboxToken;
@@ -55,7 +56,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
     // Add attractions as markers
     if (attractions.length > 0 && map.current) {
-      console.log('🗺️ MapboxMap: Adding markers');
+      debug.log('🗺️ MapboxMap: Adding markers');
       markersRef.current = [];
       const bounds = new mapboxgl.LngLatBounds();
       let hasValidMarkers = false;
@@ -66,16 +67,16 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
         const lng = attr.location?.lng || attr.lng;
         
         if (index === 0) {
-          console.log('🗺️ MapboxMap: FIRST MARKER DEBUG');
-          console.log('  attr:', attr);
-          console.log('  attr.lat:', attr.lat);
-          console.log('  attr.lng:', attr.lng);
-          console.log('  attr.location:', attr.location);
-          console.log('  Resolved lat:', lat);
-          console.log('  Resolved lng:', lng);
+          debug.log('🗺️ MapboxMap: FIRST MARKER DEBUG');
+          debug.log('  attr:', attr);
+          debug.log('  attr.lat:', attr.lat);
+          debug.log('  attr.lng:', attr.lng);
+          debug.log('  attr.location:', attr.location);
+          debug.log('  Resolved lat:', lat);
+          debug.log('  Resolved lng:', lng);
         }
         
-        console.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
+        debug.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
         
         if (lat !== undefined && lng !== undefined && lat !== null && lng !== null && map.current) {
           // Create marker with color based on selection
@@ -108,13 +109,13 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       // Fit bounds to all markers only if we have valid markers
       if (map.current && hasValidMarkers) {
         try {
-          console.log('🗺️ MapboxMap: Fitting bounds');
+          debug.log('🗺️ MapboxMap: Fitting bounds');
           (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 80 });
         } catch (error) {
-          console.error('❌ MapboxMap: Error fitting bounds:', error);
+          debug.error('❌ MapboxMap: Error fitting bounds:', error);
         }
       } else if (map.current && !hasValidMarkers) {
-        console.warn('⚠️ MapboxMap: No valid markers to display');
+        debug.warn('⚠️ MapboxMap: No valid markers to display');
       }
     }
 

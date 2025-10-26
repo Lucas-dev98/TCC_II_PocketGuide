@@ -6,6 +6,7 @@ import { Card } from '../components/Card';
 import { Badge } from '../components/Badge';
 import { LoadingSpinner } from '../components/LoadingSpinner';
 import { MapboxMap } from '../components/MapboxMap';
+import { debug } from '../utils/debug';
 import {
   ArrowLeft,
   Calendar,
@@ -86,7 +87,7 @@ const getAttractionImage = async (attractionName: string): Promise<string> => {
     // Usar API do Unsplash diretamente
     const apiKey = import.meta.env.VITE_UNSPLASH_API_KEY;
     if (!apiKey) {
-      console.warn('⚠️ VITE_UNSPLASH_API_KEY não configurada');
+      debug.warn('⚠️ VITE_UNSPLASH_API_KEY não configurada');
       return getPlaceholderImage(query);
     }
 
@@ -95,21 +96,21 @@ const getAttractionImage = async (attractionName: string): Promise<string> => {
     );
 
     if (!response.ok) {
-      console.warn(`⚠️ API Unsplash retornou ${response.status}`);
+      debug.warn(`⚠️ API Unsplash retornou ${response.status}`);
       return getPlaceholderImage(query);
     }
 
     const data = await response.json();
     if (data.results && data.results.length > 0) {
       const imageUrl = data.results[0].urls.small;
-      console.log(`✅ Imagem encontrada para "${query}": ${imageUrl.substring(0, 60)}...`);
+      debug.log(`✅ Imagem encontrada para "${query}": ${imageUrl.substring(0, 60)}...`);
       return imageUrl;
     }
 
-    console.warn(`⚠️ Nenhuma imagem encontrada para "${query}"`);
+    debug.warn(`⚠️ Nenhuma imagem encontrada para "${query}"`);
     return getPlaceholderImage(query);
   } catch (error) {
-    console.error(`❌ Erro ao buscar imagem para "${query}":`, error);
+    debug.error(`❌ Erro ao buscar imagem para "${query}":`, error);
     return getPlaceholderImage(query);
   }
 };
@@ -149,27 +150,24 @@ const getPlaceholderImage = (query: string): string => {
  * to display format (array of days with activities)
  */
 const transformItinerary = (itinerary: any) => {
-  console.log('📍 transformItinerary input:', itinerary);
+  debug.log('📍 transformItinerary input:', itinerary);
   
   if (!itinerary) {
-    console.warn('⚠️ transformItinerary: itinerary is null/undefined');
+    debug.warn('⚠️ transformItinerary: itinerary is null/undefined');
     return null;
   }
   
   // If it's already in the correct format
   if (itinerary.days && Array.isArray(itinerary.days)) {
-    console.log('✅ transformItinerary: Already in correct format (has days array)');
+    debug.log('✅ transformItinerary: Already in correct format (has days array)');
     return itinerary;
   }
   
   // If it's the Gemini format: { itinerary: [...], tips: [...] }
   if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
-    console.log('✅ transformItinerary: Converting from Gemini format');
+    debug.log('✅ transformItinerary: Converting from Gemini format');
     const activities = itinerary.itinerary;
-    console.log(`📊 Found ${activities.length} activities`);
-    
-    // Debug: Show first activity raw data
-    console.log('🔍 First raw activity from Gemini:', activities[0]);
+    debug.log(`📊 Found ${activities.length} activities`);
     
     const daysMap = new Map<number, any[]>();
     
@@ -182,7 +180,7 @@ const transformItinerary = (itinerary: any) => {
       daysMap.get(day)!.push(activity);
     });
     
-    console.log(`📊 Grouped into ${daysMap.size} days`);
+    debug.log(`📊 Grouped into ${daysMap.size} days`);
     
     // Convert to days array
     const days = Array.from({ length: daysMap.size }, (_, index) => {
@@ -208,13 +206,6 @@ const transformItinerary = (itinerary: any) => {
             lng: lng,
           };
           
-          // Debug first attraction of first day
-          if (dayNum === 1 && dayActivities[0] === activity) {
-            console.log('🔍 First transformed attraction (Day 1):', transformed);
-            console.log('  - activity.lat:', activity.lat, 'activity.location?.lat:', activity.location?.lat);
-            console.log('  - Resolved lat:', lat, 'lng:', lng);
-          }
-          
           return transformed;
         }),
       };
@@ -226,12 +217,11 @@ const transformItinerary = (itinerary: any) => {
       destination: itinerary.destination,
     };
     
-    console.log('✅ transformItinerary result:', result);
-    console.log('✅ First day attractions after transform:', result.days[0]?.attractions);
+    debug.log('✅ transformItinerary result:', result);
     return result;
   }
   
-  console.warn('⚠️ transformItinerary: Unknown format', itinerary);
+  debug.warn('⚠️ transformItinerary: Unknown format', itinerary);
   return itinerary;
 };
 
@@ -255,16 +245,16 @@ export default function TripDetailScreen() {
 
   const trip = id ? trips.find((t) => t.id === id) : null;
 
-  console.log('🔍 TripDetailScreen - Trip:', trip);
-  console.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
+  debug.log('🔍 TripDetailScreen - Trip:', trip);
+  debug.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
 
   // Carregar imagens das atrações
   useEffect(() => {
-    console.log('🖼️ [useEffect] Iniciando carregamento de imagens...');
-    console.log('🖼️ trip:', trip?.id, 'itinerary:', !!trip?.itinerary);
+    debug.log('🖼️ [useEffect] Iniciando carregamento de imagens...');
+    debug.log('🖼️ trip:', trip?.id, 'itinerary:', !!trip?.itinerary);
     
     if (!trip?.itinerary) {
-      console.log('⚠️ Sem itinerary para carregar imagens');
+      debug.log('⚠️ Sem itinerary para carregar imagens');
       return;
     }
 
@@ -275,7 +265,7 @@ export default function TripDetailScreen() {
       try {
         itinerary = JSON.parse(itinerary);
       } catch (error) {
-        console.error('❌ Erro ao fazer parse do itinerary:', error);
+        debug.error('❌ Erro ao fazer parse do itinerary:', error);
         return;
       }
     }
@@ -284,11 +274,11 @@ export default function TripDetailScreen() {
     itinerary = transformItinerary(itinerary);
 
     if (!itinerary?.days || itinerary.days.length === 0) {
-      console.log('⚠️ Itinerary sem dias');
+      debug.log('⚠️ Itinerary sem dias');
       return;
     }
 
-    console.log(`🖼️ Processando ${itinerary.days.length} dias...`);
+    debug.log(`🖼️ Processando ${itinerary.days.length} dias...`);
 
     // Carregar imagens de forma assíncrona
     const loadImages = async () => {
@@ -296,32 +286,32 @@ export default function TripDetailScreen() {
 
       for (const day of itinerary.days) {
         if (!day.attractions || day.attractions.length === 0) {
-          console.log(`🖼️ Dia sem atrações`);
+          debug.log(`🖼️ Dia sem atrações`);
           continue;
         }
         
-        console.log(`🖼️ Dia com ${day.attractions.length} atrações`);
+        debug.log(`🖼️ Dia com ${day.attractions.length} atrações`);
         
         for (const attraction of day.attractions) {
           const cacheKey = attraction.name.toLowerCase();
           
           // Se já tem em cache, pular
           if (imageMap.has(cacheKey)) {
-            console.log(`  ♻️ Já em cache: ${attraction.name}`);
+            debug.log(`  ♻️ Já em cache: ${attraction.name}`);
             continue;
           }
           
           try {
             const imageUrl = await getAttractionImage(attraction.name);
             imageMap.set(cacheKey, imageUrl);
-            console.log(`  ✅ URL obtida para: ${attraction.name}`);
+            debug.log(`  ✅ URL obtida para: ${attraction.name}`);
           } catch (error) {
-            console.warn(`  ❌ Erro ao obter imagem para: ${attraction.name}`, error);
+            debug.warn(`  ❌ Erro ao obter imagem para: ${attraction.name}`, error);
           }
         }
       }
 
-      console.log(`🖼️ ✅ TOTAL: ${imageMap.size} imagens carregadas`);
+      debug.log(`🖼️ ✅ TOTAL: ${imageMap.size} imagens carregadas`);
       setAttractionImages(new Map(imageMap)); // Force update
     };
 
@@ -388,12 +378,12 @@ export default function TripDetailScreen() {
       ? JSON.parse(trip.itinerary)
       : trip.itinerary;
 
-  console.log('🔍 rawItinerary after parse:', rawItinerary);
+  debug.log('🔍 rawItinerary after parse:', rawItinerary);
 
   // Transform itinerary to the correct format
   const itinerary = transformItinerary(rawItinerary);
   
-  console.log('🔍 final itinerary after transform:', itinerary);
+  debug.log('🔍 final itinerary after transform:', itinerary);
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-12">
@@ -500,15 +490,15 @@ export default function TripDetailScreen() {
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
               <>
                 {(() => {
-                  console.log('\n🗺️ MAP DEBUG - Input itinerary.days[0]:', itinerary.days[0]);
-                  console.log('🗺️ MAP DEBUG - Input itinerary.days[0].attractions[0]:', itinerary.days[0]?.attractions?.[0]);
+                  debug.log('\n🗺️ MAP DEBUG - Input itinerary.days[0]:', itinerary.days[0]);
+                  debug.log('🗺️ MAP DEBUG - Input itinerary.days[0].attractions[0]:', itinerary.days[0]?.attractions?.[0]);
                   
                   const attractions = itinerary.days.flatMap((day: any) => {
                     return (day.attractions || []).map((attr: any) => {
-                      console.log('🗺️ MAP DEBUG - Raw attr object:', attr);
-                      console.log('  Keys:', Object.keys(attr));
-                      console.log('  lat value:', attr.lat, 'type:', typeof attr.lat);
-                      console.log('  lng value:', attr.lng, 'type:', typeof attr.lng);
+                      debug.log('🗺️ MAP DEBUG - Raw attr object:', attr);
+                      debug.log('  Keys:', Object.keys(attr));
+                      debug.log('  lat value:', attr.lat, 'type:', typeof attr.lat);
+                      debug.log('  lng value:', attr.lng, 'type:', typeof attr.lng);
                       
                       return {
                         name: attr.name,
@@ -519,7 +509,7 @@ export default function TripDetailScreen() {
                     });
                   });
                   
-                  console.log('🗺️ MAP DEBUG - Final mapped attractions[0]:', attractions[0]);
+                  debug.log('🗺️ MAP DEBUG - Final mapped attractions[0]:', attractions[0]);
                   return null;
                 })()}
                 <MapboxMap
@@ -534,7 +524,7 @@ export default function TripDetailScreen() {
                   height="400px"
                   onAttractionSelect={(attraction, index) => {
                     setSelectedAttractionIndex(index);
-                    console.log('🗺️ Atração selecionada no mapa:', attraction, 'índice:', index);
+                    debug.log('🗺️ Atração selecionada no mapa:', attraction, 'índice:', index);
                   }}
                 />
               </>
@@ -627,10 +617,10 @@ export default function TripDetailScreen() {
                                     alt={attraction.name}
                                     className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                                     onLoad={() => {
-                                      console.log(`✅ Imagem carregada: ${attraction.name}`);
+                                      debug.log(`✅ Imagem carregada: ${attraction.name}`);
                                     }}
                                     onError={(e) => {
-                                      console.warn(`❌ Erro ao carregar: ${attraction.name}`);
+                                      debug.warn(`❌ Erro ao carregar: ${attraction.name}`);
                                       // Fallback com SVG
                                       (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e2e8f0" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%2364748b" text-anchor="middle" dominant-baseline="middle"%3E📸 Sem imagem%3C/text%3E%3C/svg%3E';
                                     }}
