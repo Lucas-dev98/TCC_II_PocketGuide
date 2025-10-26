@@ -1,4 +1,5 @@
 import { debug } from '@/utils/debug';
+import { retryService } from './retryService';
 
 export interface PhotoSource {
   url: string;
@@ -120,7 +121,11 @@ export class PhotoService {
       url.searchParams.set('per_page', '1');
       url.searchParams.set('orientation', 'landscape');
 
-      const response = await fetch(url.toString());
+      const response = await retryService.fetchWithRetry(url.toString(), {
+        headers: {
+          'User-Agent': 'PocketGuide/1.0',
+        },
+      });
 
       if (!response.ok) {
         debug.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
