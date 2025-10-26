@@ -15,36 +15,21 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { formatDate } from '../utils/formatDate';
+import PhotoService from '../services/photoService';
 
 /**
  * Gera URL de imagem do Unsplash baseado no nome da atração
+ * Usa PhotoService para gerenciar cache e fallbacks
  */
-const getAttractionImage = (attractionName: string, index: number): string => {
-  const queries: { [key: string]: string } = {
-    colosseum: 'colosseum rome',
-    'roman forum': 'roman forum',
-    'palatine hill': 'palatine hill',
-    monti: 'rome monti neighborhood',
-    lunch: 'italian food rome',
-    restaurante: 'restaurant rome',
-    museu: 'museum',
-    natureza: 'nature landscape',
-    compra: 'shopping city',
-  };
-
-  let query = 'attraction landmark';
-  const lowerName = attractionName.toLowerCase();
-  
-  for (const [key, value] of Object.entries(queries)) {
-    if (lowerName.includes(key)) {
-      query = value;
-      break;
-    }
+const getAttractionImage = async (attractionName: string): Promise<string> => {
+  try {
+    const photoSource = await PhotoService.generatePhotoUrl(attractionName);
+    return photoSource.url;
+  } catch (error) {
+    console.error(`❌ Erro ao gerar foto para "${attractionName}":`, error);
+    // Fallback: usar Unsplash com query genérica
+    return `https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=400&h=300&fit=crop`;
   }
-
-  // Usar Unsplash random com query
-  const randomParam = Math.floor(Math.random() * 100) + index;
-  return `https://source.unsplash.com/400x300/?${encodeURIComponent(query)}&sig=${randomParam}`;
 };
 
 /**
@@ -154,11 +139,47 @@ export default function TripDetailScreen() {
   const { trips } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
+  const [attractionImages, setAttractionImages] = useState<Map<string, string>>(new Map());
 
   const trip = id ? trips.find((t) => t.id === id) : null;
 
   console.log('🔍 TripDetailScreen - Trip:', trip);
   console.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
+
+  // Carregar imagens das atrações
+  useEffect(() => {
+    if (!trip?.itinerary?.days) return;
+
+    const loadAttractionImages = async () => {
+      const imageMap = new Map<string, string>();
+      const itinerary = transformItinerary(trip.itinerary);
+
+      if (!itinerary?.days) return;
+
+      for (const day of itinerary.days) {
+        if (!day.attractions) continue;
+        
+        for (const attraction of day.attractions) {
+          const cacheKey = attraction.name.toLowerCase();
+          
+          // Se já tem em cache, pular
+          if (imageMap.has(cacheKey)) continue;
+          
+          try {
+            const imageUrl = await getAttractionImage(attraction.name);
+            imageMap.set(cacheKey, imageUrl);
+            console.log(`📸 Imagem carregada para: ${attraction.name}`);
+          } catch (error) {
+            console.warn(`⚠️ Erro ao carregar imagem para: ${attraction.name}`);
+          }
+        }
+      }
+
+      setAttractionImages(imageMap);
+    };
+
+    loadAttractionImages();
+  }, [trip?.itinerary]);
 
   useEffect(() => {
     // Simular carregamento
@@ -440,36 +461,46 @@ export default function TripDetailScreen() {
                         <div className="space-y-3 ml-4">
                           {/* Attractions Grid Preview */}
                           <div className="grid grid-cols-2 md:grid-cols-3 gap-2 mb-4">
-                            {day.attractions.slice(0, 3).map((attraction: any, attrIndex: number) => (
-                              <div
-                                key={attrIndex}
-                                className="relative rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 hover:shadow-md transition-shadow group cursor-pointer"
-                                onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
-                              >
-                                {/* Image with fallback */}
-                                <img
-                                  src={getAttractionImage(attraction.name, attrIndex)}
-                                  alt={attraction.name}
-                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                                  onError={(e) => {
-                                    // Fallback se a imagem falhar
-                                    (e.target as HTMLImageElement).style.display = 'none';
-                                  }}
-                                />
-                                
-                                {/* Overlay gradient */}
-                                <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
-                                  <div className="w-full">
-                                    <p className="text-xs font-medium text-white line-clamp-2">
-                                      {attraction.name}
-                                    </p>
-                                    <p className="text-caption text-white/80">
-                                      ⏱️ {attraction.time}
-                                    </p>
+                            {day.attractions.slice(0, 3).map((attraction: any, attrIndex: number) => {
+                              const imageUrl = attractionImages.get(attraction.name.toLowerCase());
+                              
+                              return (
+                                <div
+                                  key={attrIndex}
+                                  className="relative rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 hover:shadow-md transition-shadow group cursor-pointer"
+                                  onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
+                                >
+                                  {/* Image with fallback */}
+                                  {imageUrl ? (
+                                    <img
+                                      src={imageUrl}
+                                      alt={attraction.name}
+                                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                                      onError={(e) => {
+                                        // Fallback se a imagem falhar
+                                        (e.target as HTMLImageElement).style.display = 'none';
+                                      }}
+                                    />
+                                  ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-slate-200 to-slate-300 dark:from-slate-600 dark:to-slate-700 flex items-center justify-center animate-pulse">
+                                      <span className="text-slate-500 dark:text-slate-400 text-sm">📸 Carregando...</span>
+                                    </div>
+                                  )}
+                                  
+                                  {/* Overlay gradient */}
+                                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent flex items-end p-2">
+                                    <div className="w-full">
+                                      <p className="text-xs font-medium text-white line-clamp-2">
+                                        {attraction.name}
+                                      </p>
+                                      <p className="text-caption text-white/80">
+                                        ⏱️ {attraction.time}
+                                      </p>
+                                    </div>
                                   </div>
                                 </div>
-                              </div>
-                            ))}
+                              );
+                            })}
                             {day.attractions.length > 3 && (
                               <div className="rounded-lg overflow-hidden h-32 bg-slate-100 dark:bg-slate-700 flex items-center justify-center group cursor-pointer hover:shadow-md transition-shadow"
                                 onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}>
