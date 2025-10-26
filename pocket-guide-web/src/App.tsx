@@ -5,6 +5,7 @@ import { AuthProvider } from './contexts/AuthContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RouteLoadingFallback } from './components/RouteLoadingFallback'
 import { OfflineIndicator } from './components/OfflineIndicator'
+import { WebVitalsDebugger } from './components/WebVitalsDebugger'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))
@@ -30,6 +31,7 @@ function App() {
       <AuthProvider>
         <Router>
           <OfflineIndicator />
+          <WebVitalsDebugger />
           <Suspense fallback={<RouteLoadingFallback />}>
             <Routes>
               {/* Public routes */}
