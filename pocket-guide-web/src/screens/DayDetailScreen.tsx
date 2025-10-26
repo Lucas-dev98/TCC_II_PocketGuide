@@ -436,7 +436,7 @@ function generatePhotosForAttraction(attraction: any): PhotoData[] {
   // Gerar 2 URLs diferentes usando PhotoService
   for (let i = 0; i < 2; i++) {
     try {
-      const photoSource = PhotoService.generatePhotoUrl(attraction.name, i);
+      const photoSource = PhotoService.generatePhotoUrl(attraction.name);
       
       photos.push({
         id: `${attraction.id || 'attraction'}-${i}`,
