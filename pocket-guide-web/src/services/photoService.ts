@@ -1,3 +1,5 @@
+import { debug } from '@/utils/debug';
+
 export interface PhotoSource {
   url: string;
   source: 'unsplash' | 'pexels' | 'fallback';
@@ -89,20 +91,20 @@ export class PhotoService {
       }
 
       if (this.UNSPLASH_API_KEY) {
-        console.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"`);
+        debug.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"`);
         const photo = await this.fetchFromUnsplash(attractionName);
         if (photo) {
           this.CACHE.set(cacheKey, photo);
           return photo;
         }
       } else {
-        console.log(`⚠️ Sem chave Unsplash API - usando fallback para: "${attractionName}"`);
+        debug.log(`⚠️ Sem chave Unsplash API - usando fallback para: "${attractionName}"`);
       }
 
-      console.log(`📸 Usando fallback gradient para: "${attractionName}"`);
+      debug.log(`📸 Usando fallback gradient para: "${attractionName}"`);
       return this.getFallbackPhoto(attractionName);
     } catch (error) {
-      console.error(`❌ Erro gerando foto para "${attractionName}":`, error);
+      debug.error(`❌ Erro gerando foto para "${attractionName}":`, error);
       return this.getFallbackPhoto(attractionName);
     }
   }
@@ -110,7 +112,7 @@ export class PhotoService {
   private static async fetchFromUnsplash(attractionName: string): Promise<PhotoSource | null> {
     try {
       const query = this.getSearchQuery(attractionName);
-      console.log(`   → Query de busca: "${query}"`);
+      debug.log(`   → Query de busca: "${query}"`);
 
       const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
       url.searchParams.set('query', query);
@@ -121,14 +123,14 @@ export class PhotoService {
       const response = await fetch(url.toString());
 
       if (!response.ok) {
-        console.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
+        debug.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
         return null;
       }
 
       const data: UnsplashResponse = await response.json();
 
       if (data.results.length === 0) {
-        console.warn(`⚠️ Nenhuma imagem encontrada para: "${query}"`);
+        debug.warn(`⚠️ Nenhuma imagem encontrada para: "${query}"`);
         return null;
       }
 
@@ -140,10 +142,10 @@ export class PhotoService {
         height: 600,
       };
 
-      console.log(`✅ Imagem encontrada: ${image.user.name}`);
+      debug.log(`✅ Imagem encontrada: ${image.user.name}`);
       return photo;
     } catch (error) {
-      console.error(`❌ Erro ao buscar Unsplash:`, error);
+      debug.error(`❌ Erro ao buscar Unsplash:`, error);
       return null;
     }
   }
