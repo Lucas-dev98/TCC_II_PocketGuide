@@ -27,26 +27,29 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
+  const attractionsRef = useRef(attractions);
 
   const mapboxToken = import.meta.env.VITE_MAPBOX_API_KEY;
 
-  useEffect(() => {
-    if (!mapboxToken) {
-      debug.warn('🗺️ Mapbox token not configured');
-      return;
+  // Helper: Extract and validate coordinates
+  const getCoordinates = (attraction: any): [number, number] | null => {
+    const lat = attraction?.location?.lat ?? attraction?.lat;
+    const lng = attraction?.location?.lng ?? attraction?.lng;
+    
+    if (typeof lat === 'number' && typeof lng === 'number' && 
+        !isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+      return [lng, lat];
     }
+    return null;
+  };
 
-    if (map.current) return; // initialize map only once
+  // Initialize map once
+  useEffect(() => {
+    if (!mapboxToken || map.current) return;
     if (!mapContainer.current) return;
 
-    debug.log('🗺️ MapboxMap: Initializing with', attractions.length, 'attractions');
-    if (attractions.length > 0) {
-      debug.log('🗺️ MapboxMap: First attraction received:', attractions[0]);
-      debug.log('🗺️ MapboxMap: Keys in first attraction:', Object.keys(attractions[0]));
-    }
-
     mapboxgl.accessToken = mapboxToken;
-
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/streets-v12',
@@ -54,112 +57,127 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       zoom: zoom,
     });
 
-    // Add attractions as markers
-    if (attractions.length > 0 && map.current) {
-      debug.log('🗺️ MapboxMap: Adding markers');
-      markersRef.current = [];
-      const bounds = new mapboxgl.LngLatBounds();
-      let hasValidMarkers = false;
+    debug.log('🗺️ MapboxMap: Map initialized');
+
+    return () => {
+      // Don't remove map on unmount to avoid re-renders
+    };
+  }, [mapboxToken, center, zoom]);
+
+  // Add/update markers when attractions change
+  useEffect(() => {
+    if (!map.current || attractions.length === 0) return;
+
+    attractionsRef.current = attractions;
+
+    // Clear existing markers
+    markersRef.current.forEach(marker => marker.remove());
+    markersRef.current = [];
+
+    debug.log('🗺️ MapboxMap: Adding/updating markers for', attractions.length, 'attractions');
+    
+    const bounds = new mapboxgl.LngLatBounds();
+    let hasValidMarkers = false;
+    
+    attractions.forEach((attraction, index) => {
+      const coords = getCoordinates(attraction);
       
-      attractions.forEach((attraction, index) => {
-        const attr = attraction as any;
-        const lat = attr.location?.lat || attr.lat;
-        const lng = attr.location?.lng || attr.lng;
-        
-        if (index === 0) {
-          debug.log('🗺️ MapboxMap: FIRST MARKER DEBUG');
-          debug.log('  attr:', attr);
-          debug.log('  attr.lat:', attr.lat);
-          debug.log('  attr.lng:', attr.lng);
-          debug.log('  attr.location:', attr.location);
-          debug.log('  Resolved lat:', lat);
-          debug.log('  Resolved lng:', lng);
-        }
-        
+      if (coords) {
+        const [lng, lat] = coords;
         debug.log(`🗺️ MapboxMap: Marker ${index}:`, { name: attraction.name, lat, lng });
         
-        if (lat !== undefined && lng !== undefined && lat !== null && lng !== null && map.current) {
-          // Create marker with color based on selection
-          const markerColor = index === selectedIndex ? '#10B981' : '#3B82F6';
-          const marker = new mapboxgl.Marker({ color: markerColor })
-            .setLngLat([lng, lat])
-            .setPopup(
-              new mapboxgl.Popup().setHTML(
-                `<div class="p-2">
-                  <strong>${index + 1}. ${attraction.name}</strong>
-                  <p>${attr.reason || ''}</p>
-                  ${attr.time ? `<p class="text-sm text-gray-600">⏰ ${attr.time}</p>` : ''}
-                </div>`
-              )
+        const markerColor = index === selectedIndex ? '#10B981' : '#3B82F6';
+        const marker = new mapboxgl.Marker({ color: markerColor })
+          .setLngLat([lng, lat])
+          .setPopup(
+            new mapboxgl.Popup({ offset: 25 }).setHTML(
+              `<div class="p-2 max-w-xs">
+                <strong>${index + 1}. ${attraction.name}</strong>
+                <p class="text-sm mt-1">${attraction.reason || ''}</p>
+                ${attraction.time ? `<p class="text-xs text-gray-600">⏰ ${attraction.time}</p>` : ''}
+              </div>`
             )
-            .addTo(map.current as mapboxgl.Map);
-          
-          // Add click listener to marker
-          marker.getElement().addEventListener('click', () => {
-            setSelectedIndex(index);
-            onAttractionSelect?.(attraction, index);
-          });
-          
-          markersRef.current.push(marker);
-          bounds.extend([lng, lat]);
-          hasValidMarkers = true;
-        }
-      });
-
-      // Fit bounds to all markers only if we have valid markers
-      if (map.current && hasValidMarkers) {
-        try {
-          debug.log('🗺️ MapboxMap: Fitting bounds');
-          (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 80 });
-        } catch (error) {
-          debug.error('❌ MapboxMap: Error fitting bounds:', error);
-        }
-      } else if (map.current && !hasValidMarkers) {
-        debug.warn('⚠️ MapboxMap: No valid markers to display');
+          )
+          .addTo(map.current as mapboxgl.Map);
+        
+        // Add click listener
+        marker.getElement().addEventListener('click', () => {
+          setSelectedIndex(index);
+          onAttractionSelect?.(attraction, index);
+        });
+        
+        markersRef.current.push(marker);
+        bounds.extend([lng, lat]);
+        hasValidMarkers = true;
       }
+    });
+
+    // Fit bounds to all markers
+    if (hasValidMarkers && markersRef.current.length > 0) {
+      try {
+        debug.log('🗺️ MapboxMap: Fitting bounds to', markersRef.current.length, 'markers');
+        if (markersRef.current.length === 1) {
+          // Single marker: just center on it
+          map.current.flyTo({
+            center: markersRef.current[0].getLngLat(),
+            zoom: 15,
+            duration: 1000,
+          });
+        } else {
+          // Multiple markers: fit bounds
+          (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 80, duration: 1000 });
+        }
+      } catch (error) {
+        debug.error('❌ MapboxMap: Error fitting bounds:', error);
+      }
+    } else {
+      debug.warn('⚠️ MapboxMap: No valid markers to display');
     }
 
     return () => {
-      if (map.current) {
-        map.current.remove();
-        map.current = null;
-      }
+      // Cleanup markers on unmount
+      markersRef.current.forEach(marker => marker.remove());
+      markersRef.current = [];
     };
-  }, [mapboxToken, attractions, zoom, center, selectedIndex, onAttractionSelect]);
+  }, [attractions, onAttractionSelect]);
+
+  // Update marker colors when selection changes
+  useEffect(() => {
+    markersRef.current.forEach((marker, index) => {
+      const newColor = index === selectedIndex ? '#10B981' : '#3B82F6';
+      marker.setDraggable(false); // Ensure markers stay in place
+      
+      // Update marker element styling
+      const element = marker.getElement();
+      const svg = element.querySelector('svg');
+      if (svg) {
+        svg.setAttribute('fill', newColor);
+      }
+    });
+
+    // Optionally fly to selected marker
+    if (markersRef.current[selectedIndex] && map.current) {
+      const lngLat = markersRef.current[selectedIndex].getLngLat();
+      debug.log('🗺️ MapboxMap: Flying to marker', selectedIndex);
+      map.current.flyTo({
+        center: lngLat,
+        zoom: 15,
+        duration: 1000,
+      });
+    }
+  }, [selectedIndex]);
 
   // Handle navigation between attractions
   const handlePrevious = () => {
     const newIndex = selectedIndex === 0 ? attractions.length - 1 : selectedIndex - 1;
     setSelectedIndex(newIndex);
-    onAttractionSelect?.(attractions[newIndex], newIndex);
-    
-    const attr = attractions[newIndex] as any;
-    const lat = attr.location?.lat || attr.lat;
-    const lng = attr.location?.lng || attr.lng;
-    if (map.current && lat !== undefined && lng !== undefined) {
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: 15,
-        duration: 1000,
-      });
-    }
+    onAttractionSelect?.(attractionsRef.current[newIndex], newIndex);
   };
 
   const handleNext = () => {
     const newIndex = (selectedIndex + 1) % attractions.length;
     setSelectedIndex(newIndex);
-    onAttractionSelect?.(attractions[newIndex], newIndex);
-    
-    const attr = attractions[newIndex] as any;
-    const lat = attr.location?.lat || attr.lat;
-    const lng = attr.location?.lng || attr.lng;
-    if (map.current && lat !== undefined && lng !== undefined) {
-      map.current.flyTo({
-        center: [lng, lat],
-        zoom: 15,
-        duration: 1000,
-      });
-    }
+    onAttractionSelect?.(attractionsRef.current[newIndex], newIndex);
   };
 
   return (
