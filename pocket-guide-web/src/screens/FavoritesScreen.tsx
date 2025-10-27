@@ -7,23 +7,20 @@
 
 import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trip } from '../types'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { FavoriteButton } from '../components/FavoriteButton'
 import { MainLayout } from '../components/Layout'
+import { useTripsStore } from '../store/tripsStore'
 import { useFavorites } from '../hooks/useFavorites'
 import { debug } from '../utils/debug'
-
-interface FavoritesScreenProps {
-  trips: Trip[]
-}
 
 type SortOption = 'date-desc' | 'date-asc' | 'name-asc' | 'name-desc'
 type ViewMode = 'grid' | 'list'
 
-export default function FavoritesScreen({ trips }: FavoritesScreenProps) {
+export default function FavoritesScreen() {
   const navigate = useNavigate()
+  const { trips } = useTripsStore()
   const { favorites, clearFavorites } = useFavorites()
   const [sortBy, setSortBy] = useState<SortOption>('date-desc')
   const [viewMode, setViewMode] = useState<ViewMode>('grid')

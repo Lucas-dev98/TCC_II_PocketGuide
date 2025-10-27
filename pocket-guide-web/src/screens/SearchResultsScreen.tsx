@@ -7,7 +7,7 @@
 
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
-import { Trip } from '../types'
+import { useTripsStore } from '../store/tripsStore'
 import { SearchInput } from '../components/SearchInput'
 import { AdvancedFilters } from '../components/AdvancedFilters'
 import { Card } from '../components/Card'
@@ -16,12 +16,9 @@ import { MainLayout } from '../components/Layout'
 import { searchService, SearchFilters, SearchResult } from '../services/searchService'
 import { debug } from '../utils/debug'
 
-interface SearchResultsScreenProps {
-  trips: Trip[]
-}
-
-export default function SearchResultsScreen({ trips }: SearchResultsScreenProps) {
+export default function SearchResultsScreen() {
   const navigate = useNavigate()
+  const { trips } = useTripsStore()
   const [filters, setFilters] = useState<SearchFilters>({
     page: 1,
     pageSize: 10,

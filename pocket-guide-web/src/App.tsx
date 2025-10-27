@@ -90,7 +90,7 @@ function App() {
                 path="/search"
                 element={
                   <ProtectedRoute>
-                    <SearchResultsScreen trips={[]} />
+                    <SearchResultsScreen />
                   </ProtectedRoute>
                 }
               />
@@ -99,7 +99,7 @@ function App() {
                 path="/favorites"
                 element={
                   <ProtectedRoute>
-                    <FavoritesScreen trips={[]} />
+                    <FavoritesScreen />
                   </ProtectedRoute>
                 }
               />
