@@ -9,6 +9,7 @@ import { MapboxMap } from '../components/MapboxMap';
 import { ShareButton } from '../components/ShareButton';
 import { ExportButton } from '../components/ExportButton';
 import { FavoriteButton } from '../components/FavoriteButton';
+import { MainLayout } from '../components/Layout';
 import { debug } from '../utils/debug';
 import {
   ArrowLeft,
@@ -389,9 +390,10 @@ export default function TripDetailScreen() {
   debug.log('🔍 final itinerary after transform:', itinerary);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-20">
-      {/* Header com fundo gradiente */}
-      <header className="bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-20">
+      {/* Mobile Header - Hidden on Desktop */}
+      <header className="lg:hidden bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-4xl mx-auto px-4 py-8">
           <button
             onClick={() => navigate('/home')}
@@ -439,8 +441,53 @@ export default function TripDetailScreen() {
         </div>
       </header>
 
+      {/* Desktop Header */}
+      <header className="hidden lg:block bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
+        <div className="max-w-6xl mx-auto px-6 py-8">
+          <h1 className="text-3xl font-bold mb-2 text-slate-900 dark:text-white">{trip.destination}</h1>
+          <p className="text-lg text-slate-600 dark:text-slate-400 mb-6">{trip.country}</p>
+
+          {/* Action buttons - Share, Export, Favorite */}
+          <div className="flex gap-3 mb-6 flex-wrap">
+            <ShareButton trip={trip} variant="filled" />
+            <ExportButton trip={trip} variant="filled" />
+            <FavoriteButton tripId={trip.id} size="md" />
+          </div>
+
+          {/* Quick info */}
+          <div className="grid grid-cols-4 gap-4 mt-8" role="region" aria-label="Informações rápidas da viagem">
+            <div>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Data</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
+                {daysCount} dias
+              </p>
+            </div>
+            <div>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Orçamento</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
+                {trip.budget === 'econômico'
+                  ? '💰 Econômico'
+                  : trip.budget === 'médio'
+                    ? '💳 Médio'
+                    : '💎 Luxo'}
+              </p>
+            </div>
+            <div>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Interesses</p>
+              <p className="font-semibold text-slate-900 dark:text-white">{trip.interests?.length || 0}</p>
+            </div>
+            <div>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Período</p>
+              <p className="font-semibold text-slate-900 dark:text-white">
+                {new Date(trip.startDate).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })} - {new Date(trip.endDate).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
+              </p>
+            </div>
+          </div>
+        </div>
+      </header>
+
       {/* Main content */}
-      <main className="max-w-4xl mx-auto px-4 py-8">
+      <main className="max-w-7xl mx-auto px-4 lg:px-6 py-8">
         {/* Trip Info Cards */}
         <div className="grid md:grid-cols-2 gap-6 mb-8">
           {/* Dates */}
@@ -752,6 +799,7 @@ export default function TripDetailScreen() {
           </Card>
         )}
       </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 }
