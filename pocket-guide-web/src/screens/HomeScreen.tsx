@@ -7,9 +7,9 @@ import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { MainLayout } from '../components/Layout'
 import { SkeletonCard } from '../components/Skeleton'
-import { Plus, MapPin, Calendar, Trash2, LogOut } from 'lucide-react'
-import { ThemeToggle } from '../components/ThemeToggle'
+import { Plus, MapPin, Calendar, Trash2 } from 'lucide-react'
 import { formatDate } from '../utils/formatDate'
 import { debug } from '../utils/debug'
 
@@ -27,7 +27,7 @@ import { debug } from '../utils/debug'
  */
 export default function HomeScreen() {
   const navigate = useNavigate()
-  const { user, signOut } = useAuth()
+  const { user } = useAuth()
   const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore()
   const { showError, showSuccess } = useToast()
   const [deleting, setDeleting] = useState<string | null>(null)
@@ -42,16 +42,6 @@ export default function HomeScreen() {
 
   debug.log('🏠 HomeScreen: Current trips:', trips)
   debug.log('🏠 HomeScreen: isLoading:', isLoading)
-
-  const handleLogout = async () => {
-    try {
-      await signOut()
-      navigate('/login', { replace: true })
-    } catch (error) {
-      debug.error('Erro ao fazer logout:', error)
-      showError('Erro ao fazer logout')
-    }
-  }
 
   const handleCreateTrip = () => {
     navigate('/create-trip')
@@ -79,11 +69,11 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 pb-20">
-      {/* Header */}
-      <div className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div>
+    <MainLayout>
+      <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900">
+        {/* Mobile Header - Hidden on Desktop */}
+        <div className="lg:hidden bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10">
+          <div className="max-w-6xl mx-auto px-4 py-4">
             <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
               Minhas Viagens
             </h1>
@@ -91,33 +81,26 @@ export default function HomeScreen() {
               Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
             </p>
           </div>
+        </div>
 
-          <div className="flex items-center gap-3">
-            {/* Toggle tema */}
-            <ThemeToggle />
+        {/* Desktop Header - Visible on Desktop */}
+        <div className="hidden lg:block px-6 py-6">
+          <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
+            Minhas Viagens
+          </h1>
+          <p className="text-slate-600 dark:text-slate-400">
+            Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
+          </p>
+        </div>
 
-            {/* Logout */}
+        {/* Main content */}
+        <div className="max-w-7xl mx-auto px-4 py-8 lg:px-6">
+          {/* Botão criar nova viagem */}
+          <div className="mb-8">
             <Button
-              onClick={handleLogout}
-              variant="outline"
-              size="sm"
+              onClick={handleCreateTrip}
               className="gap-2"
             >
-              <LogOut className="w-4 h-4" />
-              Sair
-            </Button>
-          </div>
-        </div>
-      </div>
-
-      {/* Main content */}
-      <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Botão criar nova viagem */}
-        <div className="mb-8">
-          <Button
-            onClick={handleCreateTrip}
-            className="gap-2"
-          >
             <Plus className="w-5 h-5" />
             Criar Nova Viagem
           </Button>
@@ -241,7 +224,8 @@ export default function HomeScreen() {
             ))}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </MainLayout>
   )
 }
