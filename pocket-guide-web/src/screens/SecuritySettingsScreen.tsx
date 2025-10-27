@@ -10,6 +10,7 @@
 import { useState } from 'react'
 import { ArrowLeft, Fingerprint, Lock, Trash2, Plus, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
+import { MainLayout } from '../components/Layout'
 import { biometryService } from '../services/biometryService'
 
 export const SecuritySettingsScreen = () => {
@@ -99,24 +100,38 @@ export const SecuritySettingsScreen = () => {
   }
 
   return (
-    <div className="min-h-screen bg-white dark:bg-slate-950">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 sticky top-0 z-10">
-        <div className="max-w-2xl mx-auto">
-          <button
-            onClick={() => navigate(-1)}
-            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
-          >
-            <ArrowLeft className="w-5 h-5" />
-            Voltar
-          </button>
+    <MainLayout>
+      <div className="min-h-screen bg-white dark:bg-slate-950">
+        {/* Mobile Header - Hidden on Desktop */}
+        <div className="lg:hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 sticky top-16 z-10">
+          <div className="max-w-2xl mx-auto">
+            <button
+              onClick={() => navigate(-1)}
+              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
+            >
+              <ArrowLeft className="w-5 h-5" />
+              Voltar
+            </button>
 
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-            Segurança
-          </h1>
-          <p className="text-slate-600 dark:text-slate-400">
-            Gerencie suas credenciais de autenticação
-          </p>
+            <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
+              Segurança
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400">
+              Gerencie suas credenciais de autenticação
+            </p>
+          </div>
+        </div>
+
+        {/* Desktop Header */}
+        <div className="hidden lg:block bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 p-6">
+          <div className="max-w-2xl mx-auto">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
+              Segurança
+            </h1>
+            <p className="text-slate-600 dark:text-slate-400 mt-2">
+              Gerencie suas credenciais de autenticação
+            </p>
+          </div>
         </div>
       </div>
 
@@ -340,7 +355,7 @@ export const SecuritySettingsScreen = () => {
           </button>
         </div>
       </div>
-    </div>
+    </MainLayout>
   )
 }
 
