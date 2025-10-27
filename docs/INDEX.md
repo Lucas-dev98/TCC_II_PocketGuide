@@ -45,13 +45,8 @@ Bem-vindo à documentação do **Pocket Guide**, um app web de planejamento de v
 ### 🧪 Testes
 - `TESTE_FAVORITOS.md` - Guia de testes
 
-### 📊 Análise & Status
-- `PROJECT_ANALYSIS.md` - Análise do projeto
-- `EXECUTIVE_SUMMARY.md` - Resumo
-- `ROADMAP_COMPLETE.md` - Roadmap
-- `DOCUMENTATION_CONSOLIDATION_SUMMARY.md` - Status docs
-- `DOCUMENTATION_QUICK_REFERENCE.md` - Referência rápida
-- `DOCUMENTATION_FINAL_STATUS.md` - Status final
+### 📊 Status & Análise
+- `STATUS.md` - Status completo do projeto
 
 ### 🔗 APIs & Extras
 - `UNSPLASH_API_STATUS.md` - Unsplash API
@@ -82,11 +77,10 @@ Bem-vindo à documentação do **Pocket Guide**, um app web de planejamento de v
 2. CODE_SPLITTING_GUIDE.md
 ```
 
-### 📊 Análise Geral
+### 📊 Status Geral
 ```
-1. PROJECT_ANALYSIS.md
-2. EXECUTIVE_SUMMARY.md
-3. ROADMAP_COMPLETE.md
+1. STATUS.md
+2. ROADMAP_COMPLETE.md
 ```
 
 ---
