@@ -114,13 +114,23 @@ export const useFavoritesStore = create<FavoritesState>()(
           isFav = (favorites as string[]).includes(tripId)
         }
 
-        if (isFav) {
-          state.removeFavorite(tripId)
-          return false
-        } else {
-          state.addFavorite(tripId)
-          return true
-        }
+        // Directly update state instead of calling async methods
+        set((currentState) => {
+          const newFavorites = new Set(currentState.favorites || [])
+          if (isFav) {
+            newFavorites.delete(tripId)
+            debug.log(`💔 Removed favorite: ${tripId}`)
+          } else {
+            newFavorites.add(tripId)
+            debug.log(`⭐ Added favorite: ${tripId}`)
+          }
+          return {
+            favorites: newFavorites,
+            lastUpdated: new Date(),
+          }
+        })
+        
+        return !isFav
       },
 
       isFavorite: (tripId: string) => {

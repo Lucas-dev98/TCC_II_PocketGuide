@@ -23,11 +23,12 @@ export function FavoriteButton({
   onToggle,
 }: FavoriteButtonProps) {
   const { toggleFavorite, isFavorite: checkIsFavorite } = useFavorites()
+  // Call the method directly to get reactive updates
   const isFavorite = checkIsFavorite(tripId)
 
   const handleToggle = () => {
-    const newState = toggleFavorite(tripId)
-    onToggle?.(newState)
+    toggleFavorite(tripId)
+    onToggle?.(!isFavorite)
   }
 
   const sizeClasses = {
