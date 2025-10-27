@@ -343,3 +343,5 @@ export const SecuritySettingsScreen = () => {
     </div>
   )
 }
+
+export default SecuritySettingsScreen

@@ -12,6 +12,10 @@ export { Toast, useToast } from "./Toast";
 export { MapboxMap } from "./MapboxMap";
 export { ProtectedRoute } from "./ProtectedRoute";
 export { RouteLoadingFallback } from "./RouteLoadingFallback";
+export { BottomNavigation } from "./BottomNavigation";
+export { ShareButton } from "./ShareButton";
+export { ExportButton } from "./ExportButton";
+export { FavoriteButton } from "./FavoriteButton";
 
 // Day Detail Components
 export { DayGallery } from "./DayGallery";

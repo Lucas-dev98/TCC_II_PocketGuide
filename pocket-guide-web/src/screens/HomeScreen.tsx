@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
+import { FavoriteButton } from '../components/FavoriteButton'
 import { SkeletonCard } from '../components/Skeleton'
 import { Plus, MapPin, Calendar, Trash2, LogOut } from 'lucide-react'
 import { ThemeToggle } from '../components/ThemeToggle'
@@ -78,7 +79,7 @@ export default function HomeScreen() {
   }
 
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 pb-8">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-900 pb-20">
       {/* Header */}
       <div className="bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center justify-between">
@@ -219,19 +220,22 @@ export default function HomeScreen() {
                   )}
 
                   {/* Delete button */}
-                  <Button
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      handleDeleteTrip(trip.id)
-                    }}
-                    disabled={deleting === trip.id}
-                    variant="outline"
-                    size="sm"
-                    className="w-full gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                    {deleting === trip.id ? 'Deletando...' : 'Deletar'}
-                  </Button>
+                  <div className="flex gap-2">
+                    <FavoriteButton tripId={trip.id} size="md" />
+                    <Button
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        handleDeleteTrip(trip.id)
+                      }}
+                      disabled={deleting === trip.id}
+                      variant="outline"
+                      size="sm"
+                      className="flex-1 gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {deleting === trip.id ? 'Deletando...' : 'Deletar'}
+                    </Button>
+                  </div>
                 </Card.Body>
               </Card>
             ))}

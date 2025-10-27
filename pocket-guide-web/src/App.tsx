@@ -16,9 +16,11 @@ const TripDetailScreen = lazy(() => import('./screens/TripDetailScreen'))
 const DayDetailScreen = lazy(() => import('./screens/DayDetailScreen'))
 const SearchResultsScreen = lazy(() => import('./screens/SearchResultsScreen'))
 const FavoritesScreen = lazy(() => import('./screens/FavoritesScreen'))
+const SecuritySettingsScreen = lazy(() => import('./screens/SecuritySettingsScreen'))
 
 // Import SharedTripView component (non-lazy, shared component)
 import { SharedTripView } from './components/SharedTripView'
+import { BottomNavigation } from './components/BottomNavigation'
 
 /**
  * App.tsx - Aplicação principal com routing
@@ -102,6 +104,15 @@ function App() {
                 }
               />
 
+              <Route
+                path="/security"
+                element={
+                  <ProtectedRoute>
+                    <SecuritySettingsScreen />
+                  </ProtectedRoute>
+                }
+              />
+
               {/* Public shared trip view */}
               <Route
                 path="/share/:shareId"
@@ -134,6 +145,7 @@ function App() {
                 }
               />
             </Routes>
+            <BottomNavigation />
           </Suspense>
         </Router>
       </AuthProvider>
