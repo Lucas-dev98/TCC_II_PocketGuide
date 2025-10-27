@@ -8,15 +8,13 @@
 import { useFavoritesStore } from '../stores/favoritesStore'
 
 export function useFavorites() {
-  // Subscribe directly to store methods and favorites state for reactivity
+  // Subscribe to store methods for actions
   const addFavorite = useFavoritesStore((state) => state.addFavorite)
   const removeFavorite = useFavoritesStore((state) => state.removeFavorite)
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
-  const isFavorite = useFavoritesStore((state) => state.isFavorite)
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
   
-  // Get favorites array and count directly from state for reactivity
-  // These selectors will cause component to re-render when favorites state changes
+  // Get favorites array directly from state for reactivity
   const favorites = useFavoritesStore((state) => {
     const fav = state.favorites
     if (!fav) return []
@@ -32,6 +30,11 @@ export function useFavorites() {
     if (Array.isArray(fav)) return (fav as string[]).length
     return 0
   })
+
+  // Create a reactive isFavorite function that checks against current favorites
+  const isFavorite = (tripId: string) => {
+    return favorites.includes(tripId)
+  }
 
   return {
     // State
