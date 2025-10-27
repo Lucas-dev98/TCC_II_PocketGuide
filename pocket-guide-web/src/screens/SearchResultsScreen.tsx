@@ -12,6 +12,7 @@ import { SearchInput } from '../components/SearchInput'
 import { AdvancedFilters } from '../components/AdvancedFilters'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
+import { MainLayout } from '../components/Layout'
 import { searchService, SearchFilters, SearchResult } from '../services/searchService'
 import { debug } from '../utils/debug'
 
@@ -102,54 +103,83 @@ export default function SearchResultsScreen({ trips }: SearchResultsScreenProps)
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-20">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 shadow-sm">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-          <div className="mb-4">
-            <button
-              onClick={() => navigate('/home')}
-              className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
-            >
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M15 19l-7-7 7-7"
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 dark:from-gray-900 dark:to-gray-800 pb-20">
+        {/* Mobile Header - Hidden on Desktop */}
+        <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-16 z-40 shadow-sm">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+            <div className="mb-4">
+              <button
+                onClick={() => navigate('/home')}
+                className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
+              >
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M15 19l-7-7 7-7"
+                  />
+                </svg>
+                <span>Voltar</span>
+              </button>
+            </div>
+
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
+
+            {/* Search Bar */}
+            <div className="flex gap-4 items-end">
+              <div className="flex-1">
+                <SearchInput
+                  trips={trips}
+                  onSearch={(result) => {
+                    setResults(result)
+                    setFilters({
+                      ...filters,
+                      page: 1,
+                    })
+                  }}
                 />
-              </svg>
-              <span>Voltar</span>
-            </button>
-          </div>
-
-          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
-
-          {/* Search Bar */}
-          <div className="flex gap-4 items-end">
-            <div className="flex-1">
-              <SearchInput
-                trips={trips}
-                onSearch={(result) => {
-                  setResults(result)
-                  setFilters({
-                    ...filters,
-                    page: 1,
-                  })
-                }}
+              </div>
+              <AdvancedFilters
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onApply={performSearch}
               />
             </div>
-            <AdvancedFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-              onApply={performSearch}
-            />
           </div>
         </div>
-      </div>
 
-      {/* Main Content */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        {/* Desktop Header */}
+        <div className="hidden lg:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+          <div className="max-w-7xl mx-auto px-6 py-6">
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
+
+            {/* Search Bar */}
+            <div className="flex gap-4 items-end">
+              <div className="flex-1">
+                <SearchInput
+                  trips={trips}
+                  onSearch={(result) => {
+                    setResults(result)
+                    setFilters({
+                      ...filters,
+                      page: 1,
+                    })
+                  }}
+                />
+              </div>
+              <AdvancedFilters
+                filters={filters}
+                onFiltersChange={handleFiltersChange}
+                onApply={performSearch}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Main Content */}
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
         {/* Results Info */}
         {results.total > 0 && (
           <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
@@ -332,5 +362,6 @@ export default function SearchResultsScreen({ trips }: SearchResultsScreenProps)
         )}
       </div>
     </div>
+    </MainLayout>
   )
 }
