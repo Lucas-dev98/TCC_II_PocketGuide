@@ -6,6 +6,7 @@ import { useToast } from '../components/Toast'
 import { Button } from '../components/Button'
 import { Input } from '../components/Input'
 import { Card } from '../components/Card'
+import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
 import { Budget } from '../types'
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react'
@@ -208,25 +209,26 @@ export default function CreateTripScreen() {
   };
 
   return (
-    <form className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 pb-20">
-      <div className="max-w-2xl mx-auto">
-        {/* Header */}
-        <div className="mb-8">
-          <button
-            onClick={handleGoBack}
-            type="button"
-            className="flex items-center gap-2 text-primary hover:text-primary-dark dark:hover:text-blue-300 mb-4 font-medium transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
-            aria-label="Voltar para etapa anterior ou página inicial"
-          >
-            <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-            Voltar
-          </button>
-          
-          <h1 className="text-h1 font-bold text-slate-900 dark:text-white mb-2">
-            Criar Nova Viagem ✈️
-          </h1>
-          
-          <p className="text-body text-slate-600 dark:text-slate-400">
+    <MainLayout>
+      <form className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 pb-20">
+        <div className="max-w-2xl mx-auto">
+          {/* Header */}
+          <div className="mb-8">
+            <button
+              onClick={handleGoBack}
+              type="button"
+              className="flex items-center gap-2 text-primary hover:text-primary-dark dark:hover:text-blue-300 mb-4 font-medium transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
+              aria-label="Voltar para etapa anterior ou página inicial"
+            >
+              <ArrowLeft className="w-4 h-4" aria-hidden="true" />
+              Voltar
+            </button>
+            
+            <h1 className="text-h1 font-bold text-slate-900 dark:text-white mb-2">
+              Criar Nova Viagem ✈️
+            </h1>
+            
+            <p className="text-body text-slate-600 dark:text-slate-400">
             Deixe nossa IA criar um roteiro perfeito para você
           </p>
         </div>
@@ -452,7 +454,8 @@ export default function CreateTripScreen() {
             </Card.Footer>
           </Card>
         )}
-      </div>
-    </form>
+        </div>
+      </form>
+    </MainLayout>
   )
 }
