@@ -17,6 +17,9 @@ export { ShareButton } from "./ShareButton";
 export { ExportButton } from "./ExportButton";
 export { FavoriteButton } from "./FavoriteButton";
 
+// Layout Components (Desktop)
+export { TopBar, Sidebar, MainLayout } from "./Layout";
+
 // Day Detail Components
 export { DayGallery } from "./DayGallery";
 export { DayNavigation } from "./DayNavigation";
