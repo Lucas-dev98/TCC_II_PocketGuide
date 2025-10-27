@@ -25,7 +25,8 @@ export function TopBar() {
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault()
     if (searchValue.trim()) {
-      navigate('/search')
+      navigate(`/search?q=${encodeURIComponent(searchValue)}`)
+      setSearchValue('')
     }
   }
 

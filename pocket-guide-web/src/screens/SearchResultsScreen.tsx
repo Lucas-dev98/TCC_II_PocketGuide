@@ -6,9 +6,8 @@
  */
 
 import { useState, useEffect } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, useSearchParams } from 'react-router-dom'
 import { useTripsStore } from '../store/tripsStore'
-import { SearchInput } from '../components/SearchInput'
 import { AdvancedFilters } from '../components/AdvancedFilters'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
@@ -19,7 +18,11 @@ import { debug } from '../utils/debug'
 export default function SearchResultsScreen() {
   const navigate = useNavigate()
   const { trips } = useTripsStore()
+  const [searchParams] = useSearchParams()
+  const queryParam = searchParams.get('q') || ''
+  
   const [filters, setFilters] = useState<SearchFilters>({
+    query: queryParam,
     page: 1,
     pageSize: 10,
     sortBy: 'date',
@@ -33,6 +36,17 @@ export default function SearchResultsScreen() {
     hasMore: false,
   })
   const [isLoading, setIsLoading] = useState(false)
+
+  /**
+   * Sincroniza query do URL com filtros
+   */
+  useEffect(() => {
+    setFilters((prev) => ({
+      ...prev,
+      query: queryParam,
+      page: 1,
+    }))
+  }, [queryParam])
 
   /**
    * Executa busca quando filtros mudam
@@ -124,18 +138,8 @@ export default function SearchResultsScreen() {
 
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
 
-            {/* Search Bar */}
+            {/* Filters */}
             <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <SearchInput
-                  trips={trips}
-                  filters={filters}
-                  onSearch={(result, updatedFilters) => {
-                    setResults(result)
-                    setFilters(updatedFilters)
-                  }}
-                />
-              </div>
               <AdvancedFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
@@ -150,18 +154,8 @@ export default function SearchResultsScreen() {
           <div className="max-w-7xl mx-auto px-6 py-6">
             <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
 
-            {/* Search Bar */}
+            {/* Filters */}
             <div className="flex gap-4 items-end">
-              <div className="flex-1">
-                <SearchInput
-                  trips={trips}
-                  filters={filters}
-                  onSearch={(result, updatedFilters) => {
-                    setResults(result)
-                    setFilters(updatedFilters)
-                  }}
-                />
-              </div>
               <AdvancedFilters
                 filters={filters}
                 onFiltersChange={handleFiltersChange}
