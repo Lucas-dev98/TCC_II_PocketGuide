@@ -82,7 +82,16 @@ export const useFavoritesStore = create<FavoritesState>()(
       addFavorite: (tripId: string) => {
         console.log(`[Store] addFavorite called for: ${tripId}`)
         set((state) => {
-          const newFavorites = new Set(state.favorites || [])
+          // Garantir que favorites é sempre um array antes de criar Set
+          let favoritesArray: string[] = []
+          
+          if (state.favorites instanceof Set) {
+            favoritesArray = Array.from(state.favorites)
+          } else if (Array.isArray(state.favorites)) {
+            favoritesArray = state.favorites as string[]
+          }
+          
+          const newFavorites = new Set(favoritesArray)
           newFavorites.add(tripId)
           console.log(`[Store] new favorites after add:`, Array.from(newFavorites))
           debug.log(`⭐ Added favorite: ${tripId}`)
@@ -96,7 +105,16 @@ export const useFavoritesStore = create<FavoritesState>()(
       removeFavorite: (tripId: string) => {
         console.log(`[Store] removeFavorite called for: ${tripId}`)
         set((state) => {
-          const newFavorites = new Set(state.favorites || [])
+          // Garantir que favorites é sempre um array antes de criar Set
+          let favoritesArray: string[] = []
+          
+          if (state.favorites instanceof Set) {
+            favoritesArray = Array.from(state.favorites)
+          } else if (Array.isArray(state.favorites)) {
+            favoritesArray = state.favorites as string[]
+          }
+          
+          const newFavorites = new Set(favoritesArray)
           newFavorites.delete(tripId)
           console.log(`[Store] new favorites after remove:`, Array.from(newFavorites))
           debug.log(`💔 Removed favorite: ${tripId}`)
@@ -120,7 +138,16 @@ export const useFavoritesStore = create<FavoritesState>()(
 
         // Directly update state instead of calling async methods
         set((currentState) => {
-          const newFavorites = new Set(currentState.favorites || [])
+          // Garantir que favorites é sempre um array antes de criar Set
+          let favoritesArray: string[] = []
+          
+          if (currentState.favorites instanceof Set) {
+            favoritesArray = Array.from(currentState.favorites)
+          } else if (Array.isArray(currentState.favorites)) {
+            favoritesArray = currentState.favorites as string[]
+          }
+          
+          const newFavorites = new Set(favoritesArray)
           if (isFav) {
             newFavorites.delete(tripId)
             debug.log(`💔 Removed favorite: ${tripId}`)
