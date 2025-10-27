@@ -26,7 +26,8 @@ export function FavoriteButton({
   // Call the method directly to get reactive updates
   const isFavorite = checkIsFavorite(tripId)
 
-  const handleToggle = () => {
+  const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
+    e.stopPropagation()
     toggleFavorite(tripId)
     onToggle?.(!isFavorite)
   }
@@ -46,7 +47,7 @@ export function FavoriteButton({
   if (variant === 'filled') {
     return (
       <button
-        onClick={handleToggle}
+        onClick={(e) => handleToggle(e)}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
           isFavorite
             ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
@@ -74,7 +75,7 @@ export function FavoriteButton({
   // Icon variant (default)
   return (
     <button
-      onClick={handleToggle}
+      onClick={(e) => handleToggle(e)}
       className={`p-1.5 rounded-full transition-all transform hover:scale-110 active:scale-95 ${
         isFavorite
           ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
