@@ -11,6 +11,7 @@ import { Trip } from '../types'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { MainLayout } from '../components/Layout'
 import { useFavorites } from '../hooks/useFavorites'
 import { debug } from '../utils/debug'
 
@@ -68,9 +69,10 @@ export default function FavoritesScreen({ trips }: FavoritesScreenProps) {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-100 dark:from-gray-900 dark:to-gray-800 pb-20">
-      {/* Header */}
-      <div className="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-0 z-40 shadow-sm">
+    <MainLayout>
+      <div className="min-h-screen bg-gradient-to-br from-pink-50 to-red-100 dark:from-gray-900 dark:to-gray-800 pb-20">
+      {/* Mobile Header - Hidden on Desktop */}
+      <div className="lg:hidden bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 sticky top-16 z-40 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           {/* Back Button */}
           <button
@@ -88,6 +90,87 @@ export default function FavoritesScreen({ trips }: FavoritesScreenProps) {
             <span>Voltar</span>
           </button>
 
+          {/* Title & Description */}
+          <div className="mb-6">
+            <div className="flex items-center gap-3 mb-2">
+              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">Favoritos</h1>
+              {favoritedTrips.length > 0 && (
+                <span className="inline-flex items-center justify-center px-3 py-1 text-sm font-semibold text-white bg-red-500 rounded-full">
+                  {favoritedTrips.length}
+                </span>
+              )}
+            </div>
+            <p className="text-gray-600 dark:text-gray-400">
+              {favoritedTrips.length === 0
+                ? 'Você ainda não tem viagens favoritas'
+                : `Você tem ${favoritedTrips.length} viagem${favoritedTrips.length !== 1 ? 's' : ''} favoritada${favoritedTrips.length !== 1 ? 's' : ''}`}
+            </p>
+          </div>
+
+          {/* Controls */}
+          {favoritedTrips.length > 0 && (
+            <div className="flex flex-wrap gap-4 items-center">
+              {/* Sort Dropdown */}
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as SortOption)}
+                className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+              >
+                <option value="date-desc">Mais recentes</option>
+                <option value="date-asc">Mais antigas</option>
+                <option value="name-asc">Destino (A-Z)</option>
+                <option value="name-desc">Destino (Z-A)</option>
+              </select>
+
+              {/* View Mode Toggle */}
+              <div className="flex gap-2 bg-gray-100 dark:bg-gray-700 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode('grid')}
+                  className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'grid'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Visualização em grade"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path d="M3 4a1 1 0 011-1h12a1 1 0 011 1v2a1 1 0 01-1 1H4a1 1 0 01-1-1V4zM3 10a1 1 0 011-1h12a1 1 0 011 1v6a1 1 0 01-1 1H4a1 1 0 01-1-1v-6z" />
+                  </svg>
+                </button>
+                <button
+                  onClick={() => setViewMode('list')}
+                  className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
+                    viewMode === 'list'
+                      ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                  title="Visualização em lista"
+                >
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path
+                      fillRule="evenodd"
+                      d="M3 4a1 1 0 011-1h12a1 1 0 11 0 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 11 0 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 11 0 2H4a1 1 0 01-1-1zm0 4a1 1 0 011-1h12a1 1 0 11 0 2H4a1 1 0 01-1-1z"
+                      clipRule="evenodd"
+                    />
+                  </svg>
+                </button>
+              </div>
+
+              {/* Clear All Button */}
+              <button
+                onClick={() => setShowClearConfirm(true)}
+                className="ml-auto px-4 py-2 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors text-sm font-medium"
+              >
+                Limpar tudo
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Desktop Header */}
+      <div className="hidden lg:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
+        <div className="max-w-7xl mx-auto px-6 py-6">
           {/* Title & Description */}
           <div className="mb-6">
             <div className="flex items-center gap-3 mb-2">
@@ -350,6 +433,7 @@ export default function FavoritesScreen({ trips }: FavoritesScreenProps) {
           </div>
         </div>
       )}
-    </div>
+      </div>
+      </MainLayout>
   )
 }
