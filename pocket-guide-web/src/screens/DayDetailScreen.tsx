@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { Button, Skeleton, EmptyState, useToast, Card } from "@/components";
+import { MainLayout } from "@/components/Layout";
 import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
@@ -330,7 +331,8 @@ export const DayDetailScreen: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+    <MainLayout>
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
       {/* Header com navegação */}
       <header className="sticky top-0 z-20 bg-white dark:bg-slate-800 border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
@@ -478,7 +480,8 @@ export const DayDetailScreen: React.FC = () => {
           </Card>
         )}
       </main>
-    </div>
+      </div>
+    </MainLayout>
   );
 };
 
