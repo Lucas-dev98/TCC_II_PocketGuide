@@ -8,18 +8,30 @@
 import { useFavoritesStore } from '../stores/favoritesStore'
 
 export function useFavorites() {
-  // Zustand store - Get individual methods for reactivity
+  // Subscribe directly to store methods and favorites state for reactivity
   const addFavorite = useFavoritesStore((state) => state.addFavorite)
   const removeFavorite = useFavoritesStore((state) => state.removeFavorite)
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
   const isFavorite = useFavoritesStore((state) => state.isFavorite)
-  const getFavorites = useFavoritesStore((state) => state.getFavorites)
-  const getFavoritesCount = useFavoritesStore((state) => state.getFavoritesCount)
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
+  
+  // Get favorites array and count directly from state for reactivity
+  // These selectors will cause component to re-render when favorites state changes
+  const favorites = useFavoritesStore((state) => {
+    const fav = state.favorites
+    if (!fav) return []
+    if (fav instanceof Set) return Array.from(fav)
+    if (Array.isArray(fav)) return fav as string[]
+    return []
+  })
 
-  // Get reactively updated array from store
-  const favorites = getFavorites()
-  const count = getFavoritesCount()
+  const count = useFavoritesStore((state) => {
+    const fav = state.favorites
+    if (!fav) return 0
+    if (fav instanceof Set) return fav.size
+    if (Array.isArray(fav)) return (fav as string[]).length
+    return 0
+  })
 
   return {
     // State
@@ -31,8 +43,6 @@ export function useFavorites() {
     removeFavorite,
     toggleFavorite,
     isFavorite,
-    getFavorites,
-    getFavoritesCount,
     clearFavorites,
   }
 }
