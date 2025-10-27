@@ -15,6 +15,7 @@ const CreateTripScreen = lazy(() => import('./screens/CreateTripScreen'))
 const TripDetailScreen = lazy(() => import('./screens/TripDetailScreen'))
 const DayDetailScreen = lazy(() => import('./screens/DayDetailScreen'))
 const SearchResultsScreen = lazy(() => import('./screens/SearchResultsScreen'))
+const FavoritesScreen = lazy(() => import('./screens/FavoritesScreen'))
 
 /**
  * App.tsx - Aplicação principal com routing
@@ -82,6 +83,15 @@ function App() {
                 element={
                   <ProtectedRoute>
                     <SearchResultsScreen trips={[]} />
+                  </ProtectedRoute>
+                }
+              />
+
+              <Route
+                path="/favorites"
+                element={
+                  <ProtectedRoute>
+                    <FavoritesScreen trips={[]} />
                   </ProtectedRoute>
                 }
               />

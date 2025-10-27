@@ -1,0 +1,143 @@
+/**
+ * Favorites Store
+ * 
+ * Gerencia viagens favoritadas do usuário
+ * - Persist em localStorage
+ * - Add/remove/toggle favoritos
+ * - Query favoritados
+ */
+
+import { create } from 'zustand'
+import { persist } from 'zustand/middleware'
+import { debug } from '../utils/debug'
+
+export interface FavoritesState {
+  // State
+  favorites: Set<string> // Trip IDs
+  lastUpdated: Date | null
+
+  // Actions
+  addFavorite: (tripId: string) => void
+  removeFavorite: (tripId: string) => void
+  toggleFavorite: (tripId: string) => boolean
+  isFavorite: (tripId: string) => boolean
+  getFavorites: () => string[]
+  clearFavorites: () => void
+  getFavoritesCount: () => number
+
+  // Utils
+  getFavoritesSet: () => Set<string>
+}
+
+/**
+ * Custom storage para Set
+ */
+const favoritesStorage = {
+  getItem: (name: string) => {
+    const item = localStorage.getItem(name)
+    if (!item) return null
+    try {
+      const parsed = JSON.parse(item)
+      return {
+        ...parsed,
+        favorites: new Set(parsed.favorites || []),
+      }
+    } catch (error) {
+      debug.error('Error parsing favorites:', error)
+      return null
+    }
+  },
+  setItem: (name: string, value: any) => {
+    try {
+      const toStore = {
+        ...value,
+        favorites: Array.from(value.favorites || []),
+      }
+      localStorage.setItem(name, JSON.stringify(toStore))
+    } catch (error) {
+      debug.error('Error storing favorites:', error)
+    }
+  },
+  removeItem: (name: string) => {
+    localStorage.removeItem(name)
+  },
+}
+
+export const useFavoritesStore = create<FavoritesState>()(
+  persist(
+    (set, get) => ({
+      // Initial state
+      favorites: new Set<string>(),
+      lastUpdated: null,
+
+      // Actions
+      addFavorite: (tripId: string) => {
+        set((state) => {
+          const newFavorites = new Set(state.favorites)
+          newFavorites.add(tripId)
+          debug.log(`⭐ Added favorite: ${tripId}`)
+          return {
+            favorites: newFavorites,
+            lastUpdated: new Date(),
+          }
+        })
+      },
+
+      removeFavorite: (tripId: string) => {
+        set((state) => {
+          const newFavorites = new Set(state.favorites)
+          newFavorites.delete(tripId)
+          debug.log(`💔 Removed favorite: ${tripId}`)
+          return {
+            favorites: newFavorites,
+            lastUpdated: new Date(),
+          }
+        })
+      },
+
+      toggleFavorite: (tripId: string) => {
+        const state = get()
+        const isFav = state.favorites.has(tripId)
+
+        if (isFav) {
+          state.removeFavorite(tripId)
+          return false
+        } else {
+          state.addFavorite(tripId)
+          return true
+        }
+      },
+
+      isFavorite: (tripId: string) => {
+        return get().favorites.has(tripId)
+      },
+
+      getFavorites: () => {
+        return Array.from(get().favorites)
+      },
+
+      getFavoritesSet: () => {
+        return new Set(get().favorites)
+      },
+
+      clearFavorites: () => {
+        set(() => {
+          debug.log('🗑️ Cleared all favorites')
+          return {
+            favorites: new Set<string>(),
+            lastUpdated: new Date(),
+          }
+        })
+      },
+
+      getFavoritesCount: () => {
+        return get().favorites.size
+      },
+    }),
+    {
+      name: 'favorites-storage',
+      storage: favoritesStorage,
+      version: 1,
+    }
+  )
+)
