@@ -6,6 +6,7 @@ import { ProtectedRoute } from './components/ProtectedRoute'
 import { RouteLoadingFallback } from './components/RouteLoadingFallback'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { WebVitalsDebugger } from './components/WebVitalsDebugger'
+import { ErrorBoundary } from './components/ErrorBoundary'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))
@@ -27,13 +28,14 @@ const DayDetailScreen = lazy(() => import('./screens/DayDetailScreen'))
  */
 function App() {
   return (
-    <ThemeProvider>
-      <AuthProvider>
-        <Router>
-          <OfflineIndicator />
-          <WebVitalsDebugger />
-          <Suspense fallback={<RouteLoadingFallback />}>
-            <Routes>
+    <ErrorBoundary>
+      <ThemeProvider>
+        <AuthProvider>
+          <Router>
+            <OfflineIndicator />
+            <WebVitalsDebugger />
+            <Suspense fallback={<RouteLoadingFallback />}>
+              <Routes>
               {/* Public routes */}
               <Route path="/login" element={<LoginScreen />} />
 
@@ -104,6 +106,7 @@ function App() {
         </Router>
       </AuthProvider>
     </ThemeProvider>
+    </ErrorBoundary>
   )
 }
 
