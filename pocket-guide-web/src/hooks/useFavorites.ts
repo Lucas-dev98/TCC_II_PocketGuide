@@ -8,8 +8,7 @@
 import { useFavoritesStore } from '../stores/favoritesStore'
 
 export function useFavorites() {
-  // Zustand store
-  const favorites = useFavoritesStore((state) => state.favorites)
+  // Zustand store - Get individual methods for reactivity
   const addFavorite = useFavoritesStore((state) => state.addFavorite)
   const removeFavorite = useFavoritesStore((state) => state.removeFavorite)
   const toggleFavorite = useFavoritesStore((state) => state.toggleFavorite)
@@ -18,26 +17,14 @@ export function useFavorites() {
   const getFavoritesCount = useFavoritesStore((state) => state.getFavoritesCount)
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
 
-  // Get count safely
-  const getCount = () => {
-    if (!favorites) return 0
-    if (favorites instanceof Set) return favorites.size
-    if (Array.isArray(favorites)) return (favorites as string[]).length
-    return 0
-  }
-
-  // Get favorites array safely
-  const getFavoritesArray = () => {
-    if (!favorites) return []
-    if (favorites instanceof Set) return Array.from(favorites)
-    if (Array.isArray(favorites)) return favorites as string[]
-    return []
-  }
+  // Get reactively updated array from store
+  const favorites = getFavorites()
+  const count = getFavoritesCount()
 
   return {
     // State
-    favorites: getFavoritesArray(),
-    count: getCount(),
+    favorites,
+    count,
 
     // Actions
     addFavorite,
