@@ -129,12 +129,10 @@ export default function SearchResultsScreen() {
               <div className="flex-1">
                 <SearchInput
                   trips={trips}
-                  onSearch={(result) => {
+                  filters={filters}
+                  onSearch={(result, updatedFilters) => {
                     setResults(result)
-                    setFilters({
-                      ...filters,
-                      page: 1,
-                    })
+                    setFilters(updatedFilters)
                   }}
                 />
               </div>
@@ -157,12 +155,10 @@ export default function SearchResultsScreen() {
               <div className="flex-1">
                 <SearchInput
                   trips={trips}
-                  onSearch={(result) => {
+                  filters={filters}
+                  onSearch={(result, updatedFilters) => {
                     setResults(result)
-                    setFilters({
-                      ...filters,
-                      page: 1,
-                    })
+                    setFilters(updatedFilters)
                   }}
                 />
               </div>

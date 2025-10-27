@@ -9,18 +9,19 @@
  */
 
 import { useState, useRef, useEffect } from 'react'
-import { SearchResult, SearchSuggestion, searchService } from '../services/searchService'
+import { SearchResult, SearchSuggestion, searchService, SearchFilters } from '../services/searchService'
 import { Trip } from '../types'
 import { debug } from '../utils/debug'
 
 interface SearchInputProps {
   trips: Trip[]
-  onSearch: (results: SearchResult) => void
+  filters?: SearchFilters
+  onSearch: (results: SearchResult, filters: SearchFilters) => void
   placeholder?: string
   className?: string
 }
 
-export function SearchInput({ trips, onSearch, placeholder, className }: SearchInputProps) {
+export function SearchInput({ trips, filters = {}, onSearch, placeholder, className }: SearchInputProps) {
   const [query, setQuery] = useState('')
   const [suggestions, setSuggestions] = useState<SearchSuggestion[]>([])
   const [showSuggestions, setShowSuggestions] = useState(false)
@@ -129,9 +130,11 @@ export function SearchInput({ trips, onSearch, placeholder, className }: SearchI
   const performSearch = (searchQuery: string) => {
     debug.log('🔍 Searching for:', searchQuery)
     const results = searchService.search(trips, {
+      ...filters,
       query: searchQuery,
+      page: 1, // Reset para página 1
     })
-    onSearch(results)
+    onSearch(results, { ...filters, query: searchQuery, page: 1 })
   }
 
   /**
