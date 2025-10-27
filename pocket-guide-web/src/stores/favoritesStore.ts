@@ -80,9 +80,11 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       // Actions
       addFavorite: (tripId: string) => {
+        console.log(`[Store] addFavorite called for: ${tripId}`)
         set((state) => {
           const newFavorites = new Set(state.favorites || [])
           newFavorites.add(tripId)
+          console.log(`[Store] new favorites after add:`, Array.from(newFavorites))
           debug.log(`⭐ Added favorite: ${tripId}`)
           return {
             favorites: newFavorites,
@@ -92,9 +94,11 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
 
       removeFavorite: (tripId: string) => {
+        console.log(`[Store] removeFavorite called for: ${tripId}`)
         set((state) => {
           const newFavorites = new Set(state.favorites || [])
           newFavorites.delete(tripId)
+          console.log(`[Store] new favorites after remove:`, Array.from(newFavorites))
           debug.log(`💔 Removed favorite: ${tripId}`)
           return {
             favorites: newFavorites,

@@ -25,9 +25,12 @@ export function FavoriteButton({
   const { toggleFavorite, isFavorite: checkIsFavorite } = useFavorites()
   // Call the method directly to get reactive updates
   const isFavorite = checkIsFavorite(tripId)
+  
+  console.log(`[FavoriteButton] Rendering for tripId: ${tripId}, isFavorite: ${isFavorite}`)
 
   const handleToggle = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.stopPropagation()
+    console.log(`[FavoriteButton] handleToggle for: ${tripId}`)
     toggleFavorite(tripId)
     onToggle?.(!isFavorite)
   }
