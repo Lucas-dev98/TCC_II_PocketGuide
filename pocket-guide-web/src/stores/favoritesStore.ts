@@ -38,9 +38,17 @@ const favoritesStorage = {
     if (!item) return null
     try {
       const parsed = JSON.parse(item)
+      const favorites = parsed.favorites
+      // Garantir que é sempre um Set
+      if (Array.isArray(favorites)) {
+        return {
+          ...parsed,
+          favorites: new Set(favorites),
+        }
+      }
       return {
         ...parsed,
-        favorites: new Set(parsed.favorites || []),
+        favorites: favorites instanceof Set ? favorites : new Set(favorites || []),
       }
     } catch (error) {
       debug.error('Error parsing favorites:', error)
@@ -97,7 +105,14 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       toggleFavorite: (tripId: string) => {
         const state = get()
-        const isFav = state.favorites.has(tripId)
+        const favorites = state.favorites
+        let isFav = false
+        
+        if (favorites instanceof Set) {
+          isFav = favorites.has(tripId)
+        } else if (Array.isArray(favorites)) {
+          isFav = (favorites as string[]).includes(tripId)
+        }
 
         if (isFav) {
           state.removeFavorite(tripId)
@@ -109,15 +124,26 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
 
       isFavorite: (tripId: string) => {
-        return get().favorites.has(tripId)
+        const favorites = get().favorites
+        if (!favorites) return false
+        if (favorites instanceof Set) return favorites.has(tripId)
+        if (Array.isArray(favorites)) return (favorites as string[]).includes(tripId)
+        return false
       },
 
       getFavorites: () => {
-        return Array.from(get().favorites)
+        const favorites = get().favorites
+        if (!favorites) return []
+        if (favorites instanceof Set) return Array.from(favorites)
+        if (Array.isArray(favorites)) return favorites
+        return []
       },
 
       getFavoritesSet: () => {
-        return new Set(get().favorites)
+        const favorites = get().favorites
+        if (favorites instanceof Set) return new Set(favorites)
+        if (Array.isArray(favorites)) return new Set(favorites)
+        return new Set<string>()
       },
 
       clearFavorites: () => {
@@ -131,7 +157,11 @@ export const useFavoritesStore = create<FavoritesState>()(
       },
 
       getFavoritesCount: () => {
-        return get().favorites.size
+        const favorites = get().favorites
+        if (!favorites) return 0
+        if (favorites instanceof Set) return favorites.size
+        if (Array.isArray(favorites)) return (favorites as string[]).length
+        return 0
       },
     }),
     {
