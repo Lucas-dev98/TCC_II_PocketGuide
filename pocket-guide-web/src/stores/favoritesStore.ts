@@ -81,7 +81,7 @@ export const useFavoritesStore = create<FavoritesState>()(
       // Actions
       addFavorite: (tripId: string) => {
         set((state) => {
-          const newFavorites = new Set(state.favorites)
+          const newFavorites = new Set(state.favorites || [])
           newFavorites.add(tripId)
           debug.log(`⭐ Added favorite: ${tripId}`)
           return {
@@ -93,7 +93,7 @@ export const useFavoritesStore = create<FavoritesState>()(
 
       removeFavorite: (tripId: string) => {
         set((state) => {
-          const newFavorites = new Set(state.favorites)
+          const newFavorites = new Set(state.favorites || [])
           newFavorites.delete(tripId)
           debug.log(`💔 Removed favorite: ${tripId}`)
           return {

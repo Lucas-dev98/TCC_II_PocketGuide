@@ -18,10 +18,26 @@ export function useFavorites() {
   const getFavoritesCount = useFavoritesStore((state) => state.getFavoritesCount)
   const clearFavorites = useFavoritesStore((state) => state.clearFavorites)
 
+  // Get count safely
+  const getCount = () => {
+    if (!favorites) return 0
+    if (favorites instanceof Set) return favorites.size
+    if (Array.isArray(favorites)) return (favorites as string[]).length
+    return 0
+  }
+
+  // Get favorites array safely
+  const getFavoritesArray = () => {
+    if (!favorites) return []
+    if (favorites instanceof Set) return Array.from(favorites)
+    if (Array.isArray(favorites)) return favorites as string[]
+    return []
+  }
+
   return {
     // State
-    favorites: Array.from(favorites),
-    count: favorites.size,
+    favorites: getFavoritesArray(),
+    count: getCount(),
 
     // Actions
     addFavorite,
