@@ -184,7 +184,7 @@ export default function CreateTripScreen() {
       await addTrip(tripData)
 
       // Toast sucesso e redirecionar para home
-      showError('✅ Viagem criada com sucesso!')
+      showError(t('createTrip.tripCreatedSuccess'))
       console.log('🏠 Redirecionando para home...')
       navigate('/home')
     } catch (err) {
@@ -192,7 +192,7 @@ export default function CreateTripScreen() {
       showError(
         err instanceof Error
           ? err.message
-          : 'Erro ao criar viagem. Tente novamente.'
+          : t('createTrip.errorCreating')
       );
       setIsLoading(false);
     }
