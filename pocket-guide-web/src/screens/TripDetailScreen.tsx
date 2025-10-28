@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
+import useI18n from '../hooks/useI18n';
 import { useTripsStore } from '../store/tripsStore';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -242,6 +243,7 @@ const transformItinerary = (itinerary: any) => {
 export default function TripDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { t } = useI18n();
   const { trips } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
@@ -346,23 +348,23 @@ export default function TripDetailScreen() {
           <button
             onClick={() => navigate('/home')}
             className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity"
-            aria-label="Voltar para viagens"
+            aria-label={t('tripDetail.backToTrips')}
           >
             <ArrowLeft className="w-4 h-4" />
-            Voltar
+            {t('tripDetail.backButton')}
           </button>
 
           <Card>
             <Card.Body className="text-center py-12">
               <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-4" />
               <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-2">
-                Viagem não encontrada
+                {t('tripDetail.tripNotFound')}
               </h2>
               <p className="text-body text-slate-600 dark:text-slate-400 mb-6">
-                Esta viagem pode ter sido deletada
+                {t('tripDetail.tripDeletedDescription')}
               </p>
               <Button onClick={() => navigate('/home')}>
-                Voltar para Minhas Viagens
+                {t('tripDetail.backToTrips')}
               </Button>
             </Card.Body>
           </Card>
@@ -399,10 +401,10 @@ export default function TripDetailScreen() {
             onClick={() => navigate('/home')}
             type="button"
             className="flex items-center gap-2 text-primary dark:text-primary hover:opacity-80 mb-4 font-medium transition-opacity focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
-            aria-label="Voltar para a lista de viagens"
+            aria-label={t('tripDetail.backToTrips')}
           >
             <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-            Voltar
+            {t('tripDetail.backButton')}
           </button>
 
           <h1 className="text-h1 font-bold mb-2 text-slate-900 dark:text-white">{trip.destination}</h1>
@@ -416,25 +418,25 @@ export default function TripDetailScreen() {
           </div>
 
           {/* Quick info */}
-          <div className="grid grid-cols-3 gap-4 mt-8" role="region" aria-label="Informações rápidas da viagem">
+          <div className="grid grid-cols-3 gap-4 mt-8" role="region" aria-label={t('tripDetail.quickInfo')}>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Data</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.date')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
-                {daysCount} dias
+                {t('tripDetail.days', { count: daysCount })}
               </p>
             </div>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Orçamento</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.budget')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {trip.budget === 'econômico'
-                  ? '💰 Econômico'
+                  ? t('tripDetail.budgetEconomic')
                   : trip.budget === 'médio'
-                    ? '💳 Médio'
-                    : '💎 Luxo'}
+                    ? t('tripDetail.budgetMedium')
+                    : t('tripDetail.budgetLuxury')}
               </p>
             </div>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Interesses</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.interests')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">{trip.interests?.length || 0}</p>
             </div>
           </div>
@@ -455,29 +457,29 @@ export default function TripDetailScreen() {
           </div>
 
           {/* Quick info */}
-          <div className="grid grid-cols-4 gap-4 mt-8" role="region" aria-label="Informações rápidas da viagem">
+          <div className="grid grid-cols-4 gap-4 mt-8" role="region" aria-label={t('tripDetail.quickInfo')}>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Data</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.date')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
-                {daysCount} dias
+                {t('tripDetail.days', { count: daysCount })}
               </p>
             </div>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Orçamento</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.budget')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {trip.budget === 'econômico'
-                  ? '💰 Econômico'
+                  ? t('tripDetail.budgetEconomic')
                   : trip.budget === 'médio'
-                    ? '💳 Médio'
-                    : '💎 Luxo'}
+                    ? t('tripDetail.budgetMedium')
+                    : t('tripDetail.budgetLuxury')}
               </p>
             </div>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Interesses</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.interests')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">{trip.interests?.length || 0}</p>
             </div>
             <div>
-              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">Período</p>
+              <p className="text-small text-slate-600 dark:text-slate-400 mb-1">{t('tripDetail.period')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
                 {new Date(trip.startDate).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })} - {new Date(trip.endDate).toLocaleDateString('pt-BR', { month: 'short', day: 'numeric' })}
               </p>
@@ -497,14 +499,14 @@ export default function TripDetailScreen() {
                 <Calendar className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" aria-hidden="true" />
                 <div>
                   <p className="text-small text-slate-600 dark:text-slate-400 mb-1">
-                    Data da viagem
+                    {t('tripDetail.tripDate')}
                   </p>
                   <p className="font-semibold text-slate-900 dark:text-white">
                     {formatDate(trip.startDate)} até{' '}
                     {formatDate(trip.endDate)}
                   </p>
                   <p className="text-small text-slate-500 dark:text-slate-400 mt-1">
-                    {daysCount} dias de aventura
+                    {t('tripDetail.daysOfAdventure', { count: daysCount })}
                   </p>
                 </div>
               </div>
@@ -518,9 +520,9 @@ export default function TripDetailScreen() {
                 <Users className="w-5 h-5 text-primary dark:text-primary flex-shrink-0 mt-1" aria-hidden="true" />
                 <div className="w-full">
                   <p className="text-small text-slate-600 dark:text-slate-400 mb-2">
-                    Seus interesses
+                    {t('tripDetail.yourInterests')}
                   </p>
-                  <div className="flex flex-wrap gap-2" role="list" aria-label={`Lista de ${trip.interests?.length || 0} interesse(s)`}>
+                  <div className="flex flex-wrap gap-2" role="list" aria-label={t('tripDetail.interestsList', { count: trip.interests?.length || 0 })}>
                     {trip.interests?.map((interest) => (
                       <span key={interest} role="listitem">
                         <Badge variant="primary">
@@ -540,7 +542,7 @@ export default function TripDetailScreen() {
           <Card.Header>
             <h2 className="text-h2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <MapIcon className="w-6 h-6 text-primary dark:text-primary" />
-              Mapa da Viagem
+              {t('tripDetail.tripMap')}
             </h2>
           </Card.Header>
           <Card.Body className="p-0">
@@ -587,7 +589,7 @@ export default function TripDetailScreen() {
               </>
             ) : (
               <div className="p-8 text-center text-slate-500">
-                <p>Mapa não disponível para este itinerário</p>
+                <p>{t('tripDetail.mapNotAvailable')}</p>
               </div>
             )}
           </Card.Body>
@@ -598,13 +600,13 @@ export default function TripDetailScreen() {
           <Card.Header>
             <h2 className="text-h2 font-bold text-slate-900 dark:text-white flex items-center gap-2">
               <MapIcon className="w-6 h-6 text-primary dark:text-primary" aria-hidden="true" />
-              Seu Itinerário
+              {t('tripDetail.itinerary')}
             </h2>
           </Card.Header>
 
           <Card.Body>
             {itinerary && itinerary.days && itinerary.days.length > 0 ? (
-              <div role="list" aria-label={`Itinerário de ${itinerary.days.length} dia(s)`} className="space-y-6">
+              <div role="list" aria-label={t('tripDetail.itineraryDays', { count: itinerary.days.length })} className="space-y-6">
                 {itinerary.days.map(
                   (day: any, index: number) => (
                     <div
@@ -621,7 +623,7 @@ export default function TripDetailScreen() {
                             </div>
                             <div>
                               <h3 className="font-bold text-slate-900 dark:text-white text-h3">
-                                <span className="sr-only">Dia {index + 1}: </span>
+                                <span className="sr-only">{t('tripDetail.dayHeader', { day: index + 1 })} </span>
                                 {day.title || `Dia ${index + 1}`}
                               </h3>
                               {day.date && (
@@ -637,9 +639,9 @@ export default function TripDetailScreen() {
                             size="sm"
                             onClick={() => navigate(`/trip/${trip.id}/day/${index + 1}`)}
                             className="whitespace-nowrap"
-                            aria-label={`Ver detalhes do dia ${index + 1}`}
+                            aria-label={t('tripDetail.viewDayDetails', { day: index + 1 })}
                           >
-                            Ver completo
+                            {t('tripDetail.viewFull')}
                           </Button>
                         </div>
 

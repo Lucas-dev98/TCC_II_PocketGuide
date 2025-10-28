@@ -162,6 +162,35 @@
     "routeMap": "🗺️ Day Route"
   },
 
+  "tripDetail": {
+    "title": "Trip Details",
+    "backButton": "Back",
+    "backToTrips": "Back to My Trips",
+    "tripNotFound": "Trip not found",
+    "tripDeletedDescription": "This trip may have been deleted",
+    "quickInfo": "Quick trip information",
+    "date": "Date",
+    "days": "{{count}} days",
+    "daysOfAdventure": "{{count}} days of adventure",
+    "budget": "Budget",
+    "budgetEconomic": "💰 Economic",
+    "budgetMedium": "💳 Medium",
+    "budgetLuxury": "💎 Luxury",
+    "interests": "Interests",
+    "period": "Period",
+    "yourInterests": "Your interests",
+    "interestsList": "List of {{count}} interest(s)",
+    "tripMap": "Trip Map",
+    "mapNotAvailable": "Map not available for this itinerary",
+    "itinerary": "Your Itinerary",
+    "itineraryDays": "Itinerary of {{count}} day(s)",
+    "dayHeader": "Day {{day}}: ",
+    "viewFull": "View full",
+    "viewDayDetails": "View details for day {{day}}",
+    "tripDate": "Trip date",
+    "attractions": "Attractions"
+  },
+
   "favorites": {
     "title": "Favorites",
     "addFavorite": "Add to Favorites",

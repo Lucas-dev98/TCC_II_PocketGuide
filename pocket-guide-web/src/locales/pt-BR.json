@@ -162,6 +162,35 @@
     "routeMap": "🗺️ Rota do Dia"
   },
 
+  "tripDetail": {
+    "title": "Detalhes da Viagem",
+    "backButton": "Voltar",
+    "backToTrips": "Voltar para Minhas Viagens",
+    "tripNotFound": "Viagem não encontrada",
+    "tripDeletedDescription": "Esta viagem pode ter sido deletada",
+    "quickInfo": "Informações rápidas da viagem",
+    "date": "Data",
+    "days": "{{count}} dias",
+    "daysOfAdventure": "{{count}} dias de aventura",
+    "budget": "Orçamento",
+    "budgetEconomic": "💰 Econômico",
+    "budgetMedium": "💳 Médio",
+    "budgetLuxury": "💎 Luxo",
+    "interests": "Interesses",
+    "period": "Período",
+    "yourInterests": "Seus interesses",
+    "interestsList": "Lista de {{count}} interesse(s)",
+    "tripMap": "Mapa da Viagem",
+    "mapNotAvailable": "Mapa não disponível para este itinerário",
+    "itinerary": "Seu Itinerário",
+    "itineraryDays": "Itinerário de {{count}} dia(s)",
+    "dayHeader": "Dia {{day}}: ",
+    "viewFull": "Ver completo",
+    "viewDayDetails": "Ver detalhes do dia {{day}}",
+    "tripDate": "Data da viagem",
+    "attractions": "Atrações"
+  },
+
   "favorites": {
     "title": "Favoritos",
     "addFavorite": "Adicionar aos Favoritos",

@@ -162,6 +162,35 @@
     "routeMap": "🗺️ Ruta del Día"
   },
 
+  "tripDetail": {
+    "title": "Detalles del Viaje",
+    "backButton": "Atrás",
+    "backToTrips": "Volver a Mis Viajes",
+    "tripNotFound": "Viaje no encontrado",
+    "tripDeletedDescription": "Este viaje puede haber sido eliminado",
+    "quickInfo": "Información rápida del viaje",
+    "date": "Fecha",
+    "days": "{{count}} días",
+    "daysOfAdventure": "{{count}} días de aventura",
+    "budget": "Presupuesto",
+    "budgetEconomic": "💰 Económico",
+    "budgetMedium": "💳 Medio",
+    "budgetLuxury": "💎 Lujo",
+    "interests": "Intereses",
+    "period": "Período",
+    "yourInterests": "Tus intereses",
+    "interestsList": "Lista de {{count}} interés(es)",
+    "tripMap": "Mapa del Viaje",
+    "mapNotAvailable": "Mapa no disponible para este itinerario",
+    "itinerary": "Tu Itinerario",
+    "itineraryDays": "Itinerario de {{count}} día(s)",
+    "dayHeader": "Día {{day}}: ",
+    "viewFull": "Ver completo",
+    "viewDayDetails": "Ver detalles del día {{day}}",
+    "tripDate": "Fecha del viaje",
+    "attractions": "Atracciones"
+  },
+
   "favorites": {
     "title": "Favoritos",
     "addFavorite": "Añadir a Favoritos",
