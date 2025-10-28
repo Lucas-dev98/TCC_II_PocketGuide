@@ -1,0 +1,264 @@
+{
+  "common": {
+    "appName": "Pocket Guide",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success",
+    "cancel": "Cancel",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "add": "Add",
+    "back": "Back",
+    "next": "Next",
+    "close": "Close",
+    "confirm": "Confirm",
+    "search": "Search",
+    "filter": "Filter",
+    "sort": "Sort",
+    "more": "More",
+    "less": "Less",
+    "noData": "No data",
+    "retry": "Try again",
+    "offline": "Offline"
+  },
+
+  "auth": {
+    "loginWithGoogle": "Sign in with Google",
+    "logout": "Sign out",
+    "logoutConfirm": "Are you sure you want to sign out?",
+    "signingIn": "Signing in...",
+    "signingOut": "Signing out...",
+    "loginTitle": "Welcome to Pocket Guide",
+    "loginDescription": "Plan your travels with AI",
+    "unauthorized": "You don't have permission to access this",
+    "biometricAuth": "Biometric Authentication",
+    "enableBiometric": "Enable biometric authentication"
+  },
+
+  "navigation": {
+    "home": "Home",
+    "myTrips": "My Trips",
+    "favorites": "Favorites",
+    "createTrip": "New Trip",
+    "search": "Search",
+    "settings": "Settings",
+    "profile": "Profile",
+    "share": "Share"
+  },
+
+  "trips": {
+    "title": "My Trips",
+    "createNewTrip": "Create New Trip",
+    "noTrips": "You don't have any trips yet",
+    "startPlanning": "Start planning now",
+    "destination": "Destination",
+    "startDate": "Start Date",
+    "endDate": "End Date",
+    "duration": "Duration",
+    "days": "days",
+    "tripDetails": "Trip Details",
+    "itinerary": "Itinerary",
+    "deleteTrip": "Delete Trip",
+    "deleteTripConfirm": "Are you sure you want to delete this trip?",
+    "editTrip": "Edit Trip",
+    "exportPDF": "Export to PDF",
+    "shareTrip": "Share Trip"
+  },
+
+  "search": {
+    "title": "Search Trips",
+    "placeholder": "Enter destination, date or activity...",
+    "results": "Results",
+    "noResults": "No results found",
+    "filters": "Filters",
+    "advancedFilters": "Advanced Filters",
+    "clearFilters": "Clear Filters",
+    "searchBy": "Search by"
+  },
+
+  "createTrip": {
+    "title": "Create New Trip",
+    "step1": "Basic Details",
+    "step2": "Dates",
+    "step3": "Preferences",
+    "step4": "Review",
+    "destinationLabel": "Where do you want to travel?",
+    "destinationPlaceholder": "Enter destination",
+    "startDateLabel": "Departure Date",
+    "endDateLabel": "Return Date",
+    "travelersLabel": "Number of Travelers",
+    "budgetLabel": "Budget (Optional)",
+    "interestsLabel": "Your Interests",
+    "pace": "Travel Pace",
+    "paceFast": "Fast (lots to do)",
+    "paceMedium": "Medium (balanced)",
+    "paceSlow": "Slow (relaxed)",
+    "generatingItinerary": "Generating itinerary...",
+    "generateItinerary": "Generate Itinerary",
+    "creatingTrip": "Creating trip...",
+    "tripCreatedSuccess": "Trip created successfully!",
+    "back": "Back",
+    "submit": "Create Trip"
+  },
+
+  "dayDetail": {
+    "title": "Day",
+    "attractions": "Attractions",
+    "schedule": "Schedule",
+    "startTime": "Start Time",
+    "duration": "Duration",
+    "location": "Location",
+    "description": "Description",
+    "notes": "Notes",
+    "addNotes": "Add Notes",
+    "photos": "Photos",
+    "noPhotos": "No photos available",
+    "navigation": "Navigation",
+    "openInMaps": "Open in Maps",
+    "editDay": "Edit Day",
+    "deleteDay": "Delete Day"
+  },
+
+  "favorites": {
+    "title": "Favorites",
+    "addFavorite": "Add to Favorites",
+    "removeFavorite": "Remove from Favorites",
+    "noFavorites": "You don't have any favorites yet",
+    "addNow": "Add trips to your favorites",
+    "count": "{{count}} favorite",
+    "count_plural": "{{count}} favorites"
+  },
+
+  "share": {
+    "title": "Share Trip",
+    "shareLink": "Share Link",
+    "copied": "Copied to clipboard!",
+    "copy": "Copy Link",
+    "shareVia": "Share via",
+    "viewOnly": "View only",
+    "canEdit": "Can edit",
+    "publicLink": "Public Link"
+  },
+
+  "settings": {
+    "title": "Settings",
+    "account": "Account",
+    "preferences": "Preferences",
+    "language": "Language",
+    "theme": "Theme",
+    "themeDark": "Dark",
+    "themeLight": "Light",
+    "themeAuto": "Auto",
+    "notifications": "Notifications",
+    "privacy": "Privacy",
+    "security": "Security",
+    "about": "About",
+    "version": "Version",
+    "feedback": "Feedback",
+    "help": "Help",
+    "logout": "Sign Out"
+  },
+
+  "errors": {
+    "generic": "Something went wrong",
+    "networkError": "Network error. Check your connection.",
+    "unauthorized": "You don't have permission to do this",
+    "notFound": "Not found",
+    "serverError": "Server error. Try again later.",
+    "emptyField": "This field is required",
+    "invalidEmail": "Invalid email",
+    "passwordTooShort": "Password too short",
+    "passwordsDoNotMatch": "Passwords do not match",
+    "userNotFound": "User not found",
+    "invalidCredentials": "Invalid credentials",
+    "accountDisabled": "Account disabled"
+  },
+
+  "success": {
+    "saved": "Saved successfully",
+    "deleted": "Deleted successfully",
+    "updated": "Updated successfully",
+    "created": "Created successfully",
+    "copied": "Copied to clipboard"
+  },
+
+  "filters": {
+    "budget": "Budget",
+    "duration": "Duration",
+    "season": "Season",
+    "activityType": "Activity Type",
+    "difficulty": "Difficulty",
+    "difficultyEasy": "Easy",
+    "difficultyMedium": "Medium",
+    "difficultyHard": "Hard",
+    "priceRange": "Price Range",
+    "rating": "Rating",
+    "popularity": "Popularity"
+  },
+
+  "time": {
+    "justNow": "Just now",
+    "minutesAgo": "{{count}} minute ago",
+    "minutesAgo_plural": "{{count}} minutes ago",
+    "hoursAgo": "{{count}} hour ago",
+    "hoursAgo_plural": "{{count}} hours ago",
+    "daysAgo": "{{count}} day ago",
+    "daysAgo_plural": "{{count}} days ago",
+    "monday": "Monday",
+    "tuesday": "Tuesday",
+    "wednesday": "Wednesday",
+    "thursday": "Thursday",
+    "friday": "Friday",
+    "saturday": "Saturday",
+    "sunday": "Sunday",
+    "january": "January",
+    "february": "February",
+    "march": "March",
+    "april": "April",
+    "may": "May",
+    "june": "June",
+    "july": "July",
+    "august": "August",
+    "september": "September",
+    "october": "October",
+    "november": "November",
+    "december": "December"
+  },
+
+  "activities": {
+    "cultural": "Cultural",
+    "adventure": "Adventure",
+    "relaxation": "Relaxation",
+    "food": "Food",
+    "nature": "Nature",
+    "nightlife": "Nightlife",
+    "shopping": "Shopping",
+    "sightseeing": "Sightseeing",
+    "sports": "Sports",
+    "arts": "Arts"
+  },
+
+  "pdf": {
+    "title": "Export Trip",
+    "exporting": "Exporting...",
+    "exportSuccess": "PDF exported successfully",
+    "exportError": "Error exporting PDF"
+  },
+
+  "offline": {
+    "offlineMode": "Offline Mode",
+    "offlineMessage": "You are offline. Some features may be limited.",
+    "syncWhenOnline": "Will sync when back online"
+  },
+
+  "validation": {
+    "required": "Required field",
+    "minLength": "Must be at least {{min}} characters",
+    "maxLength": "Must be at most {{max}} characters",
+    "email": "Invalid email",
+    "url": "Invalid URL",
+    "number": "Must be a number",
+    "date": "Invalid date"
+  }
+}

@@ -1,0 +1,264 @@
+{
+  "common": {
+    "appName": "Pocket Guide",
+    "loading": "Carregando...",
+    "error": "Erro",
+    "success": "Sucesso",
+    "cancel": "Cancelar",
+    "save": "Salvar",
+    "delete": "Deletar",
+    "edit": "Editar",
+    "add": "Adicionar",
+    "back": "Voltar",
+    "next": "Próximo",
+    "close": "Fechar",
+    "confirm": "Confirmar",
+    "search": "Pesquisar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "more": "Mais",
+    "less": "Menos",
+    "noData": "Sem dados",
+    "retry": "Tentar novamente",
+    "offline": "Offline"
+  },
+
+  "auth": {
+    "loginWithGoogle": "Entrar com Google",
+    "logout": "Sair",
+    "logoutConfirm": "Você tem certeza que quer sair?",
+    "signingIn": "Entrando...",
+    "signingOut": "Saindo...",
+    "loginTitle": "Bem-vindo ao Pocket Guide",
+    "loginDescription": "Planeje suas viagens com IA",
+    "unauthorized": "Você não tem permissão para acessar isso",
+    "biometricAuth": "Autenticação Biométrica",
+    "enableBiometric": "Ativar autenticação biométrica"
+  },
+
+  "navigation": {
+    "home": "Início",
+    "myTrips": "Minhas Viagens",
+    "favorites": "Favoritos",
+    "createTrip": "Nova Viagem",
+    "search": "Pesquisar",
+    "settings": "Configurações",
+    "profile": "Perfil",
+    "share": "Compartilhar"
+  },
+
+  "trips": {
+    "title": "Minhas Viagens",
+    "createNewTrip": "Criar Nova Viagem",
+    "noTrips": "Você ainda não tem viagens",
+    "startPlanning": "Comece a planejar agora",
+    "destination": "Destino",
+    "startDate": "Data de Início",
+    "endDate": "Data de Término",
+    "duration": "Duração",
+    "days": "dias",
+    "tripDetails": "Detalhes da Viagem",
+    "itinerary": "Itinerário",
+    "deleteTrip": "Deletar Viagem",
+    "deleteTripConfirm": "Tem certeza que quer deletar esta viagem?",
+    "editTrip": "Editar Viagem",
+    "exportPDF": "Exportar para PDF",
+    "shareTrip": "Compartilhar Viagem"
+  },
+
+  "search": {
+    "title": "Pesquisar Viagens",
+    "placeholder": "Digite o destino, data ou atividade...",
+    "results": "Resultados",
+    "noResults": "Nenhum resultado encontrado",
+    "filters": "Filtros",
+    "advancedFilters": "Filtros Avançados",
+    "clearFilters": "Limpar Filtros",
+    "searchBy": "Pesquisar por"
+  },
+
+  "createTrip": {
+    "title": "Criar Nova Viagem",
+    "step1": "Detalhes Básicos",
+    "step2": "Datas",
+    "step3": "Preferências",
+    "step4": "Revisar",
+    "destinationLabel": "Para onde você quer viajar?",
+    "destinationPlaceholder": "Digite o destino",
+    "startDateLabel": "Data de Saída",
+    "endDateLabel": "Data de Retorno",
+    "travelersLabel": "Número de Viajantes",
+    "budgetLabel": "Orçamento (Opcional)",
+    "interestsLabel": "Seus Interesses",
+    "pace": "Ritmo da Viagem",
+    "paceFast": "Rápido (muito para fazer)",
+    "paceMedium": "Médio (equilíbrio)",
+    "paceSlow": "Lento (relaxado)",
+    "generatingItinerary": "Gerando itinerário...",
+    "generateItinerary": "Gerar Itinerário",
+    "creatingTrip": "Criando viagem...",
+    "tripCreatedSuccess": "Viagem criada com sucesso!",
+    "back": "Voltar",
+    "submit": "Criar Viagem"
+  },
+
+  "dayDetail": {
+    "title": "Dia",
+    "attractions": "Atrações",
+    "schedule": "Horário",
+    "startTime": "Hora de Início",
+    "duration": "Duração",
+    "location": "Localização",
+    "description": "Descrição",
+    "notes": "Notas",
+    "addNotes": "Adicionar Notas",
+    "photos": "Fotos",
+    "noPhotos": "Nenhuma foto disponível",
+    "navigation": "Navegação",
+    "openInMaps": "Abrir no Mapa",
+    "editDay": "Editar Dia",
+    "deleteDay": "Deletar Dia"
+  },
+
+  "favorites": {
+    "title": "Favoritos",
+    "addFavorite": "Adicionar aos Favoritos",
+    "removeFavorite": "Remover dos Favoritos",
+    "noFavorites": "Você não tem favoritos ainda",
+    "addNow": "Adicione viagens aos seus favoritos",
+    "count": "{{count}} favorito",
+    "count_plural": "{{count}} favoritos"
+  },
+
+  "share": {
+    "title": "Compartilhar Viagem",
+    "shareLink": "Link de Compartilhamento",
+    "copied": "Copiado para a área de transferência!",
+    "copy": "Copiar Link",
+    "shareVia": "Compartilhar via",
+    "viewOnly": "Visualização apenas",
+    "canEdit": "Pode editar",
+    "publicLink": "Link Público"
+  },
+
+  "settings": {
+    "title": "Configurações",
+    "account": "Conta",
+    "preferences": "Preferências",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themeDark": "Escuro",
+    "themeLight": "Claro",
+    "themeAuto": "Automático",
+    "notifications": "Notificações",
+    "privacy": "Privacidade",
+    "security": "Segurança",
+    "about": "Sobre",
+    "version": "Versão",
+    "feedback": "Feedback",
+    "help": "Ajuda",
+    "logout": "Sair"
+  },
+
+  "errors": {
+    "generic": "Algo deu errado",
+    "networkError": "Erro de rede. Verifique sua conexão.",
+    "unauthorized": "Você não tem permissão para fazer isso",
+    "notFound": "Não encontrado",
+    "serverError": "Erro no servidor. Tente novamente mais tarde.",
+    "emptyField": "Este campo é obrigatório",
+    "invalidEmail": "Email inválido",
+    "passwordTooShort": "Senha muito curta",
+    "passwordsDoNotMatch": "As senhas não correspondem",
+    "userNotFound": "Usuário não encontrado",
+    "invalidCredentials": "Credenciais inválidas",
+    "accountDisabled": "Conta desabilitada"
+  },
+
+  "success": {
+    "saved": "Salvo com sucesso",
+    "deleted": "Deletado com sucesso",
+    "updated": "Atualizado com sucesso",
+    "created": "Criado com sucesso",
+    "copied": "Copiado para a área de transferência"
+  },
+
+  "filters": {
+    "budget": "Orçamento",
+    "duration": "Duração",
+    "season": "Estação",
+    "activityType": "Tipo de Atividade",
+    "difficulty": "Dificuldade",
+    "difficultyEasy": "Fácil",
+    "difficultyMedium": "Médio",
+    "difficultyHard": "Difícil",
+    "priceRange": "Faixa de Preço",
+    "rating": "Classificação",
+    "popularity": "Popularidade"
+  },
+
+  "time": {
+    "justNow": "Agora mesmo",
+    "minutesAgo": "há {{count}} minuto",
+    "minutesAgo_plural": "há {{count}} minutos",
+    "hoursAgo": "há {{count}} hora",
+    "hoursAgo_plural": "há {{count}} horas",
+    "daysAgo": "há {{count}} dia",
+    "daysAgo_plural": "há {{count}} dias",
+    "monday": "Segunda",
+    "tuesday": "Terça",
+    "wednesday": "Quarta",
+    "thursday": "Quinta",
+    "friday": "Sexta",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "january": "Janeiro",
+    "february": "Fevereiro",
+    "march": "Março",
+    "april": "Abril",
+    "may": "Maio",
+    "june": "Junho",
+    "july": "Julho",
+    "august": "Agosto",
+    "september": "Setembro",
+    "october": "Outubro",
+    "november": "Novembro",
+    "december": "Dezembro"
+  },
+
+  "activities": {
+    "cultural": "Cultural",
+    "adventure": "Aventura",
+    "relaxation": "Relaxamento",
+    "food": "Gastronomia",
+    "nature": "Natureza",
+    "nightlife": "Vida Noturna",
+    "shopping": "Compras",
+    "sightseeing": "Turismo",
+    "sports": "Esportes",
+    "arts": "Artes"
+  },
+
+  "pdf": {
+    "title": "Exportar Viagem",
+    "exporting": "Exportando...",
+    "exportSuccess": "PDF exportado com sucesso",
+    "exportError": "Erro ao exportar PDF"
+  },
+
+  "offline": {
+    "offlineMode": "Modo Offline",
+    "offlineMessage": "Você está offline. Algumas funcionalidades podem estar limitadas.",
+    "syncWhenOnline": "Sincronizará quando voltar online"
+  },
+
+  "validation": {
+    "required": "Campo obrigatório",
+    "minLength": "Deve ter no mínimo {{min}} caracteres",
+    "maxLength": "Deve ter no máximo {{max}} caracteres",
+    "email": "Email inválido",
+    "url": "URL inválida",
+    "number": "Deve ser um número",
+    "date": "Data inválida"
+  }
+}

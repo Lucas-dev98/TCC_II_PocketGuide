@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../../hooks/useAuth'
 import { ThemeToggle } from '../ThemeToggle'
+import { LanguageSwitcher } from '../LanguageSwitcher'
 import { Search, Bell, LogOut, User } from 'lucide-react'
 
 /**
@@ -68,6 +69,9 @@ export function TopBar() {
         <div className="flex items-center gap-4">
           {/* Theme Toggle */}
           <ThemeToggle />
+
+          {/* Language Switcher */}
+          <LanguageSwitcher />
 
           {/* Notifications */}
           <button

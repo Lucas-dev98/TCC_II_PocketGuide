@@ -1,0 +1,264 @@
+{
+  "common": {
+    "appName": "Pocket Guide",
+    "loading": "Cargando...",
+    "error": "Error",
+    "success": "Éxito",
+    "cancel": "Cancelar",
+    "save": "Guardar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "add": "Añadir",
+    "back": "Atrás",
+    "next": "Siguiente",
+    "close": "Cerrar",
+    "confirm": "Confirmar",
+    "search": "Buscar",
+    "filter": "Filtrar",
+    "sort": "Ordenar",
+    "more": "Más",
+    "less": "Menos",
+    "noData": "Sin datos",
+    "retry": "Intentar de nuevo",
+    "offline": "Sin conexión"
+  },
+
+  "auth": {
+    "loginWithGoogle": "Iniciar sesión con Google",
+    "logout": "Cerrar sesión",
+    "logoutConfirm": "¿Está seguro de que desea cerrar sesión?",
+    "signingIn": "Iniciando sesión...",
+    "signingOut": "Cerrando sesión...",
+    "loginTitle": "Bienvenido a Pocket Guide",
+    "loginDescription": "Planifica tus viajes con IA",
+    "unauthorized": "No tienes permiso para acceder a esto",
+    "biometricAuth": "Autenticación Biométrica",
+    "enableBiometric": "Habilitar autenticación biométrica"
+  },
+
+  "navigation": {
+    "home": "Inicio",
+    "myTrips": "Mis Viajes",
+    "favorites": "Favoritos",
+    "createTrip": "Nuevo Viaje",
+    "search": "Buscar",
+    "settings": "Configuración",
+    "profile": "Perfil",
+    "share": "Compartir"
+  },
+
+  "trips": {
+    "title": "Mis Viajes",
+    "createNewTrip": "Crear Nuevo Viaje",
+    "noTrips": "Aún no tienes viajes",
+    "startPlanning": "Comienza a planificar ahora",
+    "destination": "Destino",
+    "startDate": "Fecha de Inicio",
+    "endDate": "Fecha de Regreso",
+    "duration": "Duración",
+    "days": "días",
+    "tripDetails": "Detalles del Viaje",
+    "itinerary": "Itinerario",
+    "deleteTrip": "Eliminar Viaje",
+    "deleteTripConfirm": "¿Está seguro de que desea eliminar este viaje?",
+    "editTrip": "Editar Viaje",
+    "exportPDF": "Exportar a PDF",
+    "shareTrip": "Compartir Viaje"
+  },
+
+  "search": {
+    "title": "Buscar Viajes",
+    "placeholder": "Ingrese destino, fecha o actividad...",
+    "results": "Resultados",
+    "noResults": "No se encontraron resultados",
+    "filters": "Filtros",
+    "advancedFilters": "Filtros Avanzados",
+    "clearFilters": "Limpiar Filtros",
+    "searchBy": "Buscar por"
+  },
+
+  "createTrip": {
+    "title": "Crear Nuevo Viaje",
+    "step1": "Detalles Básicos",
+    "step2": "Fechas",
+    "step3": "Preferencias",
+    "step4": "Revisar",
+    "destinationLabel": "¿A dónde quieres viajar?",
+    "destinationPlaceholder": "Ingrese destino",
+    "startDateLabel": "Fecha de Salida",
+    "endDateLabel": "Fecha de Regreso",
+    "travelersLabel": "Número de Viajeros",
+    "budgetLabel": "Presupuesto (Opcional)",
+    "interestsLabel": "Tus Intereses",
+    "pace": "Ritmo del Viaje",
+    "paceFast": "Rápido (mucho que hacer)",
+    "paceMedium": "Moderado (equilibrado)",
+    "paceSlow": "Lento (relajado)",
+    "generatingItinerary": "Generando itinerario...",
+    "generateItinerary": "Generar Itinerario",
+    "creatingTrip": "Creando viaje...",
+    "tripCreatedSuccess": "¡Viaje creado exitosamente!",
+    "back": "Atrás",
+    "submit": "Crear Viaje"
+  },
+
+  "dayDetail": {
+    "title": "Día",
+    "attractions": "Atracciones",
+    "schedule": "Horario",
+    "startTime": "Hora de Inicio",
+    "duration": "Duración",
+    "location": "Ubicación",
+    "description": "Descripción",
+    "notes": "Notas",
+    "addNotes": "Añadir Notas",
+    "photos": "Fotos",
+    "noPhotos": "No hay fotos disponibles",
+    "navigation": "Navegación",
+    "openInMaps": "Abrir en Mapas",
+    "editDay": "Editar Día",
+    "deleteDay": "Eliminar Día"
+  },
+
+  "favorites": {
+    "title": "Favoritos",
+    "addFavorite": "Añadir a Favoritos",
+    "removeFavorite": "Quitar de Favoritos",
+    "noFavorites": "Aún no tienes favoritos",
+    "addNow": "Añade viajes a tus favoritos",
+    "count": "{{count}} favorito",
+    "count_plural": "{{count}} favoritos"
+  },
+
+  "share": {
+    "title": "Compartir Viaje",
+    "shareLink": "Enlace de Compartición",
+    "copied": "¡Copiado al portapapeles!",
+    "copy": "Copiar Enlace",
+    "shareVia": "Compartir a través de",
+    "viewOnly": "Solo ver",
+    "canEdit": "Puede editar",
+    "publicLink": "Enlace Público"
+  },
+
+  "settings": {
+    "title": "Configuración",
+    "account": "Cuenta",
+    "preferences": "Preferencias",
+    "language": "Idioma",
+    "theme": "Tema",
+    "themeDark": "Oscuro",
+    "themeLight": "Claro",
+    "themeAuto": "Automático",
+    "notifications": "Notificaciones",
+    "privacy": "Privacidad",
+    "security": "Seguridad",
+    "about": "Acerca de",
+    "version": "Versión",
+    "feedback": "Comentarios",
+    "help": "Ayuda",
+    "logout": "Cerrar Sesión"
+  },
+
+  "errors": {
+    "generic": "Algo salió mal",
+    "networkError": "Error de red. Verifique su conexión.",
+    "unauthorized": "No tiene permiso para hacer esto",
+    "notFound": "No encontrado",
+    "serverError": "Error del servidor. Intente más tarde.",
+    "emptyField": "Este campo es obligatorio",
+    "invalidEmail": "Correo electrónico inválido",
+    "passwordTooShort": "Contraseña muy corta",
+    "passwordsDoNotMatch": "Las contraseñas no coinciden",
+    "userNotFound": "Usuario no encontrado",
+    "invalidCredentials": "Credenciales inválidas",
+    "accountDisabled": "Cuenta deshabilitada"
+  },
+
+  "success": {
+    "saved": "Guardado exitosamente",
+    "deleted": "Eliminado exitosamente",
+    "updated": "Actualizado exitosamente",
+    "created": "Creado exitosamente",
+    "copied": "Copiado al portapapeles"
+  },
+
+  "filters": {
+    "budget": "Presupuesto",
+    "duration": "Duración",
+    "season": "Estación",
+    "activityType": "Tipo de Actividad",
+    "difficulty": "Dificultad",
+    "difficultyEasy": "Fácil",
+    "difficultyMedium": "Moderado",
+    "difficultyHard": "Difícil",
+    "priceRange": "Rango de Precios",
+    "rating": "Calificación",
+    "popularity": "Popularidad"
+  },
+
+  "time": {
+    "justNow": "Justo ahora",
+    "minutesAgo": "hace {{count}} minuto",
+    "minutesAgo_plural": "hace {{count}} minutos",
+    "hoursAgo": "hace {{count}} hora",
+    "hoursAgo_plural": "hace {{count}} horas",
+    "daysAgo": "hace {{count}} día",
+    "daysAgo_plural": "hace {{count}} días",
+    "monday": "Lunes",
+    "tuesday": "Martes",
+    "wednesday": "Miércoles",
+    "thursday": "Jueves",
+    "friday": "Viernes",
+    "saturday": "Sábado",
+    "sunday": "Domingo",
+    "january": "Enero",
+    "february": "Febrero",
+    "march": "Marzo",
+    "april": "Abril",
+    "may": "Mayo",
+    "june": "Junio",
+    "july": "Julio",
+    "august": "Agosto",
+    "september": "Septiembre",
+    "october": "Octubre",
+    "november": "Noviembre",
+    "december": "Diciembre"
+  },
+
+  "activities": {
+    "cultural": "Cultural",
+    "adventure": "Aventura",
+    "relaxation": "Relajación",
+    "food": "Gastronomía",
+    "nature": "Naturaleza",
+    "nightlife": "Vida Nocturna",
+    "shopping": "Compras",
+    "sightseeing": "Turismo",
+    "sports": "Deportes",
+    "arts": "Artes"
+  },
+
+  "pdf": {
+    "title": "Exportar Viaje",
+    "exporting": "Exportando...",
+    "exportSuccess": "PDF exportado exitosamente",
+    "exportError": "Error al exportar PDF"
+  },
+
+  "offline": {
+    "offlineMode": "Modo Sin Conexión",
+    "offlineMessage": "Está sin conexión. Algunas funciones pueden estar limitadas.",
+    "syncWhenOnline": "Se sincronizará cuando vuelva a conectarse"
+  },
+
+  "validation": {
+    "required": "Campo obligatorio",
+    "minLength": "Debe tener al menos {{min}} caracteres",
+    "maxLength": "Debe tener como máximo {{max}} caracteres",
+    "email": "Correo electrónico inválido",
+    "url": "URL inválida",
+    "number": "Debe ser un número",
+    "date": "Fecha inválida"
+  }
+}

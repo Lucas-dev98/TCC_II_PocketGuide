@@ -16,6 +16,7 @@ export { BottomNavigation } from "./BottomNavigation";
 export { ShareButton } from "./ShareButton";
 export { ExportButton } from "./ExportButton";
 export { FavoriteButton } from "./FavoriteButton";
+export { LanguageSwitcher } from "./LanguageSwitcher";
 
 // Layout Components (Desktop)
 export { TopBar, Sidebar, MainLayout } from "./Layout";
