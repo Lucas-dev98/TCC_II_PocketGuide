@@ -100,7 +100,20 @@
     "filters": "Filters",
     "advancedFilters": "Advanced Filters",
     "clearFilters": "Clear Filters",
-    "searchBy": "Search by"
+    "searchBy": "Search by",
+    "searching": "Searching trips...",
+    "tripsFound": "trips found",
+    "for": "for",
+    "page": "Page",
+    "of": "of",
+    "showing": "Showing",
+    "previous": "← Previous",
+    "next": "Next →",
+    "noTripsFound": "No trips found",
+    "tryDifferentSearch": "Try another search term.",
+    "adjustFilters": "Adjust your filters and try again.",
+    "noTripsCreated": "No trips created",
+    "startCreating": "Start creating a new trip to see it in search!"
   },
 
   "createTrip": {
@@ -214,7 +227,9 @@
     "viewFull": "View full",
     "viewDayDetails": "View details for day {{day}}",
     "tripDate": "Trip date",
-    "attractions": "Attractions"
+    "attractions": "Attractions",
+    "itineraryNotGenerated": "Itinerary has not been generated yet",
+    "additionalInfo": "Additional Information"
   },
 
   "favorites": {

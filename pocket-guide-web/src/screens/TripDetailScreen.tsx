@@ -776,7 +776,7 @@ export default function TripDetailScreen() {
               <div className="text-center py-8">
                 <AlertCircle className="w-8 h-8 text-slate-400 mx-auto mb-2" aria-hidden="true" />
                 <p className="text-slate-600 dark:text-slate-400">
-                  Itinerário ainda não foi gerado
+                  {t('tripDetail.itineraryNotGenerated')}
                 </p>
               </div>
             )}
@@ -789,7 +789,7 @@ export default function TripDetailScreen() {
             <Card.Header>
               <h3 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <FileText className="w-5 h-5 text-primary dark:text-primary" />
-                Informações Adicionais
+                {t('tripDetail.additionalInfo')}
               </h3>
             </Card.Header>
 

@@ -100,7 +100,20 @@
     "filters": "Filtros",
     "advancedFilters": "Filtros Avançados",
     "clearFilters": "Limpar Filtros",
-    "searchBy": "Pesquisar por"
+    "searchBy": "Pesquisar por",
+    "searching": "Buscando viagens...",
+    "tripsFound": "viagens encontradas",
+    "for": "para",
+    "page": "Página",
+    "of": "de",
+    "showing": "Exibindo",
+    "previous": "← Anterior",
+    "next": "Próxima →",
+    "noTripsFound": "Nenhuma viagem encontrada",
+    "tryDifferentSearch": "Tente outro termo de busca.",
+    "adjustFilters": "Ajuste seus filtros e tente novamente.",
+    "noTripsCreated": "Nenhuma viagem criada",
+    "startCreating": "Comece criando uma nova viagem para vê-la na busca!"
   },
 
   "createTrip": {
@@ -214,7 +227,9 @@
     "viewFull": "Ver completo",
     "viewDayDetails": "Ver detalhes do dia {{day}}",
     "tripDate": "Data da viagem",
-    "attractions": "Atrações"
+    "attractions": "Atrações",
+    "itineraryNotGenerated": "Itinerário ainda não foi gerado",
+    "additionalInfo": "Informações Adicionais"
   },
 
   "favorites": {
