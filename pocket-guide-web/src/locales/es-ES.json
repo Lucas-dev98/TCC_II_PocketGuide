@@ -74,7 +74,21 @@
     "filters": "Filtros",
     "advancedFilters": "Filtros Avanzados",
     "clearFilters": "Limpiar Filtros",
-    "searchBy": "Buscar por"
+    "searchBy": "Buscar por",
+    "backButton": "Atrás",
+    "foundTrips": "{{count}} viaje encontrado",
+    "foundTrips_plural": "{{count}} viajes encontrados",
+    "for": "para",
+    "loading": "Buscando viajes...",
+    "viewDetails": "Ver Detalles",
+    "page": "Página {{page}} de {{total}}",
+    "showing": "Mostrando {{current}} de {{total}} resultados",
+    "previous": "← Anterior",
+    "next": "Siguiente →",
+    "notFound": "No se encontraron viajes",
+    "notFoundDesc": "No encontramos viajes para \"{{query}}\". Intenta otro término de búsqueda.",
+    "noTripsCreated": "No hay viajes creados",
+    "noTripsCreatedDesc": "¡Comienza creando un nuevo viaje para verlo en la búsqueda!"
   },
 
   "createTrip": {
