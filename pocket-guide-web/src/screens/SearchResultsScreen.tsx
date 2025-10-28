@@ -14,11 +14,13 @@ import { EmptyState } from '../components/EmptyState'
 import { MainLayout } from '../components/Layout'
 import { searchService, SearchFilters, SearchResult } from '../services/searchService'
 import { debug } from '../utils/debug'
+import useI18n from '../hooks/useI18n'
 
 export default function SearchResultsScreen() {
   const navigate = useNavigate()
   const { trips } = useTripsStore()
   const [searchParams] = useSearchParams()
+  const { t } = useI18n()
   const queryParam = searchParams.get('q') || ''
   
   const [filters, setFilters] = useState<SearchFilters>({
@@ -136,7 +138,7 @@ export default function SearchResultsScreen() {
               </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{t('search.title')}</h1>
 
             {/* Filters */}
             <div className="flex gap-4 items-end">
@@ -152,7 +154,7 @@ export default function SearchResultsScreen() {
         {/* Desktop Header */}
         <div className="hidden lg:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="max-w-7xl mx-auto px-6 py-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">{t('search.title')}</h1>
 
             {/* Filters */}
             <div className="flex gap-4 items-end">
@@ -172,11 +174,11 @@ export default function SearchResultsScreen() {
           <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <p className="text-gray-700 dark:text-gray-300">
               <span className="font-semibold text-gray-900 dark:text-white">{results.total}</span>{' '}
-              viagens encontradas
+              {t('search.tripsFound')}
               {filters.query && (
                 <>
                   {' '}
-                  para <span className="font-semibold text-gray-900 dark:text-white">"{filters.query}"</span>
+                  {t('search.for')} <span className="font-semibold text-gray-900 dark:text-white">"{filters.query}"</span>
                 </>
               )}
             </p>
@@ -202,7 +204,7 @@ export default function SearchResultsScreen() {
                   />
                 </svg>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">Buscando viagens...</p>
+              <p className="text-gray-600 dark:text-gray-400">{t('search.searching')}</p>
             </div>
           </div>
         )}
@@ -301,8 +303,8 @@ export default function SearchResultsScreen() {
             {results.total > results.pageSize && (
               <div className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Página {results.page} de {Math.ceil(results.total / results.pageSize)} • Exibindo{' '}
-                  {results.trips.length} de {results.total} resultados
+                  {t('search.page')} {results.page} {t('search.of')} {Math.ceil(results.total / results.pageSize)} • {t('search.showing')}{' '}
+                  {results.trips.length} {t('search.of')} {results.total} {t('search.results')}
                 </div>
 
                 <div className="flex gap-2">
@@ -311,14 +313,14 @@ export default function SearchResultsScreen() {
                     disabled={results.page === 1}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-gray-300 dark:hover:enabled:bg-gray-600 transition-colors"
                   >
-                    ← Anterior
+                    {t('search.previous')}
                   </button>
                   <button
                     onClick={handleNextPage}
                     disabled={!results.hasMore}
                     className="px-4 py-2 bg-blue-600 hover:enabled:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    Próxima →
+                    {t('search.next')}
                   </button>
                 </div>
               </div>
@@ -330,11 +332,11 @@ export default function SearchResultsScreen() {
         {!isLoading && results.trips.length === 0 && trips.length > 0 && (
           <EmptyState
             icon="🔍"
-            title="Nenhuma viagem encontrada"
+            title={t('search.noTripsFound')}
             description={
               filters.query
-                ? `Não encontramos viagens para "${filters.query}". Tente outro termo de busca.`
-                : 'Ajuste seus filtros e tente novamente.'
+                ? `${t('search.noTripsFound')} "${filters.query}". ${t('search.tryDifferentSearch')}`
+                : t('search.adjustFilters')
             }
           />
         )}
@@ -343,8 +345,8 @@ export default function SearchResultsScreen() {
         {!isLoading && trips.length === 0 && (
           <EmptyState
             icon="✈️"
-            title="Nenhuma viagem criada"
-            description="Comece criando uma nova viagem para vê-la na busca!"
+            title={t('search.noTripsCreated')}
+            description={t('search.startCreating')}
           />
         )}
       </div>
