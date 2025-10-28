@@ -341,7 +341,8 @@
     "september": "September",
     "october": "October",
     "november": "November",
-    "december": "December"
+    "december": "December",
+    "notDefined": "No time defined"
   },
 
   "activities": {

@@ -2,6 +2,7 @@ import React from "react";
 import { MapPin, Clock, Star, AlertCircle } from "lucide-react";
 import { Card, Badge } from "@/components";
 import { AttractionDetail } from "@/types";
+import useI18n from "../hooks/useI18n";
 
 interface DayTimelineProps {
   attractions: AttractionDetail[];
@@ -16,6 +17,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
   attractions,
   onAttractionClick,
 }) => {
+  const { t } = useI18n()
   if (!attractions || attractions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12">
@@ -99,7 +101,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                     <div className="flex items-center gap-2">
                       <Clock className="w-4 h-4 text-indigo-500 flex-shrink-0" />
                       <span className="font-semibold text-sm text-indigo-600">
-                        {attraction.time || "Horário não definido"}
+                        {attraction.time || t('time.notDefined')}
                       </span>
                     </div>
                     {attraction.category && (
