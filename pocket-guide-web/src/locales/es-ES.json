@@ -198,7 +198,25 @@
     "noFavorites": "Aún no tienes favoritos",
     "addNow": "Añade viajes a tus favoritos",
     "count": "{{count}} favorito",
-    "count_plural": "{{count}} favoritos"
+    "count_plural": "{{count}} favoritos",
+    "backButton": "Atrás",
+    "description": "Tienes {{count}} viaje favorito",
+    "description_plural": "Tienes {{count}} viajes favoritos",
+    "noFavoritesDesc": "Aún no tienes viajes favoritos",
+    "noFavoritesHint": "¡Añade viajes a tus favoritos para encontrarlos fácilmente después!",
+    "sortLabel": "Ordenar por",
+    "sortNewest": "Más recientes",
+    "sortOldest": "Más antiguos",
+    "sortNameAZ": "Destino (A-Z)",
+    "sortNameZA": "Destino (Z-A)",
+    "gridView": "Vista de cuadrícula",
+    "listView": "Vista de lista",
+    "clearAll": "Borrar todo",
+    "viewDetails": "Ver Detalles",
+    "clearConfirmTitle": "¿Borrar todos los favoritos?",
+    "clearConfirmDescription": "¿Estás seguro de que deseas eliminar todos los viajes de tus favoritos? Esta acción no se puede deshacer.",
+    "cancelButton": "Cancelar",
+    "confirmButton": "Borrar"
   },
 
   "share": {

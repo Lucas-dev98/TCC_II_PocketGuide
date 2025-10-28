@@ -198,7 +198,25 @@
     "noFavorites": "You don't have any favorites yet",
     "addNow": "Add trips to your favorites",
     "count": "{{count}} favorite",
-    "count_plural": "{{count}} favorites"
+    "count_plural": "{{count}} favorites",
+    "backButton": "Back",
+    "description": "You have {{count}} favorited trip",
+    "description_plural": "You have {{count}} favorited trips",
+    "noFavoritesDesc": "You don't have any favorite trips yet",
+    "noFavoritesHint": "Add trips to your favorites to find them easily later!",
+    "sortLabel": "Sort by",
+    "sortNewest": "Newest",
+    "sortOldest": "Oldest",
+    "sortNameAZ": "Destination (A-Z)",
+    "sortNameZA": "Destination (Z-A)",
+    "gridView": "Grid view",
+    "listView": "List view",
+    "clearAll": "Clear all",
+    "viewDetails": "View Details",
+    "clearConfirmTitle": "Clear all favorites?",
+    "clearConfirmDescription": "Are you sure you want to remove all trips from your favorites? This action cannot be undone.",
+    "cancelButton": "Cancel",
+    "confirmButton": "Clear"
   },
 
   "share": {
