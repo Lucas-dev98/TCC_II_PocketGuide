@@ -1,16 +1,17 @@
 /**
- * ExportButton.tsx - Botão para exportar viagem como PDF
+ * ExportButton.tsx - Button to export trip as PDF
  * 
- * Componente versátil para exportar viagens com:
- * - Opção de exportar um único PDF
- * - Exportar múltiplas viagens em um PDF
- * - Dropdown com opções adicionais
+ * Versatile component for exporting trips with:
+ * - Option to export single PDF
+ * - Export multiple trips in one PDF
+ * - Dropdown with additional options
  */
 
 import { useState } from 'react'
 import { FileDown, Loader } from 'lucide-react'
 import { Trip } from '../types'
 import { pdfService } from '../services/pdfService'
+import { useI18n } from '../i18n/I18nContext'
 
 interface ExportButtonProps {
   trip?: Trip
@@ -27,6 +28,7 @@ export const ExportButton = ({
   className = '',
   onExport,
 }: ExportButtonProps) => {
+  const { t } = useI18n()
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,7 +59,7 @@ export const ExportButton = ({
       })
       onExport?.()
     } catch (err) {
-      setError('Erro ao exportar PDF')
+      setError(t('components.exportButton.exportError'))
       console.error(err)
     } finally {
       setLoading(false)
@@ -110,7 +112,7 @@ export const ExportButton = ({
         <button
           onClick={handleExportSingle}
           disabled={loading || !trip}
-          title={loading ? 'Exportando...' : 'Exportar como PDF'}
+          title={loading ? 'Exportando...' : t('components.exportButton.exportPDF')}
           className={`
             ${sizeClasses[size]}
             rounded-lg
@@ -166,7 +168,7 @@ export const ExportButton = ({
         ) : (
           <>
             <FileDown className="w-4 h-4" />
-            <span className="hidden sm:inline">Exportar PDF</span>
+            <span className="hidden sm:inline">{t('components.exportButton.exportPDF')}</span>
           </>
         )}
       </button>

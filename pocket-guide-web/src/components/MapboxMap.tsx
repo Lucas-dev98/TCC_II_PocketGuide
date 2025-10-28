@@ -4,6 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Attraction } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { debug } from '../utils/debug';
+import { useI18n } from '../i18n/I18nContext';
 
 interface MapboxMapProps {
   attractions?: (Attraction | any)[];
@@ -23,6 +24,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   height = '400px',
   onAttractionSelect,
 }) => {
+  const { t } = useI18n()
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const markersRef = useRef<mapboxgl.Marker[]>([]);
@@ -199,7 +201,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           <button
             onClick={handlePrevious}
             className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition"
-            title="Anterior"
+            title={t('components.mapboxMap.previous')}
           >
             <ChevronLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
           </button>
@@ -216,7 +218,7 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           <button
             onClick={handleNext}
             className="p-2 hover:bg-gray-100 dark:hover:bg-slate-700 rounded-lg transition"
-            title="Próximo"
+            title={t('components.mapboxMap.next')}
           >
             <ChevronRight className="w-5 h-5 text-slate-700 dark:text-slate-300" />
           </button>

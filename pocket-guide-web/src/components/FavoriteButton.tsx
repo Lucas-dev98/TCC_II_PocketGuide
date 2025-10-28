@@ -1,11 +1,12 @@
 /**
  * FavoriteButton Component
  * 
- * Botão de coração para marcar/desmarcar favoritos
- * com animação e feedback visual
+ * Heart button to mark/unmark favorites
+ * with animation and visual feedback
  */
 
 import { useFavorites } from '../hooks/useFavorites'
+import { useI18n } from '../i18n/I18nContext'
 
 interface FavoriteButtonProps {
   tripId: string
@@ -23,6 +24,7 @@ export function FavoriteButton({
   onToggle,
 }: FavoriteButtonProps) {
   const { toggleFavorite, isFavorite: checkIsFavorite } = useFavorites()
+  const { t } = useI18n()
   // Call the method directly to get reactive updates
   const isFavorite = checkIsFavorite(tripId)
   
@@ -70,7 +72,7 @@ export function FavoriteButton({
             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
           />
         </svg>
-        <span>{isFavorite ? 'Adicionado' : 'Adicionar'}</span>
+        <span>{isFavorite ? t('components.favoriteButton.added') : t('components.favoriteButton.add')}</span>
       </button>
     )
   }
@@ -84,8 +86,8 @@ export function FavoriteButton({
           ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
           : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
       } ${className}`}
-      title={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
-      aria-label={isFavorite ? 'Remover dos favoritos' : 'Adicionar aos favoritos'}
+      title={isFavorite ? t('components.favoriteButton.removeFromFavorites') : t('components.favoriteButton.addToFavorites')}
+      aria-label={isFavorite ? t('components.favoriteButton.removeFromFavorites') : t('components.favoriteButton.addToFavorites')}
     >
       <svg
         className={`${sizeClasses[size]} transition-all ${isFavorite ? 'animate-pulse' : ''}`}
