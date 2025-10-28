@@ -4,6 +4,7 @@
     "loading": "Carregando...",
     "error": "Erro",
     "success": "Sucesso",
+    "successDeleted": "Deletado com sucesso",
     "cancel": "Cancelar",
     "save": "Salvar",
     "delete": "Deletar",
@@ -20,7 +21,9 @@
     "less": "Menos",
     "noData": "Sem dados",
     "retry": "Tentar novamente",
-    "offline": "Offline"
+    "offline": "Offline",
+    "welcome": "Bem-vindo",
+    "traveler": "Viajante"
   },
 
   "auth": {
@@ -38,7 +41,8 @@
     "disclaimer": "Ao entrar, você concorda com nossos",
     "errors": {
       "loginFailed": "Falha ao fazer login",
-      "logoutFailed": "Falha ao fazer logout"
+      "logoutFailed": "Falha ao fazer logout",
+      "signInError": "Erro ao fazer login. Tente novamente."
     },
     "messages": {
       "tryingRecoverSession": "Tenta recuperar sessão persistida",
@@ -76,10 +80,13 @@
     "endDate": "Data de Término",
     "duration": "Duração",
     "days": "dias",
+    "daysOfAdventure": "dias de aventura",
+    "delete": "Deletar",
+    "deleting": "Deletando...",
+    "deleteTripConfirm": "Você tem certeza que quer deletar essa viagem?",
     "tripDetails": "Detalhes da Viagem",
     "itinerary": "Itinerário",
     "deleteTrip": "Deletar Viagem",
-    "deleteTripConfirm": "Tem certeza que quer deletar esta viagem?",
     "editTrip": "Editar Viagem",
     "exportPDF": "Exportar para PDF",
     "shareTrip": "Compartilhar Viagem"

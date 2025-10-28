@@ -61,7 +61,7 @@ export default function HomeScreen() {
     try {
       setDeleting(tripId)
       await deleteTrip(tripId)
-      showSuccess(t('success.deleted'))
+      showSuccess(t('common.successDeleted'))
     } catch (error) {
       debug.error('Erro ao deletar viagem:', error)
       showError(t('errors.generic'))
@@ -80,7 +80,7 @@ export default function HomeScreen() {
               {t('trips.title')}
             </h1>
             <p className="text-small text-slate-600 dark:text-slate-400">
-              Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
+              {t('common.welcome')}, {user?.displayName || t('common.traveler')}! ✈️
             </p>
           </div>
         </div>
@@ -88,10 +88,10 @@ export default function HomeScreen() {
         {/* Desktop Header - Visible on Desktop */}
         <div className="hidden lg:block px-6 py-6">
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
-            Minhas Viagens
+            {t('trips.title')}
           </h1>
           <p className="text-slate-600 dark:text-slate-400">
-            Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
+            {t('common.welcome')}, {user?.displayName || t('common.traveler')}! ✈️
           </p>
         </div>
 
@@ -182,7 +182,7 @@ export default function HomeScreen() {
 
                   {/* Duration */}
                   <p className="text-small text-slate-600 dark:text-slate-400 mb-4">
-                    {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} dias de aventura
+                    {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} {t('trips.daysOfAdventure')}
                   </p>
 
                   {/* Tags */}
@@ -218,7 +218,7 @@ export default function HomeScreen() {
                       className="flex-1 gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
                     >
                       <Trash2 className="w-4 h-4" />
-                      {deleting === trip.id ? 'Deletando...' : 'Deletar'}
+                      {deleting === trip.id ? t('trips.deleting') : t('trips.delete')}
                     </Button>
                   </div>
                 </Card.Body>

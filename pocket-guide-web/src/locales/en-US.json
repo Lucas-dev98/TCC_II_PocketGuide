@@ -4,6 +4,7 @@
     "loading": "Loading...",
     "error": "Error",
     "success": "Success",
+    "successDeleted": "Successfully deleted",
     "cancel": "Cancel",
     "save": "Save",
     "delete": "Delete",
@@ -20,7 +21,9 @@
     "less": "Less",
     "noData": "No data",
     "retry": "Try again",
-    "offline": "Offline"
+    "offline": "Offline",
+    "welcome": "Welcome",
+    "traveler": "Traveler"
   },
 
   "auth": {
@@ -38,7 +41,8 @@
     "disclaimer": "By signing in, you agree to our",
     "errors": {
       "loginFailed": "Login failed",
-      "logoutFailed": "Logout failed"
+      "logoutFailed": "Logout failed",
+      "signInError": "Error signing in. Please try again."
     },
     "messages": {
       "tryingRecoverSession": "Attempting to recover persisted session",
@@ -76,10 +80,13 @@
     "endDate": "End Date",
     "duration": "Duration",
     "days": "days",
+    "daysOfAdventure": "days of adventure",
+    "delete": "Delete",
+    "deleting": "Deleting...",
+    "deleteTripConfirm": "Are you sure you want to delete this trip?",
     "tripDetails": "Trip Details",
     "itinerary": "Itinerary",
     "deleteTrip": "Delete Trip",
-    "deleteTripConfirm": "Are you sure you want to delete this trip?",
     "editTrip": "Edit Trip",
     "exportPDF": "Export to PDF",
     "shareTrip": "Share Trip"

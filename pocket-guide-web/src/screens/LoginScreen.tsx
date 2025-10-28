@@ -34,9 +34,9 @@ export default function LoginScreen() {
   // Mostrar erro via Toast
   useEffect(() => {
     if (error) {
-      showError(typeof error === 'string' ? error : 'Erro ao fazer login. Tente novamente.')
+      showError(typeof error === 'string' ? error : t('auth.errors.signInError'))
     }
-  }, [error, showError])
+  }, [error, showError, t])
 
   // Iniciar animação na montagem do componente
   useEffect(() => {
