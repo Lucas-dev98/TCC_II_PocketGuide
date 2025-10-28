@@ -6,7 +6,7 @@
  */
 
 import { useFavorites } from '../hooks/useFavorites'
-import { useI18n } from '../i18n/I18nContext'
+import { useI18n } from '../hooks/useI18n'
 
 interface FavoriteButtonProps {
   tripId: string

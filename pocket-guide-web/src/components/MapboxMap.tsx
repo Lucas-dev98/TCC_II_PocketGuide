@@ -4,7 +4,7 @@ import 'mapbox-gl/dist/mapbox-gl.css';
 import { Attraction } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { debug } from '../utils/debug';
-import { useI18n } from '../i18n/I18nContext';
+import { useI18n } from '../hooks/useI18n';
 
 interface MapboxMapProps {
   attractions?: (Attraction | any)[];

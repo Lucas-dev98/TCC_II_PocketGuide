@@ -35,7 +35,17 @@
     "biometricAuth": "Autenticação Biométrica",
     "enableBiometric": "Ativar autenticação biométrica",
     "termsOfService": "Termos de Serviço",
-    "disclaimer": "Ao entrar, você concorda com nossos"
+    "disclaimer": "Ao entrar, você concorda com nossos",
+    "errors": {
+      "loginFailed": "Falha ao fazer login",
+      "logoutFailed": "Falha ao fazer logout"
+    },
+    "messages": {
+      "tryingRecoverSession": "Tenta recuperar sessão persistida",
+      "tokenExpiringSoon": "Token expirará em {{seconds}} segundos",
+      "tokenExpired": "Token expirou, fazendo logout automático",
+      "autoLogoutError": "Erro ao fazer logout automático"
+    }
   },
 
   "navigation": {
@@ -50,7 +60,9 @@
     "security": "Segurança",
     "logout": "Sair",
     "expandSidebar": "Expandir",
-    "collapseSidebar": "Recolher"
+    "collapseSidebar": "Recolher",
+    "previous": "Anterior",
+    "next": "Próximo"
   },
 
   "trips": {
@@ -202,6 +214,9 @@
     "title": "Favoritos",
     "addFavorite": "Adicionar aos Favoritos",
     "removeFavorite": "Remover dos Favoritos",
+    "addToFavorites": "Adicionar aos favoritos",
+    "removeFromFavorites": "Remover dos favoritos",
+    "added": "Adicionado",
     "noFavorites": "Você não tem favoritos ainda",
     "addNow": "Adicione viagens aos seus favoritos",
     "count": "{{count}} favorito",
@@ -261,9 +276,45 @@
   "errors": {
     "generic": "Algo deu errado",
     "networkError": "Erro de rede. Verifique sua conexão.",
+    "network": {
+      "title": "Erro de conexão",
+      "message": "Erro de conexão. Verifique sua internet.",
+      "details": "Não foi possível conectar ao servidor"
+    },
+    "noConnection": {
+      "title": "Sem conexão",
+      "message": "Sem conexão com internet",
+      "details": "Verifique sua conexão e tente novamente"
+    },
+    "timeout": {
+      "title": "Solicitação expirou",
+      "message": "Solicitação expirou. Tente novamente."
+    },
+    "rateLimited": {
+      "title": "Muitas requisições",
+      "message": "Muitas requisições. Aguarde um momento.",
+      "details": "Você está fazendo solicitações com frequência"
+    },
+    "serverError": {
+      "title": "Erro no servidor",
+      "message": "Servidor indisponível. Tente mais tarde."
+    },
+    "notFound": {
+      "title": "Não encontrado",
+      "message": "Recurso não encontrado",
+      "details": "{{operation}} não foi encontrado"
+    },
+    "invalidRequest": {
+      "title": "Solicitação inválida",
+      "message": "Solicitação inválida",
+      "details": "Erro {{status}} na sua solicitação"
+    },
+    "parseError": {
+      "title": "Erro de resposta",
+      "message": "Resposta inválida do servidor",
+      "details": "Resposta inválida do servidor"
+    },
     "unauthorized": "Você não tem permissão para fazer isso",
-    "notFound": "Não encontrado",
-    "serverError": "Erro no servidor. Tente novamente mais tarde.",
     "emptyField": "Este campo é obrigatório",
     "invalidEmail": "Email inválido",
     "passwordTooShort": "Senha muito curta",
@@ -362,8 +413,12 @@
   "pdf": {
     "title": "Exportar Viagem",
     "exporting": "Exportando...",
+    "exportPDF": "Exportar PDF",
     "exportSuccess": "PDF exportado com sucesso",
-    "exportError": "Erro ao exportar PDF"
+    "exportError": "Não foi possível exportar o PDF",
+    "errors": {
+      "exportFailed": "Erro ao exportar PDF"
+    }
   },
 
   "offline": {

@@ -11,7 +11,7 @@ import { useState } from 'react'
 import { FileDown, Loader } from 'lucide-react'
 import { Trip } from '../types'
 import { pdfService } from '../services/pdfService'
-import { useI18n } from '../i18n/I18nContext'
+import { useI18n } from '../hooks/useI18n'
 
 interface ExportButtonProps {
   trip?: Trip

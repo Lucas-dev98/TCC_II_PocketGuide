@@ -35,7 +35,17 @@
     "biometricAuth": "Biometric Authentication",
     "enableBiometric": "Enable biometric authentication",
     "termsOfService": "Terms of Service",
-    "disclaimer": "By signing in, you agree to our"
+    "disclaimer": "By signing in, you agree to our",
+    "errors": {
+      "loginFailed": "Login failed",
+      "logoutFailed": "Logout failed"
+    },
+    "messages": {
+      "tryingRecoverSession": "Attempting to recover persisted session",
+      "tokenExpiringSoon": "Token will expire in {{seconds}} seconds",
+      "tokenExpired": "Token expired, performing automatic logout",
+      "autoLogoutError": "Error during automatic logout"
+    }
   },
 
   "navigation": {
@@ -48,9 +58,11 @@
     "profile": "Profile",
     "share": "Share",
     "security": "Security",
-    "logout": "Sign Out",
+    "logout": "Sign out",
     "expandSidebar": "Expand",
-    "collapseSidebar": "Collapse"
+    "collapseSidebar": "Collapse",
+    "previous": "Previous",
+    "next": "Next"
   },
 
   "trips": {
@@ -202,6 +214,9 @@
     "title": "Favorites",
     "addFavorite": "Add to Favorites",
     "removeFavorite": "Remove from Favorites",
+    "addToFavorites": "Add to favorites",
+    "removeFromFavorites": "Remove from favorites",
+    "added": "Added",
     "noFavorites": "You don't have any favorites yet",
     "addNow": "Add trips to your favorites",
     "count": "{{count}} favorite",
@@ -261,9 +276,45 @@
   "errors": {
     "generic": "Something went wrong",
     "networkError": "Network error. Check your connection.",
+    "network": {
+      "title": "Connection error",
+      "message": "Connection error. Check your internet.",
+      "details": "Could not connect to server"
+    },
+    "noConnection": {
+      "title": "No connection",
+      "message": "No internet connection",
+      "details": "Check your connection and try again"
+    },
+    "timeout": {
+      "title": "Request timed out",
+      "message": "Request timed out. Try again."
+    },
+    "rateLimited": {
+      "title": "Too many requests",
+      "message": "Too many requests. Wait a moment.",
+      "details": "You are making requests too frequently"
+    },
+    "serverError": {
+      "title": "Server error",
+      "message": "Server unavailable. Try again later."
+    },
+    "notFound": {
+      "title": "Not found",
+      "message": "Resource not found",
+      "details": "{{operation}} was not found"
+    },
+    "invalidRequest": {
+      "title": "Invalid request",
+      "message": "Invalid request",
+      "details": "Error {{status}} in your request"
+    },
+    "parseError": {
+      "title": "Response error",
+      "message": "Invalid response from server",
+      "details": "Invalid response from server"
+    },
     "unauthorized": "You don't have permission to do this",
-    "notFound": "Not found",
-    "serverError": "Server error. Try again later.",
     "emptyField": "This field is required",
     "invalidEmail": "Invalid email",
     "passwordTooShort": "Password too short",
@@ -362,8 +413,12 @@
   "pdf": {
     "title": "Export Trip",
     "exporting": "Exporting...",
+    "exportPDF": "Export PDF",
     "exportSuccess": "PDF exported successfully",
-    "exportError": "Error exporting PDF"
+    "exportError": "Could not export PDF",
+    "errors": {
+      "exportFailed": "Error exporting PDF"
+    }
   },
 
   "offline": {
