@@ -3,7 +3,6 @@ import { auth, signInWithGoogle, signOut as firebaseSignOut } from '../services/
 import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import * as tokenStorage from '../services/tokenStorage'
 import { debug } from '../utils/debug'
-import { useI18n } from '../i18n/I18nContext'
 
 interface AuthContextType {
   user: FirebaseUser | null
@@ -29,7 +28,6 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const { t } = useI18n()
   const [user, setUser] = useState<FirebaseUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -86,7 +84,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       await signInWithGoogle()
       // Token será salvo no onAuthStateChanged acima
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('auth.errors.loginFailed')
+      const message = err instanceof Error ? err.message : 'Falha ao fazer login'
       setError(message)
       debug.error('Erro no login:', err)
       throw err
@@ -104,7 +102,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setUser(null)
       debug.log('Logout realizado, sessão limpa')
     } catch (err) {
-      const message = err instanceof Error ? err.message : t('auth.errors.logoutFailed')
+      const message = err instanceof Error ? err.message : 'Falha ao fazer logout'
       setError(message)
       debug.error('Erro no logout:', err)
       throw err

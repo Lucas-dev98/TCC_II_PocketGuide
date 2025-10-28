@@ -2,6 +2,7 @@ import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-d
 import { lazy, Suspense } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
+import { I18nProvider } from './i18n/I18nContext'
 import { ProtectedRoute } from './components/ProtectedRoute'
 import { RouteLoadingFallback } from './components/RouteLoadingFallback'
 import { OfflineIndicator } from './components/OfflineIndicator'
@@ -39,9 +40,10 @@ import { BottomNavigation } from './components/BottomNavigation'
 function App() {
   return (
     <ErrorBoundary>
-      <ThemeProvider>
-        <AuthProvider>
-          <Router>
+      <I18nProvider>
+        <ThemeProvider>
+          <AuthProvider>
+            <Router>
               <OfflineIndicator />
               <WebVitalsDebugger />
               <Suspense fallback={<RouteLoadingFallback />}>
@@ -150,6 +152,7 @@ function App() {
           </Router>
         </AuthProvider>
       </ThemeProvider>
+    </I18nProvider>
     </ErrorBoundary>
   )
 }
