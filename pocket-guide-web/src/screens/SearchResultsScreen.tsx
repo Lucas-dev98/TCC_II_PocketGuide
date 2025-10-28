@@ -12,13 +12,11 @@ import { AdvancedFilters } from '../components/AdvancedFilters'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { MainLayout } from '../components/Layout'
-import useI18n from '../hooks/useI18n'
 import { searchService, SearchFilters, SearchResult } from '../services/searchService'
 import { debug } from '../utils/debug'
 
 export default function SearchResultsScreen() {
   const navigate = useNavigate()
-  const { t } = useI18n()
   const { trips } = useTripsStore()
   const [searchParams] = useSearchParams()
   const queryParam = searchParams.get('q') || ''
@@ -134,13 +132,11 @@ export default function SearchResultsScreen() {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                <span>{t('search.backButton')}</span>
+                <span>Voltar</span>
               </button>
             </div>
 
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-              {t('search.title')}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
 
             {/* Filters */}
             <div className="flex gap-4 items-end">
@@ -156,9 +152,7 @@ export default function SearchResultsScreen() {
         {/* Desktop Header */}
         <div className="hidden lg:block bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 shadow-sm">
           <div className="max-w-7xl mx-auto px-6 py-6">
-            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">
-              {t('search.title')}
-            </h1>
+            <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-6">Buscar Viagens</h1>
 
             {/* Filters */}
             <div className="flex gap-4 items-end">
@@ -177,13 +171,12 @@ export default function SearchResultsScreen() {
         {results.total > 0 && (
           <div className="mb-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
             <p className="text-gray-700 dark:text-gray-300">
-              <span className="font-semibold text-gray-900 dark:text-white">
-                {t('search.foundTrips', { count: results.total })}
-              </span>
+              <span className="font-semibold text-gray-900 dark:text-white">{results.total}</span>{' '}
+              viagens encontradas
               {filters.query && (
                 <>
                   {' '}
-                  {t('search.for')} <span className="font-semibold text-gray-900 dark:text-white">"{filters.query}"</span>
+                  para <span className="font-semibold text-gray-900 dark:text-white">"{filters.query}"</span>
                 </>
               )}
             </p>
@@ -209,7 +202,7 @@ export default function SearchResultsScreen() {
                   />
                 </svg>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">{t('search.loading')}</p>
+              <p className="text-gray-600 dark:text-gray-400">Buscando viagens...</p>
             </div>
           </div>
         )}
@@ -298,7 +291,7 @@ export default function SearchResultsScreen() {
 
                   {/* Action Button */}
                   <button className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg transition-colors">
-                    {t('search.viewDetails')}
+                    Ver Detalhes
                   </button>
                 </Card>
               ))}
@@ -308,7 +301,8 @@ export default function SearchResultsScreen() {
             {results.total > results.pageSize && (
               <div className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  {t('search.page', { page: results.page, total: Math.ceil(results.total / results.pageSize) })} • {t('search.showing', { current: results.trips.length, total: results.total })}
+                  Página {results.page} de {Math.ceil(results.total / results.pageSize)} • Exibindo{' '}
+                  {results.trips.length} de {results.total} resultados
                 </div>
 
                 <div className="flex gap-2">
@@ -317,14 +311,14 @@ export default function SearchResultsScreen() {
                     disabled={results.page === 1}
                     className="px-4 py-2 bg-gray-200 dark:bg-gray-700 text-gray-900 dark:text-white rounded disabled:opacity-50 disabled:cursor-not-allowed hover:enabled:bg-gray-300 dark:hover:enabled:bg-gray-600 transition-colors"
                   >
-                    {t('search.previous')}
+                    ← Anterior
                   </button>
                   <button
                     onClick={handleNextPage}
                     disabled={!results.hasMore}
                     className="px-4 py-2 bg-blue-600 hover:enabled:bg-blue-700 disabled:bg-gray-300 dark:disabled:bg-gray-700 text-white rounded disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {t('search.next')}
+                    Próxima →
                   </button>
                 </div>
               </div>
@@ -336,10 +330,10 @@ export default function SearchResultsScreen() {
         {!isLoading && results.trips.length === 0 && trips.length > 0 && (
           <EmptyState
             icon="🔍"
-            title={t('search.notFound')}
+            title="Nenhuma viagem encontrada"
             description={
               filters.query
-                ? t('search.notFoundDesc', { query: filters.query })
+                ? `Não encontramos viagens para "${filters.query}". Tente outro termo de busca.`
                 : 'Ajuste seus filtros e tente novamente.'
             }
           />
@@ -349,8 +343,8 @@ export default function SearchResultsScreen() {
         {!isLoading && trips.length === 0 && (
           <EmptyState
             icon="✈️"
-            title={t('search.noTripsCreated')}
-            description={t('search.noTripsCreatedDesc')}
+            title="Nenhuma viagem criada"
+            description="Comece criando uma nova viagem para vê-la na busca!"
           />
         )}
       </div>

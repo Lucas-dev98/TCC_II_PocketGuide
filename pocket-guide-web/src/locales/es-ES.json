@@ -74,21 +74,7 @@
     "filters": "Filtros",
     "advancedFilters": "Filtros Avanzados",
     "clearFilters": "Limpiar Filtros",
-    "searchBy": "Buscar por",
-    "backButton": "Atrás",
-    "foundTrips": "{{count}} viaje encontrado",
-    "foundTrips_plural": "{{count}} viajes encontrados",
-    "for": "para",
-    "loading": "Buscando viajes...",
-    "viewDetails": "Ver Detalles",
-    "page": "Página {{page}} de {{total}}",
-    "showing": "Mostrando {{current}} de {{total}} resultados",
-    "previous": "← Anterior",
-    "next": "Siguiente →",
-    "notFound": "No se encontraron viajes",
-    "notFoundDesc": "No encontramos viajes para \"{{query}}\". Intenta otro término de búsqueda.",
-    "noTripsCreated": "No hay viajes creados",
-    "noTripsCreatedDesc": "¡Comienza creando un nuevo viaje para verlo en la búsqueda!"
+    "searchBy": "Buscar por"
   },
 
   "createTrip": {
@@ -350,16 +336,40 @@
   },
 
   "offline": {
-    "offlineMode": "Modo Sin Conexión",
-    "offlineMessage": "Está sin conexión. Algunas funciones pueden estar limitadas.",
-    "syncWhenOnline": "Se sincronizará cuando vuelva a conectarse"
+    "offlineMode": "Modo Offline",
+    "offlineMessage": "Estás offline. Algunas características pueden estar limitadas.",
+    "syncWhenOnline": "Se sincronizará cuando vuelvas a estar en línea"
+  },
+
+  "securitySettings": {
+    "title": "Seguridad",
+    "subtitle": "Gestiona tus credenciales de autenticación",
+    "backButton": "Atrás",
+    "biometrics": "Biometría",
+    "pin": "PIN",
+    "registerBiometric": "Registrar Biometría",
+    "noBiometrics": "Sin credenciales biométricas registradas",
+    "credentialsCount": "Credenciales Registradas ({{count}})",
+    "createdAt": "Creado el {{date}}",
+    "lastUsed": "Último uso: {{date}}",
+    "setupPin": "Configurar PIN",
+    "changePIN": "Cambiar PIN",
+    "removePIN": "Eliminar PIN",
+    "noPinSetup": "Sin PIN configurado",
+    "pinConfigured": "PIN Configurado",
+    "pinPlaceholder": "Ingresa un PIN (4-6 dígitos)",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "clearAll": "Borrar Todas las Credenciales",
+    "registering": "Registrando...",
+    "removingCredential": "Eliminando credencial..."
   },
 
   "validation": {
-    "required": "Campo obligatorio",
+    "required": "Campo requerido",
     "minLength": "Debe tener al menos {{min}} caracteres",
     "maxLength": "Debe tener como máximo {{max}} caracteres",
-    "email": "Correo electrónico inválido",
+    "email": "Email inválido",
     "url": "URL inválida",
     "number": "Debe ser un número",
     "date": "Fecha inválida"

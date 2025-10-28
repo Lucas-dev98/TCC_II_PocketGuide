@@ -74,21 +74,7 @@
     "filters": "Filters",
     "advancedFilters": "Advanced Filters",
     "clearFilters": "Clear Filters",
-    "searchBy": "Search by",
-    "backButton": "Back",
-    "foundTrips": "{{count}} trip found",
-    "foundTrips_plural": "{{count}} trips found",
-    "for": "for",
-    "loading": "Searching trips...",
-    "viewDetails": "View Details",
-    "page": "Page {{page}} of {{total}}",
-    "showing": "Showing {{current}} of {{total}} results",
-    "previous": "← Previous",
-    "next": "Next →",
-    "notFound": "No trips found",
-    "notFoundDesc": "We didn't find any trips for \"{{query}}\". Try another search term.",
-    "noTripsCreated": "No trips created",
-    "noTripsCreatedDesc": "Start by creating a new trip to see it in search!"
+    "searchBy": "Search by"
   },
 
   "createTrip": {

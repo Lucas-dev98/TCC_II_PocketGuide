@@ -11,10 +11,12 @@ import { useState } from 'react'
 import { ArrowLeft, Fingerprint, Lock, Trash2, Plus, Check } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
 import { MainLayout } from '../components/Layout'
+import useI18n from '../hooks/useI18n'
 import { biometryService } from '../services/biometryService'
 
 export const SecuritySettingsScreen = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const [activeTab, setActiveTab] = useState<'biometric' | 'pin'>('biometric')
   const [credentials, setCredentials] = useState(biometryService.getCredentials())
   const [newPin, setNewPin] = useState('')
@@ -34,11 +36,11 @@ export const SecuritySettingsScreen = () => {
         `Credencial ${new Date().toLocaleDateString()}`
       )
       setCredentials(biometryService.getCredentials())
-      setMessage({ type: 'success', text: 'Biometria registrada com sucesso!' })
+      setMessage({ type: 'success', text: t('securitySettings.success') })
     } catch (error) {
       setMessage({
         type: 'error',
-        text: 'Erro ao registrar biometria',
+        text: t('securitySettings.errorBiometric'),
       })
     } finally {
       setLoading(false)
@@ -47,34 +49,34 @@ export const SecuritySettingsScreen = () => {
 
   const handleSetupPIN = () => {
     if (!newPin || newPin.length < 4) {
-      setMessage({ type: 'error', text: 'PIN deve ter no mínimo 4 dígitos' })
+      setMessage({ type: 'error', text: t('securitySettings.pinMinLength') })
       return
     }
 
     if (!/^\d{4,6}$/.test(newPin)) {
-      setMessage({ type: 'error', text: 'PIN deve conter apenas números' })
+      setMessage({ type: 'error', text: t('securitySettings.pinOnlyNumbers') })
       return
     }
 
     const success = biometryService.setupPIN(newPin)
 
     if (success) {
-      setMessage({ type: 'success', text: 'PIN configurado com sucesso!' })
+      setMessage({ type: 'success', text: t('securitySettings.success') })
       setNewPin('')
       setPinSetupMode(false)
     } else {
-      setMessage({ type: 'error', text: 'Erro ao configurar PIN' })
+      setMessage({ type: 'error', text: t('securitySettings.errorPin') })
     }
   }
 
   const handleRemovePIN = () => {
-    if (confirm('Tem certeza que deseja remover o PIN?')) {
+    if (confirm(t('securitySettings.confirmClearAll'))) {
       const success = biometryService.removePIN()
 
       if (success) {
-        setMessage({ type: 'success', text: 'PIN removido com sucesso!' })
+        setMessage({ type: 'success', text: t('securitySettings.success') })
       } else {
-        setMessage({ type: 'error', text: 'Erro ao remover PIN' })
+        setMessage({ type: 'error', text: t('securitySettings.errorRemovePin') })
       }
     }
   }
@@ -84,18 +86,18 @@ export const SecuritySettingsScreen = () => {
 
     if (success) {
       setCredentials(biometryService.getCredentials())
-      setMessage({ type: 'success', text: 'Credencial removida!' })
+      setMessage({ type: 'success', text: t('securitySettings.success') })
     } else {
-      setMessage({ type: 'error', text: 'Erro ao remover credencial' })
+      setMessage({ type: 'error', text: t('securitySettings.errorRemoveCredential') })
     }
   }
 
   const handleClearAll = () => {
-    if (confirm('Tem certeza que deseja limpar todas as credenciais?')) {
+    if (confirm(t('securitySettings.confirmClearAll'))) {
       biometryService.clearAllCredentials()
       biometryService.removePIN()
       setCredentials([])
-      setMessage({ type: 'success', text: 'Todas as credenciais foram removidas!' })
+      setMessage({ type: 'success', text: t('securitySettings.success') })
     }
   }
 
@@ -105,19 +107,19 @@ export const SecuritySettingsScreen = () => {
         {/* Mobile Header - Hidden on Desktop */}
         <div className="lg:hidden bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 p-4 sticky top-16 z-10">
           <div className="max-w-2xl mx-auto">
-            <button
-              onClick={() => navigate(-1)}
-              className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
-            >
-              <ArrowLeft className="w-5 h-5" />
-              Voltar
-            </button>
+          <button
+            onClick={() => navigate(-1)}
+            className="flex items-center gap-2 text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 mb-4"
+          >
+            <ArrowLeft className="w-5 h-5" />
+            {t('securitySettings.backButton')}
+          </button>
 
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
-              Segurança
+              {t('securitySettings.title')}
             </h1>
             <p className="text-slate-600 dark:text-slate-400">
-              Gerencie suas credenciais de autenticação
+              {t('securitySettings.subtitle')}
             </p>
           </div>
         </div>
@@ -126,10 +128,10 @@ export const SecuritySettingsScreen = () => {
         <div className="hidden lg:block bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700 p-6">
           <div className="max-w-2xl mx-auto">
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
-              Segurança
+              {t('securitySettings.title')}
             </h1>
             <p className="text-slate-600 dark:text-slate-400 mt-2">
-              Gerencie suas credenciais de autenticação
+              {t('securitySettings.subtitle')}
             </p>
           </div>
         </div>
@@ -169,7 +171,7 @@ export const SecuritySettingsScreen = () => {
             }`}
           >
             <Fingerprint className="w-4 h-4 inline mr-2" />
-            Biometria
+            {t('securitySettings.biometrics')}
           </button>
 
           <button
@@ -181,7 +183,7 @@ export const SecuritySettingsScreen = () => {
             }`}
           >
             <Lock className="w-4 h-4 inline mr-2" />
-            PIN
+            {t('securitySettings.pin')}
           </button>
         </div>
 
@@ -191,7 +193,7 @@ export const SecuritySettingsScreen = () => {
             {/* Setup */}
             <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
               <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                Registrar Nova Biometria
+                {t('securitySettings.registerBiometric')}
               </h2>
 
               <button
@@ -202,12 +204,12 @@ export const SecuritySettingsScreen = () => {
                 {loading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    Registrando...
+                    {t('securitySettings.registering')}
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4" />
-                    Registrar Biometria
+                    {t('securitySettings.registerBiometric')}
                   </>
                 )}
               </button>
@@ -217,7 +219,7 @@ export const SecuritySettingsScreen = () => {
             {credentials.length > 0 && (
               <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  Credenciais Registradas ({credentials.length})
+                  {t('securitySettings.credentialsCount', { count: credentials.length })}
                 </h2>
 
                 <div className="space-y-2">
@@ -231,13 +233,11 @@ export const SecuritySettingsScreen = () => {
                           {cred.name}
                         </p>
                         <p className="text-sm text-slate-500 dark:text-slate-400">
-                          Criada em{' '}
-                          {new Date(cred.created).toLocaleDateString('pt-BR')}
+                          {t('securitySettings.createdAt', { date: new Date(cred.created).toLocaleDateString('pt-BR') })}
                         </p>
                         {cred.lastUsed && (
                           <p className="text-xs text-slate-400 dark:text-slate-500">
-                            Último uso:{' '}
-                            {new Date(cred.lastUsed).toLocaleDateString('pt-BR')}
+                            {t('securitySettings.lastUsed', { date: new Date(cred.lastUsed).toLocaleDateString('pt-BR') })}
                           </p>
                         )}
                       </div>
@@ -257,7 +257,7 @@ export const SecuritySettingsScreen = () => {
             {credentials.length === 0 && (
               <div className="text-center py-8 text-slate-500 dark:text-slate-400">
                 <Fingerprint className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                <p>Nenhuma credencial biométrica registrada</p>
+                <p>{t('securitySettings.noBiometrics')}</p>
               </div>
             )}
           </div>
@@ -270,14 +270,14 @@ export const SecuritySettingsScreen = () => {
               <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 text-center">
                 <Lock className="w-12 h-12 mx-auto mb-4 text-slate-400" />
                 <p className="text-slate-600 dark:text-slate-400 mb-4">
-                  Nenhum PIN configurado
+                  {t('securitySettings.noPinSetup')}
                 </p>
                 <button
                   onClick={() => setPinSetupMode(true)}
                   className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg flex items-center justify-center gap-2 mx-auto"
                 >
                   <Plus className="w-4 h-4" />
-                  Configurar PIN
+                  {t('securitySettings.setupPin')}
                 </button>
               </div>
             )}
@@ -287,20 +287,20 @@ export const SecuritySettingsScreen = () => {
                 <div className="flex items-center gap-2 mb-4">
                   <Check className="w-5 h-5 text-green-600 dark:text-green-400" />
                   <p className="font-semibold text-green-900 dark:text-green-100">
-                    PIN Configurado
+                    {t('securitySettings.pinConfigured')}
                   </p>
                 </div>
                 <button
                   onClick={() => setPinSetupMode(true)}
                   className="w-full px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors mb-2"
                 >
-                  Alterar PIN
+                  {t('securitySettings.changePIN')}
                 </button>
                 <button
                   onClick={handleRemovePIN}
                   className="w-full px-4 py-2 bg-red-600 hover:bg-red-700 text-white font-medium rounded-lg transition-colors"
                 >
-                  Remover PIN
+                  {t('securitySettings.removePIN')}
                 </button>
               </div>
             )}
@@ -308,7 +308,7 @@ export const SecuritySettingsScreen = () => {
             {pinSetupMode && (
               <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700">
                 <h2 className="text-lg font-semibold text-slate-900 dark:text-white mb-4">
-                  {isPinSetup ? 'Alterar PIN' : 'Configurar PIN'}
+                  {isPinSetup ? t('securitySettings.changePIN') : t('securitySettings.setupPin')}
                 </h2>
 
                 <input
@@ -317,7 +317,7 @@ export const SecuritySettingsScreen = () => {
                   onChange={(e) =>
                     setNewPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))
                   }
-                  placeholder="Digite um PIN (4-6 dígitos)"
+                  placeholder={t('securitySettings.pinPlaceholder')}
                   maxLength={6}
                   className="w-full px-4 py-3 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white mb-4 focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
@@ -327,7 +327,7 @@ export const SecuritySettingsScreen = () => {
                     onClick={handleSetupPIN}
                     className="flex-1 px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors"
                   >
-                    Salvar
+                    {t('securitySettings.save')}
                   </button>
                   <button
                     onClick={() => {
@@ -336,7 +336,7 @@ export const SecuritySettingsScreen = () => {
                     }}
                     className="flex-1 px-4 py-2 bg-slate-300 dark:bg-slate-600 hover:bg-slate-400 dark:hover:bg-slate-500 text-slate-900 dark:text-white font-medium rounded-lg transition-colors"
                   >
-                    Cancelar
+                    {t('securitySettings.cancel')}
                   </button>
                 </div>
               </div>
@@ -351,7 +351,7 @@ export const SecuritySettingsScreen = () => {
             className="w-full px-4 py-3 bg-red-50 dark:bg-red-900/20 hover:bg-red-100 dark:hover:bg-red-900/30 text-red-600 dark:text-red-400 font-medium rounded-lg border border-red-200 dark:border-red-800 transition-colors flex items-center justify-center gap-2"
           >
             <Trash2 className="w-4 h-4" />
-            Limpar Todas as Credenciais
+            {t('securitySettings.clearAll')}
           </button>
         </div>
       </div>
