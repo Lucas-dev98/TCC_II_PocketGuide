@@ -115,7 +115,7 @@ export const BiometricAuthScreen = () => {
               </div>
             </div>
             <p className="text-slate-900 dark:text-white font-semibold">
-              Autenticado com sucesso!
+              {t('biometricAuth.successMessage')}
             </p>
           </div>
         )}
@@ -153,7 +153,7 @@ export const BiometricAuthScreen = () => {
                   }`}
                 >
                   <Fingerprint className="w-4 h-4 inline mr-2" />
-                  Biometria
+                  {t('biometricAuth.biometricsLabel')}
                 </button>
               )}
 
@@ -166,7 +166,7 @@ export const BiometricAuthScreen = () => {
                 }`}
               >
                 <Lock className="w-4 h-4 inline mr-2" />
-                PIN
+                {t('biometricAuth.pinLabel')}
               </button>
             </div>
 
@@ -188,7 +188,7 @@ export const BiometricAuthScreen = () => {
                       {loading ? t('biometricAuth.authenticating') : t('biometricAuth.biometricButton')}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
-                      Use sua impressão digital
+                      {t('biometricAuth.fingerprintDescription')}
                     </p>
                   </div>
                 </div>
@@ -200,7 +200,7 @@ export const BiometricAuthScreen = () => {
               <div className="space-y-4">
                 <div>
                   <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-2">
-                    PIN
+                    {t('biometricAuth.pinLabel')}
                   </label>
                   <div className="relative">
                     <input
@@ -236,7 +236,7 @@ export const BiometricAuthScreen = () => {
                       {t('biometricAuth.authenticating')}
                     </>
                   ) : (
-                    'Autenticar'
+                    t('biometricAuth.authenticate')
                   )}
                 </button>
               </div>
@@ -245,7 +245,7 @@ export const BiometricAuthScreen = () => {
             {/* Footer */}
             <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700 text-center">
               <p className="text-sm text-slate-600 dark:text-slate-400">
-                Pocket Guide Secure Auth
+                {t('biometricAuth.appName')}
               </p>
             </div>
           </div>

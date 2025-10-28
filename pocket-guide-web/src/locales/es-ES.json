@@ -366,12 +366,19 @@
   },
 
   "biometricAuth": {
-    "title": "Autenticación",
-    "subtitle": "Usa biometría o PIN para entrar",
-    "biometricButton": "Usar Biometría",
-    "pinButton": "Usar PIN",
-    "authenticating": "Autenticando...",
-    "pinMinLength": "PIN debe tener al menos 4 dígitos"
+    "title": "Acceso Seguro",
+    "subtitle": "Auténticate para continuar",
+    "biometricsLabel": "Biometría",
+    "pinLabel": "PIN",
+    "biometricButton": "Toca para Autenticarte",
+    "pinButton": "Ingresa tu PIN (4-6 dígitos)",
+    "authenticating": "Verificando...",
+    "pinMinLength": "PIN debe tener al menos 4 dígitos",
+    "error": "Error de autenticación",
+    "successMessage": "¡Autenticado correctamente!",
+    "fingerprintDescription": "Usa tu huella dactilar",
+    "authenticate": "Autenticarse",
+    "appName": "Pocket Guide Secure Auth"
   },
 
   "validation": {
