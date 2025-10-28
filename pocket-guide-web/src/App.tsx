@@ -152,7 +152,7 @@ function App() {
           </Router>
         </AuthProvider>
       </ThemeProvider>
-    </I18nProvider>
+      </I18nProvider>
     </ErrorBoundary>
   )
 }
