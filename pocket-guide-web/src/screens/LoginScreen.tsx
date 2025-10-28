@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../components/Toast'
 import { Button } from '../components/Button'
 import { Card } from '../components/Card'
+import useI18n from '../hooks/useI18n'
 import { Compass, MapPin, Zap, Globe, ArrowRight, Sparkles } from 'lucide-react'
 
 /**
@@ -20,6 +21,7 @@ export default function LoginScreen() {
   const navigate = useNavigate()
   const { user, signInWithGoogle, isLoading, error } = useAuth()
   const { showError } = useToast()
+  const { t } = useI18n()
   const [isAnimating, setIsAnimating] = useState(false)
 
   // Se já autenticado, redireciona para home
@@ -73,16 +75,16 @@ export default function LoginScreen() {
           </div>
           
           <h1 className="text-h1 font-bold text-slate-900 dark:text-white mb-2 flex items-center justify-center gap-2">
-            <span>Pocket Guide</span>
+            <span>{t('common.appName')}</span>
             <Sparkles className="w-6 h-6 text-primary animate-pulse" />
           </h1>
           
           <p className="text-body text-slate-600 dark:text-slate-300 mb-2">
-            Crie suas viagens perfeitas
+            {t('auth.loginDescription')}
           </p>
           
           <p className="text-small text-slate-500 dark:text-slate-400">
-            Planejamento inteligente com IA
+            {t('auth.loginTitle')}
           </p>
         </div>
 
@@ -91,20 +93,20 @@ export default function LoginScreen() {
           {/* Descrição */}
           <div className="mb-8">
             <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-3 flex items-center gap-2">
-              <span>Bem-vindo! 👋</span>
+              <span>👋 {t('auth.loginTitle')}</span>
             </h2>
             
             <p className="text-body text-slate-600 dark:text-slate-300 leading-relaxed">
-              Comece a criar roteiros inteligentes para suas viagens com nossa IA.
+              {t('auth.loginDescription')}
             </p>
           </div>
 
           {/* Features com ícones melhorados */}
           <div className="space-y-4 mb-8">
             {[
-              { icon: Zap, text: 'Roteiros personalizados em segundos', delay: 0 },
-              { icon: MapPin, text: 'Mapas interativos e rotas otimizadas', delay: 100 },
-              { icon: Globe, text: 'Sincronização em todos seus dispositivos', delay: 200 },
+              { icon: Zap, text: t('activities.adventure'), delay: 0 },
+              { icon: MapPin, text: t('navigation.search'), delay: 100 },
+              { icon: Globe, text: t('settings.about'), delay: 200 },
             ].map(({ icon: Icon, text, delay }, idx) => (
               <div
                 key={idx}
@@ -148,7 +150,7 @@ export default function LoginScreen() {
                 />
               </svg>
               <span className="flex items-center gap-1">
-                {isLoading ? 'Entrando...' : 'Entrar com Google'}
+                {isLoading ? t('auth.signingIn') : t('auth.loginWithGoogle')}
                 {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
               </span>
             </div>
@@ -157,7 +159,7 @@ export default function LoginScreen() {
           {/* Info box com dica */}
           <div className="mt-6 p-3 bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg">
             <p className="text-caption text-primary dark:text-primary/80 text-center">
-              ✨ Sua viagem perfeita está a um clique de distância
+              ✨ {t('auth.loginDescription')}
             </p>
           </div>
         </Card>

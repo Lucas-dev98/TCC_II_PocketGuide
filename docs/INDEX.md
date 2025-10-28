@@ -24,6 +24,7 @@ Bem-vindo à documentação do **Pocket Guide**, um app web de planejamento de v
 - `DEPLOYMENT.md` - Deploy
 - `API_INTEGRATION.md` - APIs
 - `CODE_SPLITTING_GUIDE.md` - Performance
+- `I18N_IMPLEMENTATION.md` - Internacionalização (3 idiomas)
 
 ### 🎯 Features (10/10 Implementadas)
 - `FEATURE_1_PERSISTENT_AUTH.md` - Auth persistente
@@ -47,6 +48,7 @@ Bem-vindo à documentação do **Pocket Guide**, um app web de planejamento de v
 
 ### 📊 Status & Análise
 - `STATUS.md` - Status completo do projeto
+- `SECURITY_ANALYSIS.md` - Análise de segurança de autenticação
 
 ### 🔗 APIs & Extras
 - `UNSPLASH_API_STATUS.md` - Unsplash API

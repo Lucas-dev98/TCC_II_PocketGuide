@@ -9,6 +9,7 @@ import { EmptyState } from '../components/EmptyState'
 import { FavoriteButton } from '../components/FavoriteButton'
 import { MainLayout } from '../components/Layout'
 import { SkeletonCard } from '../components/Skeleton'
+import useI18n from '../hooks/useI18n'
 import { Plus, MapPin, Calendar, Trash2 } from 'lucide-react'
 import { formatDate } from '../utils/formatDate'
 import { debug } from '../utils/debug'
@@ -30,6 +31,7 @@ export default function HomeScreen() {
   const { user } = useAuth()
   const { trips, loadTrips, deleteTrip, isLoading } = useTripsStore()
   const { showError, showSuccess } = useToast()
+  const { t } = useI18n()
   const [deleting, setDeleting] = useState<string | null>(null)
 
   // Carregar viagens ao montar
@@ -52,17 +54,17 @@ export default function HomeScreen() {
   }
 
   const handleDeleteTrip = async (tripId: string) => {
-    if (!window.confirm('Tem certeza que deseja deletar esta viagem?')) {
+    if (!window.confirm(t('trips.deleteTripConfirm'))) {
       return
     }
 
     try {
       setDeleting(tripId)
       await deleteTrip(tripId)
-      showSuccess('Viagem deletada com sucesso!')
+      showSuccess(t('success.deleted'))
     } catch (error) {
       debug.error('Erro ao deletar viagem:', error)
-      showError('Erro ao deletar viagem. Tente novamente.')
+      showError(t('errors.generic'))
     } finally {
       setDeleting(null)
     }
@@ -75,7 +77,7 @@ export default function HomeScreen() {
         <div className="lg:hidden bg-white dark:bg-slate-800 shadow-sm sticky top-0 z-10">
           <div className="max-w-6xl mx-auto px-4 py-4">
             <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
-              Minhas Viagens
+              {t('trips.title')}
             </h1>
             <p className="text-small text-slate-600 dark:text-slate-400">
               Bem-vindo, {user?.displayName || 'Viajante'}! ✈️
@@ -102,7 +104,7 @@ export default function HomeScreen() {
               className="gap-2"
             >
             <Plus className="w-5 h-5" />
-            Criar Nova Viagem
+            {t('trips.createNewTrip')}
           </Button>
         </div>
 
@@ -124,10 +126,10 @@ export default function HomeScreen() {
                   <MapPin className="w-8 h-8 text-primary" />
                 </div>
               }
-              title="Nenhuma viagem criada"
-              description="Crie sua primeira viagem e deixe a IA fazer a mágica! ✨"
+              title={t('trips.noTrips')}
+              description={t('trips.startPlanning')}
               action={{
-                label: 'Criar Primeira Viagem',
+                label: t('trips.createNewTrip'),
                 onClick: handleCreateTrip,
               }}
             />
