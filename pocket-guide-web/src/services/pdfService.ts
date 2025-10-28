@@ -1,11 +1,11 @@
 /**
- * pdfService.ts - Serviço de geração de PDF para viagens
+ * pdfService.ts - Service for generating trip PDFs
  * 
- * Funcionalidades:
- * - Gera PDF com detalhes completos da viagem
- * - Estilo profissional com imagens
- * - Suporte para paisagem e retrato
- * - Download automático
+ * Features:
+ * - Generates PDF with complete trip details
+ * - Professional styling with images
+ * - Support for landscape and portrait
+ * - Automatic download
  */
 
 import { jsPDF } from 'jspdf'
@@ -17,6 +17,7 @@ interface PDFOptions {
   orientation?: 'portrait' | 'landscape'
   includeMap?: boolean
   includePhotos?: boolean
+  t?: (key: string) => string
 }
 
 class PDFService {

@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import { debug } from '@/utils/debug';
+import { useI18n } from '@/i18n/I18nContext';
 
 /**
  * Interface para estado de erro
@@ -15,6 +16,7 @@ interface ErrorState {
  * Fornece feedback melhor ao usuário
  */
 export const useErrorHandler = () => {
+  const { tWithParams } = useI18n();
   const [error, setError] = useState<ErrorState | null>(null);
   const [isRetrying, setIsRetrying] = useState(false);
 
@@ -22,19 +24,19 @@ export const useErrorHandler = () => {
    * Mapeia erros técnicos para mensagens amigáveis
    */
   const mapErrorToMessage = useCallback((err: any, operation: string): ErrorState => {
-    let message = 'Ocorreu um erro ao processar sua solicitação';
+    let message = tWithParams('errors.generic.message', {});
     let code = 'UNKNOWN_ERROR';
     let details = '';
 
     if (err instanceof TypeError) {
       if (err.message.includes('fetch')) {
-        message = 'Erro de conexão. Verifique sua internet.';
+        message = tWithParams('errors.network.message', {});
         code = 'NETWORK_ERROR';
-        details = 'Não foi possível conectar ao servidor';
+        details = tWithParams('errors.network.details', {});
       } else if (err.message.includes('JSON')) {
-        message = 'Erro ao processar dados recebidos';
+        message = tWithParams('errors.parseError.message', {});
         code = 'PARSE_ERROR';
-        details = 'Resposta inválida do servidor';
+        details = tWithParams('errors.parseError.details', {});
       }
     } else if (err instanceof Error) {
       if (err.message.includes('HTTP')) {
@@ -42,29 +44,29 @@ export const useErrorHandler = () => {
         const status = statusMatch ? parseInt(statusMatch[1]) : 0;
         
         if (status === 0) {
-          message = 'Sem conexão com internet';
+          message = tWithParams('errors.noConnection.message', {});
           code = 'OFFLINE';
-          details = 'Verifique sua conexão e tente novamente';
+          details = tWithParams('errors.noConnection.details', {});
         } else if (status === 408 || status === 504) {
-          message = 'Solicitação expirou. Tente novamente.';
+          message = tWithParams('errors.timeout.message', {});
           code = 'TIMEOUT';
-          details = 'O servidor demorou muito para responder';
+          details = `O servidor demorou muito para responder`;
         } else if (status === 429) {
-          message = 'Muitas requisições. Aguarde um momento.';
+          message = tWithParams('errors.rateLimited.message', {});
           code = 'RATE_LIMIT';
-          details = 'Você está fazendo solicitações com frequência';
+          details = tWithParams('errors.rateLimited.details', {});
         } else if (status >= 500) {
-          message = 'Servidor indisponível. Tente mais tarde.';
+          message = tWithParams('errors.serverError.message', {});
           code = 'SERVER_ERROR';
           details = `Erro ${status} no servidor`;
         } else if (status === 404) {
-          message = 'Recurso não encontrado';
+          message = tWithParams('errors.notFound.message', {});
           code = 'NOT_FOUND';
-          details = `${operation} não foi encontrado`;
+          details = tWithParams('errors.notFound.details', { operation });
         } else if (status >= 400) {
-          message = 'Solicitação inválida';
+          message = tWithParams('errors.invalidRequest.message', {});
           code = 'CLIENT_ERROR';
-          details = `Erro ${status} na sua solicitação`;
+          details = tWithParams('errors.invalidRequest.details', { status });
         }
       }
     }
@@ -76,7 +78,7 @@ export const useErrorHandler = () => {
       code,
       details,
     };
-  }, []);
+  }, [tWithParams]);
 
   /**
    * Captura e processa erros
