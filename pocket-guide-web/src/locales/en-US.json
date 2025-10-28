@@ -233,7 +233,9 @@
     "shareVia": "Share via",
     "viewOnly": "View only",
     "canEdit": "Can edit",
-    "publicLink": "Public Link"
+    "publicLink": "Public Link",
+    "sharedBy": "Shared by",
+    "sharedAt": "Shared on"
   },
 
   "settings": {

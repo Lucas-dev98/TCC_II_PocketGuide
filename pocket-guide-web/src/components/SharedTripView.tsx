@@ -21,11 +21,13 @@ import {
 import { Trip, Attraction } from '../types'
 import { sharingService, SharedTripData } from '../services/sharingService'
 import { useFavorites } from '../hooks/useFavorites'
+import useI18n from '../hooks/useI18n'
 import { LoadingSpinner } from './LoadingSpinner'
 
 export const SharedTripView = () => {
   const navigate = useNavigate()
   const { shareId } = useParams<{ shareId: string }>()
+  const { t } = useI18n()
   
   const [sharedData, setSharedData] = useState<SharedTripData | null>(null)
   const [loading, setLoading] = useState(true)
@@ -143,7 +145,7 @@ export const SharedTripView = () => {
             <div className="flex items-start justify-between gap-4">
               <div className="flex-1">
                 <p className="text-sm text-slate-600 dark:text-slate-400 mb-1">
-                  Compartilhado por
+                  {t('share.sharedBy')}
                 </p>
                 <p className="font-semibold text-slate-900 dark:text-white">
                   {sharedBy.name}
@@ -155,7 +157,7 @@ export const SharedTripView = () => {
 
               <div className="text-right">
                 <p className="text-xs text-slate-500 dark:text-slate-400 mb-1">
-                  Compartilhado em
+                  {t('share.sharedAt')}
                 </p>
                 <p className="text-sm text-slate-700 dark:text-slate-300">
                   {new Date(sharedAt).toLocaleDateString('pt-BR')}
