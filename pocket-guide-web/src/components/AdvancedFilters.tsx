@@ -9,6 +9,7 @@
 
 import { useState } from 'react'
 import { SearchFilters } from '../services/searchService'
+import useI18n from '../hooks/useI18n'
 
 interface AdvancedFiltersProps {
   filters: SearchFilters
@@ -16,13 +17,8 @@ interface AdvancedFiltersProps {
   onApply: () => void
 }
 
-const BUDGET_LEVELS = ['econômico', 'médio', 'luxo']
-const SORT_OPTIONS = [
-  { value: 'date', label: 'Data (mais recentes)' },
-  { value: 'destination', label: 'Destino (A-Z)' },
-]
-
 export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedFiltersProps) {
+  const { t } = useI18n()
   const [showFilters, setShowFilters] = useState(false)
   const [expandedSection, setExpandedSection] = useState<string | null>(null)
 
@@ -88,7 +84,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
             d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"
           />
         </svg>
-        <span className="font-medium">Filtros</span>
+        <span className="font-medium">{t('filters.filterButton')}</span>
         {hasActiveFilters && (
           <span className="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-semibold text-white bg-blue-500 rounded-full">
             {[
@@ -116,7 +112,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 }
                 className="w-full flex items-center justify-between mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white">Datas</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{t('filters.dates')}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     expandedSection === 'dates' ? 'rotate-180' : ''
@@ -138,7 +134,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Data de Início (a partir de)
+                      {t('filters.startDateFrom')}
                     </label>
                     <input
                       type="date"
@@ -152,7 +148,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Data de Início (até)
+                      {t('filters.startDateTo')}
                     </label>
                     <input
                       type="date"
@@ -166,7 +162,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Data de Fim (a partir de)
+                      {t('filters.endDateFrom')}
                     </label>
                     <input
                       type="date"
@@ -180,7 +176,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Data de Fim (até)
+                      {t('filters.endDateTo')}
                     </label>
                     <input
                       type="date"
@@ -203,7 +199,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 }
                 className="w-full flex items-center justify-between mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white">Orçamento</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{t('filters.budget')}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     expandedSection === 'budget' ? 'rotate-180' : ''
@@ -225,37 +221,33 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 <div className="space-y-2">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Orçamento Mínimo
+                      {t('filters.budgetMin')}
                     </label>
                     <select
                       value={filters.budgetMin || ''}
                       onChange={(e) => handleBudgetChange('budgetMin', e.target.value)}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Qualquer um</option>
-                      {BUDGET_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </option>
-                      ))}
+                      <option value="">{t('filters.any')}</option>
+                      <option value="econômico">{t('filters.economic')}</option>
+                      <option value="médio">{t('filters.medium')}</option>
+                      <option value="luxo">{t('filters.luxury')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Orçamento Máximo
+                      {t('filters.budgetMax')}
                     </label>
                     <select
                       value={filters.budgetMax || ''}
                       onChange={(e) => handleBudgetChange('budgetMax', e.target.value)}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      <option value="">Qualquer um</option>
-                      {BUDGET_LEVELS.map((level) => (
-                        <option key={level} value={level}>
-                          {level.charAt(0).toUpperCase() + level.slice(1)}
-                        </option>
-                      ))}
+                      <option value="">{t('filters.any')}</option>
+                      <option value="econômico">{t('filters.economic')}</option>
+                      <option value="médio">{t('filters.medium')}</option>
+                      <option value="luxo">{t('filters.luxury')}</option>
                     </select>
                   </div>
                 </div>
@@ -270,7 +262,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 }
                 className="w-full flex items-center justify-between mb-3 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
               >
-                <span className="font-semibold text-gray-900 dark:text-white">Ordenação</span>
+                <span className="font-semibold text-gray-900 dark:text-white">{t('filters.sorting')}</span>
                 <svg
                   className={`w-4 h-4 transition-transform ${
                     expandedSection === 'sorting' ? 'rotate-180' : ''
@@ -292,24 +284,21 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                 <div className="space-y-3">
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Ordenar por
+                      {t('filters.sortBy')}
                     </label>
                     <select
                       value={filters.sortBy || 'date'}
                       onChange={(e) => handleSortChange(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded text-gray-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                     >
-                      {SORT_OPTIONS.map((option) => (
-                        <option key={option.value} value={option.value}>
-                          {option.label}
-                        </option>
-                      ))}
+                      <option value="date">{t('filters.sortByDate')}</option>
+                      <option value="destination">{t('filters.sortByDestination')}</option>
                     </select>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-                      Ordem
+                      {t('filters.order')}
                     </label>
                     <div className="flex gap-2">
                       <button
@@ -320,7 +309,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
-                        Crescente
+                        {t('filters.ascending')}
                       </button>
                       <button
                         onClick={() => handleSortOrderChange('desc')}
@@ -330,7 +319,7 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
                             : 'bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
-                        Decrescente
+                        {t('filters.descending')}
                       </button>
                     </div>
                   </div>
@@ -352,13 +341,13 @@ export function AdvancedFilters({ filters, onFiltersChange, onApply }: AdvancedF
               }}
               className="flex-1 px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
-              Limpar
+              {t('filters.clear')}
             </button>
             <button
               onClick={handleApply}
               className="flex-1 px-4 py-2 text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
             >
-              Aplicar
+              {t('filters.apply')}
             </button>
           </div>
         </div>
