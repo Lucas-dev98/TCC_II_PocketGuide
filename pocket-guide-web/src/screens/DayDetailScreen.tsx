@@ -7,6 +7,7 @@ import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
+import useI18n from "@/hooks/useI18n";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
 import { debug } from "@/utils/debug";
@@ -26,6 +27,7 @@ export const DayDetailScreen: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const { showError } = useToast();
+  const { t } = useI18n();
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [attractions, setAttractions] = useState<AttractionDetail[]>([]);
@@ -39,10 +41,10 @@ export const DayDetailScreen: React.FC = () => {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <EmptyState
-          title="Dados inválidos"
-          description="Não foi possível carregar os detalhes do dia."
+          title={t('dayDetail.invalidDay')}
+          description={t('validation.required')}
           action={{
-            label: "Voltar para Home",
+            label: t('dayDetail.backToTrip'),
             onClick: () => navigate("/"),
           }}
         />
@@ -317,10 +319,10 @@ export const DayDetailScreen: React.FC = () => {
         <Card className="max-w-md shadow-lg border-slate-200 dark:border-slate-700">
           <Card.Body>
             <EmptyState
-              title="Dia inválido"
-              description={`A viagem tem apenas ${totalDays} dia(s).`}
+              title={t('dayDetail.invalidDay')}
+              description={t('dayDetail.tripHasOnlyDays', { days: totalDays })}
               action={{
-                label: "Voltar para viagem",
+                label: t('dayDetail.backToTripDetails'),
                 onClick: handleBackToTrip,
               }}
             />
@@ -341,7 +343,7 @@ export const DayDetailScreen: React.FC = () => {
             size="sm"
             onClick={handleBackToTrip}
             className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
-            aria-label="Voltar para detalhes da viagem"
+            aria-label={t('dayDetail.backToTripDetails')}
           >
             <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
           </Button>
@@ -350,7 +352,7 @@ export const DayDetailScreen: React.FC = () => {
               {trip?.destination || "Viagem"}
             </h1>
             <p className="text-small text-slate-600 dark:text-slate-400">
-              📅 Dia {currentDay} de {totalDays}
+              {t('dayDetail.dayOf', { current: currentDay, total: totalDays })}
             </p>
           </div>
         </div>
@@ -381,7 +383,7 @@ export const DayDetailScreen: React.FC = () => {
                   {trip?.destination || "Seu destino"}
                 </p>
                 <p className="text-indigo-600 dark:text-indigo-300 text-sm mt-1">
-                  Explore as atrações do dia
+                  {t('dayDetail.exploreAttractions')}
                 </p>
               </div>
             </div>
@@ -392,7 +394,7 @@ export const DayDetailScreen: React.FC = () => {
         {trip && (
           <Card className="shadow-md border-slate-200 dark:border-slate-700">
             <Card.Header
-              title={`📍 Dia ${currentDay} em ${trip.destination}`}
+              title={t('dayDetail.dayIn', { day: currentDay, destination: trip.destination })}
               subtitle={trip.country}
             />
             <Card.Body>
@@ -406,7 +408,7 @@ export const DayDetailScreen: React.FC = () => {
               )}
               {!trip.itinerary && (
                 <p className="text-small text-slate-600 dark:text-slate-400">
-                  Explore as atrações planejadas para este dia da sua viagem.
+                  {t('dayDetail.explorePlanned')}
                 </p>
               )}
             </Card.Body>
@@ -414,13 +416,13 @@ export const DayDetailScreen: React.FC = () => {
         )}
 
         {/* Timeline de atrações */}
-        <section aria-label="Atrações do dia">
+        <section aria-label={t('dayDetail.attractions')}>
           <div className="mb-6">
             <h2 className="text-h2 font-bold text-slate-900 dark:text-white">
-              ✈️ Atrações
+              {t('dayDetail.attractionsTitle')}
             </h2>
             <p className="text-small text-slate-600 dark:text-slate-400 mt-1">
-              {attractions.length} {attractions.length === 1 ? "atração" : "atrações"} planejadas
+              {t('dayDetail.attractionsPlanned', { count: attractions.length })}
             </p>
           </div>
 
@@ -430,7 +432,7 @@ export const DayDetailScreen: React.FC = () => {
                 <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
                   <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
                   <p className="text-small text-blue-700 dark:text-blue-300">
-                    ⏳ Carregando fotos das atrações...
+                    {t('dayDetail.loadingPhotos')}
                   </p>
                 </div>
               )}
@@ -445,10 +447,10 @@ export const DayDetailScreen: React.FC = () => {
             <Card className="shadow-md border-slate-200 dark:border-slate-700">
               <Card.Body>
                 <EmptyState
-                  title="Sem atrações planejadas"
-                  description="Nenhuma atração foi adicionada para este dia da viagem."
+                  title={t('dayDetail.noAttractionsPlanned')}
+                  description={t('dayDetail.noAttractionAdded')}
                   action={{
-                    label: "Voltar à viagem",
+                    label: t('dayDetail.backToTripDetails'),
                     onClick: handleBackToTrip,
                   }}
                 />
@@ -460,7 +462,7 @@ export const DayDetailScreen: React.FC = () => {
         {/* Mapa com localizações do dia */}
         {attractions.length > 0 && (
           <Card className="shadow-md border-slate-200 dark:border-slate-700">
-            <Card.Header title="🗺️ Rota do Dia" />
+            <Card.Header title={t('dayDetail.routeMap')} />
             <Card.Body>
               <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
                 <MapboxMap

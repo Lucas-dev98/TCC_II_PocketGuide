@@ -117,7 +117,22 @@
     "navigation": "Navegación",
     "openInMaps": "Abrir en Mapas",
     "editDay": "Editar Día",
-    "deleteDay": "Eliminar Día"
+    "deleteDay": "Eliminar Día",
+    "invalidDay": "Día inválido",
+    "tripHasOnlyDays": "El viaje tiene solo {{days}} día(s)",
+    "backToTrip": "Volver al viaje",
+    "backToTripDetails": "Volver a detalles del viaje",
+    "dayOf": "Día {{current}} de {{total}}",
+    "exploreAttractions": "Explora las atracciones del día",
+    "dayIn": "📍 Día {{day}} en {{destination}}",
+    "explorePlanned": "Explora las atracciones planeadas para este día de tu viaje",
+    "attractionsTitle": "✈️ Atracciones",
+    "attractionsPlanned": "{{count}} atracción planeada",
+    "attractionsPlanned_plural": "{{count}} atracciones planeadas",
+    "loadingPhotos": "⏳ Cargando fotos de atracciones...",
+    "noAttractionsPlanned": "Sin atracciones planeadas",
+    "noAttractionAdded": "No se agregaron atracciones para este día del viaje",
+    "routeMap": "🗺️ Ruta del Día"
   },
 
   "favorites": {
