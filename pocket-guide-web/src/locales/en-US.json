@@ -94,6 +94,7 @@
 
   "search": {
     "title": "Search Trips",
+    "backButton": "Back",
     "placeholder": "Enter destination, date or activity...",
     "results": "Results",
     "noResults": "No results found",

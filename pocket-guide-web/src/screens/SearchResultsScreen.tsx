@@ -134,7 +134,7 @@ export default function SearchResultsScreen() {
                     d="M15 19l-7-7 7-7"
                   />
                 </svg>
-                <span>Voltar</span>
+                <span>{t('search.backButton')}</span>
               </button>
             </div>
 

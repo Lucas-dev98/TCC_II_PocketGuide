@@ -94,6 +94,7 @@
 
   "search": {
     "title": "Pesquisar Viagens",
+    "backButton": "Voltar",
     "placeholder": "Digite o destino, data ou atividade...",
     "results": "Resultados",
     "noResults": "Nenhum resultado encontrado",
