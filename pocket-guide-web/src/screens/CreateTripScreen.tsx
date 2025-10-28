@@ -1,6 +1,7 @@
 import React, { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
+import useI18n from '../hooks/useI18n'
 import { useTripsStore } from '../store/tripsStore'
 import { useToast } from '../components/Toast'
 import { Button } from '../components/Button'
@@ -49,6 +50,7 @@ interface FormData {
 export default function CreateTripScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
+  const { t } = useI18n()
   const { addTrip } = useTripsStore()
   const { showError } = useToast()
   
@@ -93,13 +95,11 @@ export default function CreateTripScreen() {
   const validateStep = (): boolean => {
     if (step === 1) {
       if (!formData.destination.trim()) {
-        const msg = 'Por favor, digite o destino'
-        showError(msg)
+        showError(t('createTrip.invalidDestination'))
         return false
       }
       if (!formData.country.trim()) {
-        const msg = 'Por favor, digite o país'
-        showError(msg)
+        showError(t('createTrip.invalidCountry'))
         return false
       }
       return true
@@ -107,23 +107,19 @@ export default function CreateTripScreen() {
 
     if (step === 2) {
       if (!formData.startDate) {
-        const msg = 'Por favor, selecione a data de início'
-        showError(msg)
+        showError(t('createTrip.invalidStartDate'))
         return false
       }
       if (!formData.endDate) {
-        const msg = 'Por favor, selecione a data de fim'
-        showError(msg)
+        showError(t('createTrip.invalidEndDate'))
         return false
       }
       if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-        const msg = 'A data de fim deve ser após a data de início'
-        showError(msg)
+        showError(t('createTrip.invalidDateRange'))
         return false
       }
       if (formData.interests.length === 0) {
-        const msg = 'Por favor, selecione pelo menos um interesse'
-        showError(msg)
+        showError(t('createTrip.invalidInterests'))
         return false
       }
       return true
@@ -218,23 +214,23 @@ export default function CreateTripScreen() {
               onClick={handleGoBack}
               type="button"
               className="flex items-center gap-2 text-primary hover:text-primary-dark dark:hover:text-blue-300 mb-4 font-medium transition focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 rounded"
-              aria-label="Voltar para etapa anterior ou página inicial"
+              aria-label={t('createTrip.backButton')}
             >
               <ArrowLeft className="w-4 h-4" aria-hidden="true" />
-              Voltar
+              {t('createTrip.backButton')}
             </button>
             
             <h1 className="text-h1 font-bold text-slate-900 dark:text-white mb-2">
-              Criar Nova Viagem ✈️
+              {t('createTrip.title')}
             </h1>
             
             <p className="text-body text-slate-600 dark:text-slate-400">
-            Deixe nossa IA criar um roteiro perfeito para você
-          </p>
+              {t('createTrip.subtitle')}
+            </p>
         </div>
 
         {/* Progress bar */}
-        <div className="mb-8 flex gap-2" role="progressbar" aria-label={`Etapa ${step} de 3`} aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
+        <div className="mb-8 flex gap-2" role="progressbar" aria-label={t('createTrip.stepLabel', { step })} aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
           {[1, 2, 3].map((s) => (
             <div
               key={s}
@@ -254,24 +250,24 @@ export default function CreateTripScreen() {
             <Card.Header>
               <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <MapPin className="w-5 h-5 text-primary" />
-                Onde você quer ir?
+                {t('createTrip.step1')}
               </h2>
             </Card.Header>
 
             <Card.Body className="space-y-4">
               <Input
-                label="Destino *"
+                label={t('createTrip.destinationLabel')}
                 name="destination"
-                placeholder="Ex: Barcelona, Roma, Tokyo..."
+                placeholder={t('createTrip.destinationPlaceholder')}
                 value={formData.destination}
                 onChange={handleInputChange}
                 autoFocus
               />
 
               <Input
-                label="País *"
+                label={t('createTrip.countryLabel')}
                 name="country"
-                placeholder="Ex: Espanha, Itália, Japão..."
+                placeholder={t('createTrip.countryPlaceholder')}
                 value={formData.country}
                 onChange={handleInputChange}
               />
@@ -282,7 +278,7 @@ export default function CreateTripScreen() {
                 onClick={handleNext}
                 className="w-full"
               >
-                Próximo →
+                {t('createTrip.nextButton')}
               </Button>
             </Card.Footer>
           </Card>
@@ -295,13 +291,13 @@ export default function CreateTripScreen() {
               <Card.Header>
                 <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Calendar className="w-5 h-5 text-primary" />
-                  Quando você quer viajar?
+                  {t('createTrip.step2')}
                 </h2>
               </Card.Header>
 
               <Card.Body className="space-y-4">
                 <Input
-                  label="Data de Início *"
+                  label={t('createTrip.startDateLabel')}
                   name="startDate"
                   type="date"
                   value={formData.startDate}
@@ -309,7 +305,7 @@ export default function CreateTripScreen() {
                 />
 
                 <Input
-                  label="Data de Fim *"
+                  label={t('createTrip.endDateLabel')}
                   name="endDate"
                   type="date"
                   value={formData.endDate}
@@ -322,12 +318,12 @@ export default function CreateTripScreen() {
               <Card.Header>
                 <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                   <Heart className="w-5 h-5 text-primary" />
-                  Seus interesses *
+                  {t('createTrip.interestsLabel')}
                 </h2>
               </Card.Header>
 
               <Card.Body>
-                <div className="grid grid-cols-2 gap-2" role="group" aria-label="Selecione seus interesses de viagem">
+                <div className="grid grid-cols-2 gap-2" role="group" aria-label={t('createTrip.selectInterests')}>
                   {INTERESTS.map((interest) => (
                     <button
                       key={interest}
@@ -354,13 +350,13 @@ export default function CreateTripScreen() {
                     variant="outline"
                     className="flex-1"
                   >
-                    ← Anterior
+                    {t('createTrip.previousButton')}
                   </Button>
                   <Button
                     onClick={handleNext}
                     className="flex-1"
                   >
-                    Próximo →
+                    {t('createTrip.nextButton')}
                   </Button>
                 </div>
               </Card.Footer>
@@ -374,7 +370,7 @@ export default function CreateTripScreen() {
             <Card.Header>
               <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
                 <Users className="w-5 h-5 text-primary" />
-                Ajustes Finais
+                {t('createTrip.step3')}
               </h2>
             </Card.Header>
 
@@ -382,7 +378,7 @@ export default function CreateTripScreen() {
               {/* Budget */}
               <div>
                 <label className="block text-small font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Orçamento
+                  {t('createTrip.budgetLabel')}
                 </label>
                 <select
                   name="budget"
@@ -395,20 +391,20 @@ export default function CreateTripScreen() {
                   }
                   className="input-base"
                 >
-                  <option value="econômico">💰 Econômico (até $50/dia)</option>
-                  <option value="médio">💳 Médio ($50-150/dia)</option>
-                  <option value="luxo">💎 Luxo ($150+/dia)</option>
+                  <option value="econômico">{t('createTrip.budgetEconomic')}</option>
+                  <option value="médio">{t('createTrip.budgetMedium')}</option>
+                  <option value="luxo">{t('createTrip.budgetLuxury')}</option>
                 </select>
               </div>
 
               {/* Description */}
               <div>
                 <label className="block text-small font-medium text-slate-700 dark:text-slate-300 mb-2">
-                  Informações Adicionais (opcional)
+                  {t('createTrip.additionalInfoLabel')}
                 </label>
                 <textarea
                   name="description"
-                  placeholder="Ex: Viajando com crianças, viagem de lua de mel, etc."
+                  placeholder={t('createTrip.additionalInfoPlaceholder')}
                   value={formData.description}
                   onChange={handleInputChange}
                   rows={3}
@@ -419,14 +415,14 @@ export default function CreateTripScreen() {
               {/* Summary */}
               <div className="bg-primary/10 dark:bg-primary/20 rounded-lg p-4 border border-primary/30 dark:border-primary/40">
                 <p className="text-small text-slate-700 dark:text-slate-300 mb-3 font-medium">
-                  📋 Resumo da sua viagem:
+                  {t('createTrip.summaryTitle')}
                 </p>
                 <div className="space-y-1 text-small text-slate-600 dark:text-slate-400">
-                  <p>🗺️ <strong>{formData.destination}, {formData.country}</strong></p>
-                  <p>📅 {new Date(formData.startDate).toLocaleDateString('pt-BR')} a {new Date(formData.endDate).toLocaleDateString('pt-BR')}</p>
-                  <p>💰 Orçamento: {formData.budget === 'econômico' ? 'Econômico' : formData.budget === 'médio' ? 'Médio' : 'Luxo'}</p>
+                  <p>{t('createTrip.summaryDestination', { destination: formData.destination, country: formData.country })}</p>
+                  <p>{t('createTrip.summaryDates', { startDate: new Date(formData.startDate).toLocaleDateString('pt-BR'), endDate: new Date(formData.endDate).toLocaleDateString('pt-BR') })}</p>
+                  <p>{t('createTrip.summaryBudget', { budget: formData.budget === 'econômico' ? t('createTrip.budgetEconomicLabel') : formData.budget === 'médio' ? t('createTrip.budgetMediumLabel') : t('createTrip.budgetLuxuryLabel') })}</p>
                   <p>
-                    ❤️ {formData.interests.length} interesse(s) selecionado(s)
+                    {t('createTrip.summaryInterests', { count: formData.interests.length })}
                   </p>
                 </div>
               </div>
@@ -439,7 +435,7 @@ export default function CreateTripScreen() {
                   variant="outline"
                   className="flex-1"
                 >
-                  ← Anterior
+                  {t('createTrip.previousButton')}
                 </Button>
                 <Button
                   onClick={handleSubmit}
@@ -448,7 +444,7 @@ export default function CreateTripScreen() {
                   className="flex-1 gap-2"
                 >
                   <Sparkles className="w-4 h-4" />
-                  {isLoading ? 'Gerando com IA...' : 'Criar Viagem'}
+                  {isLoading ? t('createTrip.createButtonLoading') : t('createTrip.createButton')}
                 </Button>
               </div>
             </Card.Footer>
