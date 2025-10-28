@@ -1,0 +1,79 @@
+{
+  "components": {
+    "favoriteButton": {
+      "addToFavorites": "Adicionar aos favoritos",
+      "removeFromFavorites": "Remover dos favoritos",
+      "added": "Adicionado",
+      "add": "Adicionar"
+    },
+    "mapboxMap": {
+      "previous": "Anterior",
+      "next": "Próximo"
+    },
+    "exportButton": {
+      "exportPDF": "Exportar PDF",
+      "exportError": "Não foi possível exportar o PDF"
+    }
+  },
+  "errors": {
+    "network": {
+      "title": "Erro de conexão",
+      "message": "Erro de conexão. Verifique sua internet.",
+      "details": "Não foi possível conectar ao servidor"
+    },
+    "noConnection": {
+      "title": "Sem conexão",
+      "message": "Sem conexão com internet",
+      "details": "Verifique sua conexão e tente novamente"
+    },
+    "timeout": {
+      "title": "Solicitação expirou",
+      "message": "Solicitação expirou. Tente novamente."
+    },
+    "rateLimited": {
+      "title": "Muitas requisições",
+      "message": "Muitas requisições. Aguarde um momento.",
+      "details": "Você está fazendo solicitações com frequência"
+    },
+    "serverError": {
+      "title": "Erro no servidor",
+      "message": "Servidor indisponível. Tente mais tarde."
+    },
+    "notFound": {
+      "title": "Não encontrado",
+      "message": "Recurso não encontrado",
+      "details": "{{operation}} não foi encontrado"
+    },
+    "invalidRequest": {
+      "title": "Solicitação inválida",
+      "message": "Solicitação inválida",
+      "details": "Erro {{status}} na sua solicitação"
+    },
+    "parseError": {
+      "title": "Erro de resposta",
+      "message": "Resposta inválida do servidor",
+      "details": "Resposta inválida do servidor"
+    },
+    "generic": {
+      "title": "Erro desconhecido",
+      "message": "Ocorreu um erro ao processar sua solicitação"
+    }
+  },
+  "auth": {
+    "errors": {
+      "loginFailed": "Falha ao fazer login",
+      "logoutFailed": "Falha ao fazer logout"
+    },
+    "messages": {
+      "tryingRecoverSession": "Tenta recuperar sessão persistida",
+      "tokenExpiringSoon": "Token expirará em {{seconds}} segundos",
+      "tokenExpired": "Token expirou, fazendo logout automático",
+      "autoLogoutError": "Erro ao fazer logout automático"
+    }
+  },
+  "pdf": {
+    "errors": {
+      "exportFailed": "Erro ao exportar PDF"
+    }
+  }
+}
