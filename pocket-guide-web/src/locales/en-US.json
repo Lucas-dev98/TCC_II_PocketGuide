@@ -341,6 +341,15 @@
     "syncWhenOnline": "Will sync when back online"
   },
 
+  "biometricAuth": {
+    "title": "Authentication",
+    "subtitle": "Use biometrics or PIN to log in",
+    "biometricButton": "Use Biometrics",
+    "pinButton": "Use PIN",
+    "authenticating": "Authenticating...",
+    "pinMinLength": "PIN must be at least 4 digits"
+  },
+
   "validation": {
     "required": "Required field",
     "minLength": "Must be at least {{min}} characters",

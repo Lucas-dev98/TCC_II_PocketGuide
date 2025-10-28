@@ -365,6 +365,15 @@
     "removingCredential": "Eliminando credencial..."
   },
 
+  "biometricAuth": {
+    "title": "Autenticación",
+    "subtitle": "Usa biometría o PIN para entrar",
+    "biometricButton": "Usar Biometría",
+    "pinButton": "Usar PIN",
+    "authenticating": "Autenticando...",
+    "pinMinLength": "PIN debe tener al menos 4 dígitos"
+  },
+
   "validation": {
     "required": "Campo requerido",
     "minLength": "Debe tener al menos {{min}} caracteres",

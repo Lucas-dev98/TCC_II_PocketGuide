@@ -9,11 +9,13 @@
 import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { Fingerprint, Lock, Eye, EyeOff, Loader } from 'lucide-react'
+import useI18n from '../hooks/useI18n'
 import { biometryService } from '../services/biometryService'
 import { useAuth } from '../hooks/useAuth'
 
 export const BiometricAuthScreen = () => {
   const navigate = useNavigate()
+  const { t } = useI18n()
   const { user } = useAuth()
   
   const [authMethod, setAuthMethod] = useState<'fingerprint' | 'pin'>('fingerprint')
@@ -44,7 +46,7 @@ export const BiometricAuthScreen = () => {
 
   const handleBiometricAuth = async () => {
     if (!biometricAvailable) {
-      setError('Biometria não disponível')
+      setError(t('biometricAuth.error'))
       return
     }
 
@@ -58,10 +60,10 @@ export const BiometricAuthScreen = () => {
         setSuccess(true)
         setTimeout(() => navigate('/home'), 1500)
       } else {
-        setError(result.error || 'Falha na autenticação biométrica')
+        setError(result.error || t('biometricAuth.error'))
       }
     } catch (err) {
-      setError('Erro ao autenticar')
+      setError(t('biometricAuth.error'))
       console.error(err)
     } finally {
       setLoading(false)
@@ -70,7 +72,7 @@ export const BiometricAuthScreen = () => {
 
   const handlePINAuth = async () => {
     if (!pin || pin.length < 4) {
-      setError('PIN deve ter no mínimo 4 dígitos')
+      setError(t('biometricAuth.pinMinLength'))
       return
     }
 
@@ -84,11 +86,11 @@ export const BiometricAuthScreen = () => {
         setSuccess(true)
         setTimeout(() => navigate('/home'), 1500)
       } else {
-        setError(result.error || 'Falha na autenticação com PIN')
+        setError(result.error || t('biometricAuth.error'))
         setPin('')
       }
     } catch (err) {
-      setError('Erro ao autenticar')
+      setError(t('biometricAuth.error'))
       console.error(err)
     } finally {
       setLoading(false)
@@ -123,10 +125,10 @@ export const BiometricAuthScreen = () => {
           <div className="bg-white dark:bg-slate-800 rounded-xl shadow-xl p-8">
             <div className="text-center mb-8">
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
-                Acesso Seguro
+                {t('biometricAuth.title')}
               </h1>
               <p className="text-slate-600 dark:text-slate-400">
-                Autentique-se para continuar
+                {t('biometricAuth.subtitle')}
               </p>
             </div>
 
@@ -183,7 +185,7 @@ export const BiometricAuthScreen = () => {
                   )}
                   <div>
                     <p className="font-semibold text-slate-900 dark:text-white">
-                      {loading ? 'Verificando...' : 'Toque para Autenticar'}
+                      {loading ? t('biometricAuth.authenticating') : t('biometricAuth.biometricButton')}
                     </p>
                     <p className="text-sm text-slate-600 dark:text-slate-400">
                       Use sua impressão digital
@@ -206,7 +208,7 @@ export const BiometricAuthScreen = () => {
                       value={pin}
                       onChange={(e) => setPin(e.target.value.replace(/[^0-9]/g, '').slice(0, 6))}
                       onKeyPress={handlePINKeyPress}
-                      placeholder="Digite seu PIN (4-6 dígitos)"
+                      placeholder={t('biometricAuth.pinButton')}
                       maxLength={6}
                       className="w-full px-4 py-3 rounded-lg border-2 border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-400 focus:outline-none focus:border-blue-500 dark:focus:border-blue-400 pr-10"
                     />
@@ -231,7 +233,7 @@ export const BiometricAuthScreen = () => {
                   {loading ? (
                     <>
                       <Loader className="w-4 h-4 inline mr-2 animate-spin" />
-                      Verificando...
+                      {t('biometricAuth.authenticating')}
                     </>
                   ) : (
                     'Autenticar'
