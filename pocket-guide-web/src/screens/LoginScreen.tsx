@@ -166,9 +166,9 @@ export default function LoginScreen() {
 
         {/* Footer */}
         <p className="text-center text-caption text-slate-500 dark:text-slate-400">
-          Ao entrar, você concorda com nossos{' '}
+          {t('auth.disclaimer')}{' '}
           <a href="#" className="text-primary hover:underline font-medium transition-colors duration-200">
-            Termos de Serviço
+            {t('auth.termsOfService')}
           </a>
         </p>
       </div>

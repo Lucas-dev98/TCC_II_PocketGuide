@@ -33,7 +33,9 @@
     "loginDescription": "Planeje suas viagens com IA",
     "unauthorized": "Você não tem permissão para acessar isso",
     "biometricAuth": "Autenticação Biométrica",
-    "enableBiometric": "Ativar autenticação biométrica"
+    "enableBiometric": "Ativar autenticação biométrica",
+    "termsOfService": "Termos de Serviço",
+    "disclaimer": "Ao entrar, você concorda com nossos"
   },
 
   "navigation": {

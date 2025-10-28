@@ -33,7 +33,9 @@
     "loginDescription": "Plan your travels with AI",
     "unauthorized": "You don't have permission to access this",
     "biometricAuth": "Biometric Authentication",
-    "enableBiometric": "Enable biometric authentication"
+    "enableBiometric": "Enable biometric authentication",
+    "termsOfService": "Terms of Service",
+    "disclaimer": "By signing in, you agree to our"
   },
 
   "navigation": {
