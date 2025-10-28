@@ -119,7 +119,7 @@ export default function HomeScreen() {
 
         {/* Empty state */}
         {!isLoading && trips.length === 0 && (
-          <div role="status" aria-label="Nenhuma viagem encontrada">
+          <div role="status" aria-label={t('trips.emptyStateAriaLabel')}>
             <EmptyState
               icon={
                 <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/20 dark:bg-primary/30 mb-4" aria-hidden="true">

@@ -58,6 +58,7 @@
     "createNewTrip": "Criar Nova Viagem",
     "noTrips": "Você ainda não tem viagens",
     "startPlanning": "Comece a planejar agora",
+    "emptyStateAriaLabel": "Nenhuma viagem encontrada",
     "destination": "Destino",
     "startDate": "Data de Início",
     "endDate": "Data de Término",

@@ -58,6 +58,7 @@
     "createNewTrip": "Create New Trip",
     "noTrips": "You don't have any trips yet",
     "startPlanning": "Start planning now",
+    "emptyStateAriaLabel": "No trips found",
     "destination": "Destination",
     "startDate": "Start Date",
     "endDate": "End Date",
