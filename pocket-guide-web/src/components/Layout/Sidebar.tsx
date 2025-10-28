@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Home, Search, Heart, Shield, LogOut, ChevronLeft, ChevronRight } from 'lucide-react'
+import useI18n from '../../hooks/useI18n'
 
 /**
  * Sidebar Component
@@ -20,13 +21,14 @@ import { Home, Search, Heart, Shield, LogOut, ChevronLeft, ChevronRight } from '
 export function Sidebar() {
   const navigate = useNavigate()
   const location = useLocation()
+  const { t } = useI18n()
   const [isCollapsed, setIsCollapsed] = useState(false)
 
   const navItems = [
-    { label: 'Home', icon: Home, path: '/home', id: 'home' },
-    { label: 'Pesquisa', icon: Search, path: '/search', id: 'search' },
-    { label: 'Favoritos', icon: Heart, path: '/favorites', id: 'favorites' },
-    { label: 'Segurança', icon: Shield, path: '/security', id: 'security' },
+    { label: t('navigation.home'), icon: Home, path: '/home', id: 'home' },
+    { label: t('navigation.search'), icon: Search, path: '/search', id: 'search' },
+    { label: t('navigation.favorites'), icon: Heart, path: '/favorites', id: 'favorites' },
+    { label: t('navigation.security'), icon: Shield, path: '/security', id: 'security' },
   ]
 
   const isActive = (path: string) => {
@@ -53,7 +55,7 @@ export function Sidebar() {
         <button
           onClick={() => setIsCollapsed(!isCollapsed)}
           className="p-1 hover:bg-slate-100 dark:hover:bg-slate-700 rounded-lg transition-colors"
-          aria-label={isCollapsed ? 'Expandir' : 'Recolher'}
+          aria-label={isCollapsed ? t('navigation.expandSidebar') : t('navigation.collapseSidebar')}
         >
           {isCollapsed ? (
             <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
@@ -95,10 +97,10 @@ export function Sidebar() {
             navigate('/login', { replace: true })
           }}
           className="w-full flex items-center gap-3 px-3 py-3 rounded-lg text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
-          title={isCollapsed ? 'Sair' : ''}
+          title={isCollapsed ? t('navigation.logout') : ''}
         >
           <LogOut className="w-5 h-5 flex-shrink-0" />
-          {!isCollapsed && <span className="text-sm font-medium">Sair</span>}
+          {!isCollapsed && <span className="text-sm font-medium">{t('navigation.logout')}</span>}
         </button>
       </div>
     </aside>

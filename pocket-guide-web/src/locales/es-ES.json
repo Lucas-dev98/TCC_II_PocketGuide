@@ -44,7 +44,11 @@
     "search": "Buscar",
     "settings": "Configuración",
     "profile": "Perfil",
-    "share": "Compartir"
+    "share": "Compartir",
+    "security": "Seguridad",
+    "logout": "Cerrar Sesión",
+    "expandSidebar": "Expandir",
+    "collapseSidebar": "Contraer"
   },
 
   "trips": {

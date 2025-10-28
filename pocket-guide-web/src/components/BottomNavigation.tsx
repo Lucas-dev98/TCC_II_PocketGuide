@@ -1,6 +1,7 @@
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Home, Search, Heart, Shield, LogOut } from 'lucide-react'
 import { useAuth } from '../hooks/useAuth'
+import useI18n from '../hooks/useI18n'
 
 /**
  * BottomNavigation Component
@@ -21,6 +22,7 @@ export function BottomNavigation() {
   const navigate = useNavigate()
   const location = useLocation()
   const { signOut } = useAuth()
+  const { t } = useI18n()
 
   // Não mostrar nav em login/share
   if (location.pathname === '/login' || location.pathname.startsWith('/share/')) {
@@ -29,31 +31,31 @@ export function BottomNavigation() {
 
   const navItems = [
     {
-      label: 'Home',
+      label: t('navigation.home'),
       icon: Home,
       path: '/home',
       action: () => navigate('/home'),
     },
     {
-      label: 'Pesquisa',
+      label: t('navigation.search'),
       icon: Search,
       path: '/search',
       action: () => navigate('/search'),
     },
     {
-      label: 'Favoritos',
+      label: t('navigation.favorites'),
       icon: Heart,
       path: '/favorites',
       action: () => navigate('/favorites'),
     },
     {
-      label: 'Segurança',
+      label: t('navigation.security'),
       icon: Shield,
       path: '/security',
       action: () => navigate('/security'),
     },
     {
-      label: 'Sair',
+      label: t('navigation.logout'),
       icon: LogOut,
       path: '/logout',
       action: async () => {
