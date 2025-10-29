@@ -93,10 +93,10 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
           .setLngLat([lng, lat])
           .setPopup(
             new mapboxgl.Popup({ offset: 25 }).setHTML(
-              `<div class="p-2 max-w-xs">
-                <strong>${index + 1}. ${attraction.name}</strong>
-                <p class="text-sm mt-1">${attraction.reason || ''}</p>
-                ${attraction.time ? `<p class="text-xs text-gray-600">⏰ ${attraction.time}</p>` : ''}
+              `<div class="p-3 max-w-xs rounded-lg" style="background-color: #FFFFFF; color: #111827; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <strong style="color: #1F2937; font-size: 15px;">${index + 1}. ${attraction.name}</strong>
+                <p style="font-size: 14px; margin-top: 8px; color: #374151; margin: 0;">${attraction.reason || ''}</p>
+                ${attraction.time ? `<p style="font-size: 12px; color: #6B7280; margin-top: 6px;">⏰ ${attraction.time}</p>` : ''}
               </div>`
             )
           )

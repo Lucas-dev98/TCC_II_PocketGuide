@@ -196,3 +196,44 @@ html.dark *:focus-visible {
     @apply text-slate-500 dark:text-slate-400;
   }
 }
+
+/* ===== MAPBOX POPUP STYLES ===== */
+.mapboxgl-popup-content {
+  @apply rounded-lg shadow-lg;
+  background-color: #FFFFFF !important;
+  color: #111827 !important;
+  padding: 12px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1) !important;
+}
+
+.mapboxgl-popup-content strong {
+  color: #1F2937 !important;
+  font-size: 15px !important;
+  font-weight: 600 !important;
+}
+
+.mapboxgl-popup-content p {
+  color: #374151 !important;
+  font-size: 14px !important;
+  margin: 8px 0 0 0 !important;
+  line-height: 1.5 !important;
+}
+
+.mapboxgl-popup-content p.time-info {
+  font-size: 12px !important;
+  color: #6B7280 !important;
+  margin-top: 6px !important;
+}
+
+/* Close button styling */
+.mapboxgl-popup-close-button {
+  color: #6B7280 !important;
+  font-size: 20px !important;
+  padding: 4px !important;
+}
+
+.mapboxgl-popup-close-button:hover {
+  color: #111827 !important;
+}
+
