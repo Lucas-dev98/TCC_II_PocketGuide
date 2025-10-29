@@ -61,7 +61,7 @@ export function TopBar() {
               onChange={(e) => setSearchValue(e.target.value)}
               className="w-full px-4 py-2 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white placeholder-slate-500 dark:placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
             />
-            <Search className="absolute right-3 top-2.5 w-5 h-5 text-slate-400" />
+            <Search className="absolute right-3 top-2.5 w-5 h-5 text-slate-500 dark:text-slate-300" />
           </div>
         </form>
 
@@ -75,7 +75,7 @@ export function TopBar() {
 
           {/* Notifications */}
           <button
-            className="relative p-2 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white transition-colors"
+            className="relative p-2 text-slate-600 dark:text-slate-300 hover:text-slate-900 dark:hover:text-white transition-colors"
             aria-label="Notificações"
           >
             <Bell className="w-5 h-5" />
@@ -103,7 +103,7 @@ export function TopBar() {
                   <p className="text-sm font-medium text-slate-900 dark:text-white">
                     {user?.displayName || 'Usuário'}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
+                  <p className="text-xs text-slate-600 dark:text-slate-300">
                     {user?.email}
                   </p>
                 </div>

@@ -84,7 +84,7 @@ export function FavoriteButton({
       className={`p-1.5 rounded-full transition-all transform hover:scale-110 active:scale-95 ${
         isFavorite
           ? 'bg-red-50 dark:bg-red-900/20 text-red-600 dark:text-red-400'
-          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 hover:bg-gray-200 dark:hover:bg-gray-600'
+          : 'bg-slate-100 dark:bg-slate-700 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-600'
       } ${className}`}
       title={isFavorite ? t('components.favoriteButton.removeFromFavorites') : t('components.favoriteButton.addToFavorites')}
       aria-label={isFavorite ? t('components.favoriteButton.removeFromFavorites') : t('components.favoriteButton.addToFavorites')}

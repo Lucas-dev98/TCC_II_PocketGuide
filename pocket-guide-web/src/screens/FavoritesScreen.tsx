@@ -76,7 +76,7 @@ export default function FavoritesScreen() {
             {/* Back Button */}
             <button
               onClick={() => navigate('/home')}
-              className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
+              className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
             >
               <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path
@@ -101,7 +101,7 @@ export default function FavoritesScreen() {
                   </span>
                 )}
               </div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 {favoritedTrips.length === 0
                   ? t('favorites.noFavoritesDesc')
                   : t('favorites.description', { count: favoritedTrips.length })}
@@ -130,7 +130,7 @@ export default function FavoritesScreen() {
                     className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                       viewMode === 'grid'
                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                     title={t('favorites.gridView')}
                   >
@@ -143,7 +143,7 @@ export default function FavoritesScreen() {
                     className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                       viewMode === 'list'
                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                     title={t('favorites.listView')}
                   >
@@ -184,7 +184,7 @@ export default function FavoritesScreen() {
                   </span>
                 )}
               </div>
-              <p className="text-gray-600 dark:text-gray-400">
+              <p className="text-slate-600 dark:text-slate-400">
                 {favoritedTrips.length === 0
                   ? t('favorites.noFavoritesDesc')
                   : t('favorites.description', { count: favoritedTrips.length })}
@@ -213,7 +213,7 @@ export default function FavoritesScreen() {
                     className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                       viewMode === 'grid'
                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                     title={t('favorites.gridView')}
                   >
@@ -226,7 +226,7 @@ export default function FavoritesScreen() {
                     className={`px-3 py-2 rounded text-sm font-medium transition-colors ${
                       viewMode === 'list'
                         ? 'bg-white dark:bg-gray-800 text-gray-900 dark:text-white shadow'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                        : 'text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white'
                     }`}
                     title={t('favorites.listView')}
                   >
@@ -278,7 +278,7 @@ export default function FavoritesScreen() {
                       {trip.destination}
                     </h3>
                     {trip.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
                         {trip.description}
                       </p>
                     )}
@@ -303,7 +303,7 @@ export default function FavoritesScreen() {
 
                     {trip.budget && (
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Orçamento:</span>
+                        <span className="text-slate-500 dark:text-slate-400">Orçamento:</span>
                         <span
                           className={`px-2 py-1 rounded text-xs font-semibold ${
                             trip.budget === 'luxo'
@@ -370,11 +370,11 @@ export default function FavoritesScreen() {
                         {trip.destination}
                       </h3>
                       {trip.description && (
-                        <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-1 mb-2">
+                        <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-1 mb-2">
                           {trip.description}
                         </p>
                       )}
-                      <div className="flex items-center gap-4 text-sm text-gray-600 dark:text-gray-400">
+                      <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                         <span>
                           {new Date(trip.startDate).toLocaleDateString('pt-BR')} -{' '}
                           {new Date(trip.endDate).toLocaleDateString('pt-BR')}
@@ -416,7 +416,7 @@ export default function FavoritesScreen() {
               <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                 {t('favorites.clearConfirmTitle')}
               </h3>
-              <p className="text-gray-600 dark:text-gray-400 mb-6">
+              <p className="text-slate-600 dark:text-slate-400 mb-6">
                 {t('favorites.clearConfirmDescription')}
               </p>
               <div className="flex gap-3">

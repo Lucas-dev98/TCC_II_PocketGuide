@@ -38,7 +38,7 @@ export const Input: React.FC<InputProps> = ({
       )}
       <div className="relative">
         {icon && (
-          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 dark:text-slate-400 pointer-events-none">
+          <div className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-600 dark:text-slate-300 pointer-events-none">
             {icon}
           </div>
         )}
@@ -84,7 +84,7 @@ export const Input: React.FC<InputProps> = ({
       {help && !error && (
         <p 
           id={`${inputId}-help`}
-          className="mt-1 text-sm text-slate-500 dark:text-slate-400"
+          className="mt-1 text-sm text-slate-600 dark:text-slate-300"
         >
           {help}
         </p>

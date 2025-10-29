@@ -84,7 +84,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </h1>
 
             {/* Mensagem */}
-            <p className="text-gray-600 dark:text-gray-400 text-center mb-4">
+            <p className="text-slate-600 dark:text-slate-400 text-center mb-4">
               Desculpe, encontramos um erro inesperado. Já notificamos nosso time e
               estamos trabalhando para corrigir isso.
             </p>
@@ -97,10 +97,10 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </p>
                 {this.state.error.stack && (
                   <details className="mt-2">
-                    <summary className="text-xs text-gray-600 dark:text-gray-400 cursor-pointer hover:underline">
+                    <summary className="text-xs text-slate-600 dark:text-slate-400 cursor-pointer hover:underline">
                       Stack Trace
                     </summary>
-                    <pre className="mt-2 text-xs text-gray-600 dark:text-gray-400 overflow-auto max-h-40">
+                    <pre className="mt-2 text-xs text-slate-600 dark:text-slate-400 overflow-auto max-h-40">
                       {this.state.error.stack}
                     </pre>
                   </details>
@@ -127,7 +127,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
             </div>
 
             {/* Suporte */}
-            <p className="text-xs text-gray-500 dark:text-gray-400 text-center mt-6">
+            <p className="text-xs text-slate-500 dark:text-slate-400 text-center mt-6">
               Se o problema persistir, entre em contato com{' '}
               <a
                 href="mailto:support@pocketguide.com"

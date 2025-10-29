@@ -79,7 +79,7 @@ export default function HomeScreen() {
             <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
               {t('trips.title')}
             </h1>
-            <p className="text-small text-slate-600 dark:text-slate-400">
+            <p className="text-small text-slate-600 dark:text-slate-300">
               {t('common.welcome')}, {user?.displayName || t('common.traveler')}! ✈️
             </p>
           </div>
@@ -90,7 +90,7 @@ export default function HomeScreen() {
           <h1 className="text-3xl font-bold text-slate-900 dark:text-white mb-2">
             {t('trips.title')}
           </h1>
-          <p className="text-slate-600 dark:text-slate-400">
+          <p className="text-slate-600 dark:text-slate-300">
             {t('common.welcome')}, {user?.displayName || t('common.traveler')}! ✈️
           </p>
         </div>
@@ -166,14 +166,14 @@ export default function HomeScreen() {
                       <h3 className="font-semibold text-slate-900 dark:text-white">
                         {trip.destination}
                       </h3>
-                      <p className="text-small text-slate-500 dark:text-slate-400">
+                      <p className="text-small text-slate-600 dark:text-slate-300">
                         {trip.country}
                       </p>
                     </div>
                   </div>
 
                   {/* Dates */}
-                  <div className="flex items-center gap-2 text-small text-slate-600 dark:text-slate-400 mb-4">
+                  <div className="flex items-center gap-2 text-small text-slate-600 dark:text-slate-300 mb-4">
                     <Calendar className="w-4 h-4" />
                     <span>
                       {formatDate(trip.startDate)} - {formatDate(trip.endDate)}
@@ -181,7 +181,7 @@ export default function HomeScreen() {
                   </div>
 
                   {/* Duration */}
-                  <p className="text-small text-slate-600 dark:text-slate-400 mb-4">
+                  <p className="text-small text-slate-600 dark:text-slate-300 mb-4">
                     {Math.ceil((new Date(trip.endDate).getTime() - new Date(trip.startDate).getTime()) / (1000 * 60 * 60 * 24))} {t('trips.daysOfAdventure')}
                   </p>
 

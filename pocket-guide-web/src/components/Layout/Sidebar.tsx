@@ -58,9 +58,9 @@ export function Sidebar() {
           aria-label={isCollapsed ? t('navigation.expandSidebar') : t('navigation.collapseSidebar')}
         >
           {isCollapsed ? (
-            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <ChevronRight className="w-5 h-5 text-slate-600 dark:text-slate-300" />
           ) : (
-            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-400" />
+            <ChevronLeft className="w-5 h-5 text-slate-600 dark:text-slate-300" />
           )}
         </button>
       </div>
@@ -78,7 +78,7 @@ export function Sidebar() {
               className={`w-full flex items-center gap-3 px-3 py-3 rounded-lg transition-colors ${
                 active
                   ? 'bg-blue-600 text-white dark:bg-blue-700'
-                  : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700'
+                  : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-700'
               }`}
               title={isCollapsed ? item.label : ''}
             >

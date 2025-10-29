@@ -83,7 +83,7 @@ export default function LoginScreen() {
             {t('auth.loginDescription')}
           </p>
           
-          <p className="text-small text-slate-500 dark:text-slate-400">
+          <p className="text-small text-slate-500 dark:text-slate-300">
             {t('auth.loginTitle')}
           </p>
         </div>
@@ -165,7 +165,7 @@ export default function LoginScreen() {
         </Card>
 
         {/* Footer */}
-        <p className="text-center text-caption text-slate-500 dark:text-slate-400">
+        <p className="text-center text-caption text-slate-500 dark:text-slate-300">
           {t('auth.disclaimer')}{' '}
           <a href="#" className="text-primary hover:underline font-medium transition-colors duration-200">
             {t('auth.termsOfService')}

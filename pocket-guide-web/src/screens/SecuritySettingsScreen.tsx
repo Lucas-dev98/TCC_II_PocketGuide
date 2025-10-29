@@ -118,7 +118,7 @@ export const SecuritySettingsScreen = () => {
             <h1 className="text-2xl font-bold text-slate-900 dark:text-white">
               {t('securitySettings.title')}
             </h1>
-            <p className="text-slate-600 dark:text-slate-400">
+            <p className="text-slate-600 dark:text-slate-300">
               {t('securitySettings.subtitle')}
             </p>
           </div>
@@ -130,7 +130,7 @@ export const SecuritySettingsScreen = () => {
             <h1 className="text-3xl font-bold text-slate-900 dark:text-white">
               {t('securitySettings.title')}
             </h1>
-            <p className="text-slate-600 dark:text-slate-400 mt-2">
+            <p className="text-slate-600 dark:text-slate-300 mt-2">
               {t('securitySettings.subtitle')}
             </p>
           </div>
@@ -167,7 +167,7 @@ export const SecuritySettingsScreen = () => {
             className={`px-4 py-3 font-medium border-b-2 transition-colors ${
               activeTab === 'biometric'
                 ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-300 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Fingerprint className="w-4 h-4 inline mr-2" />
@@ -179,7 +179,7 @@ export const SecuritySettingsScreen = () => {
             className={`px-4 py-3 font-medium border-b-2 transition-colors ${
               activeTab === 'pin'
                 ? 'text-blue-600 dark:text-blue-400 border-blue-600 dark:border-blue-400'
-                : 'text-slate-600 dark:text-slate-400 border-transparent hover:text-slate-900 dark:hover:text-white'
+                : 'text-slate-600 dark:text-slate-300 border-transparent hover:text-slate-900 dark:hover:text-white'
             }`}
           >
             <Lock className="w-4 h-4 inline mr-2" />
@@ -232,7 +232,7 @@ export const SecuritySettingsScreen = () => {
                         <p className="font-medium text-slate-900 dark:text-white">
                           {cred.name}
                         </p>
-                        <p className="text-sm text-slate-500 dark:text-slate-400">
+                        <p className="text-sm text-slate-500 dark:text-slate-300">
                           {t('securitySettings.createdAt', { date: new Date(cred.created).toLocaleDateString('pt-BR') })}
                         </p>
                         {cred.lastUsed && (
@@ -255,7 +255,7 @@ export const SecuritySettingsScreen = () => {
             )}
 
             {credentials.length === 0 && (
-              <div className="text-center py-8 text-slate-500 dark:text-slate-400">
+              <div className="text-center py-8 text-slate-500 dark:text-slate-300">
                 <Fingerprint className="w-12 h-12 mx-auto mb-2 opacity-30" />
                 <p>{t('securitySettings.noBiometrics')}</p>
               </div>
@@ -269,7 +269,7 @@ export const SecuritySettingsScreen = () => {
             {!isPinSetup && !pinSetupMode && (
               <div className="bg-slate-50 dark:bg-slate-900 rounded-lg p-6 border border-slate-200 dark:border-slate-700 text-center">
                 <Lock className="w-12 h-12 mx-auto mb-4 text-slate-400" />
-                <p className="text-slate-600 dark:text-slate-400 mb-4">
+                <p className="text-slate-600 dark:text-slate-300 mb-4">
                   {t('securitySettings.noPinSetup')}
                 </p>
                 <button

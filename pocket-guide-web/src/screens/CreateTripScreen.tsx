@@ -227,7 +227,7 @@ export default function CreateTripScreen() {
               {t('createTrip.title')}
             </h1>
             
-            <p className="text-body text-slate-600 dark:text-slate-400">
+            <p className="text-body text-slate-600 dark:text-slate-300">
               {t('createTrip.subtitle')}
             </p>
         </div>
@@ -335,7 +335,7 @@ export default function CreateTripScreen() {
                       className={`p-3 rounded-lg border-2 transition text-sm font-medium focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:focus:ring-offset-slate-900 ${
                         formData.interests.includes(interest)
                           ? 'border-primary dark:border-blue-400 bg-primary/10 dark:bg-blue-900/30 text-primary dark:text-blue-300 font-semibold'
-                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-400'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-slate-300 dark:hover:border-slate-600 text-slate-600 dark:text-slate-300'
                       }`}
                       aria-pressed={formData.interests.includes(interest)}
                       aria-label={`${interest} - ${formData.interests.includes(interest) ? 'selecionado' : 'não selecionado'}`}
@@ -420,7 +420,7 @@ export default function CreateTripScreen() {
                 <p className="text-small text-slate-700 dark:text-slate-300 mb-3 font-medium">
                   {t('createTrip.summaryTitle')}
                 </p>
-                <div className="space-y-1 text-small text-slate-600 dark:text-slate-400">
+                <div className="space-y-1 text-small text-slate-600 dark:text-slate-300">
                   <p>{t('createTrip.summaryDestination', { destination: formData.destination, country: formData.country })}</p>
                   <p>{t('createTrip.summaryDates', { startDate: new Date(formData.startDate).toLocaleDateString('pt-BR'), endDate: new Date(formData.endDate).toLocaleDateString('pt-BR') })}</p>
                   <p>{t('createTrip.summaryBudget', { budget: formData.budget === 'econômico' ? t('createTrip.budgetEconomicLabel') : formData.budget === 'médio' ? t('createTrip.budgetMediumLabel') : t('createTrip.budgetLuxuryLabel') })}</p>

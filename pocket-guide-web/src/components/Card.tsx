@@ -45,7 +45,7 @@ const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, actio
     ) : (
       <div>
         {title && <h3 className="text-h3 font-semibold text-slate-900 dark:text-white">{title}</h3>}
-        {subtitle && <p className="text-small text-slate-500 dark:text-slate-400">{subtitle}</p>}
+        {subtitle && <p className="text-small text-slate-600 dark:text-slate-300">{subtitle}</p>}
       </div>
     )}
     {action && <div>{action}</div>}

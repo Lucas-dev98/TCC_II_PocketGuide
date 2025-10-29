@@ -124,7 +124,7 @@ export default function SearchResultsScreen() {
             <div className="mb-4">
               <button
                 onClick={() => navigate('/home')}
-                className="inline-flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
+                className="inline-flex items-center gap-2 text-slate-600 dark:text-slate-400 hover:text-gray-900 dark:hover:text-white transition-colors mb-4"
               >
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                   <path
@@ -204,7 +204,7 @@ export default function SearchResultsScreen() {
                   />
                 </svg>
               </div>
-              <p className="text-gray-600 dark:text-gray-400">{t('search.searching')}</p>
+              <p className="text-slate-600 dark:text-slate-400">{t('search.searching')}</p>
             </div>
           </div>
         )}
@@ -232,7 +232,7 @@ export default function SearchResultsScreen() {
                       {trip.destination}
                     </h3>
                     {trip.description && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+                      <p className="text-sm text-slate-600 dark:text-slate-400 line-clamp-2">
                         {trip.description}
                       </p>
                     )}
@@ -257,7 +257,7 @@ export default function SearchResultsScreen() {
 
                     {trip.budget && (
                       <div className="flex items-center gap-2 text-sm">
-                        <span className="text-gray-500 dark:text-gray-400">Orçamento:</span>
+                        <span className="text-slate-500 dark:text-slate-400">Orçamento:</span>
                         <span
                           className={`px-2 py-1 rounded text-xs font-semibold ${
                             trip.budget === 'luxo'
@@ -302,7 +302,7 @@ export default function SearchResultsScreen() {
             {/* Pagination */}
             {results.total > results.pageSize && (
               <div className="flex items-center justify-between p-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-                <div className="text-sm text-gray-600 dark:text-gray-400">
+                <div className="text-sm text-slate-600 dark:text-slate-400">
                   {t('search.page')} {results.page} {t('search.of')} {Math.ceil(results.total / results.pageSize)} • {t('search.showing')}{' '}
                   {results.trips.length} {t('search.of')} {results.total} {t('search.results')}
                 </div>

@@ -37,7 +37,7 @@ export const Button: React.FC<ButtonProps> = ({
         'btn-base',
         'inline-flex items-center justify-center font-medium rounded-lg',
         'transition-all duration-200 ease-out',
-        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary',
+        'focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary dark:focus:ring-offset-slate-900',
         'active:scale-95',
         'disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:shadow-none disabled:hover:translate-y-0',
         sizeClasses[size],

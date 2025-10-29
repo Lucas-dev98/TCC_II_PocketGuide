@@ -127,7 +127,7 @@ export const BiometricAuthScreen = () => {
               <h1 className="text-2xl font-bold text-slate-900 dark:text-white mb-2">
                 {t('biometricAuth.title')}
               </h1>
-              <p className="text-slate-600 dark:text-slate-400">
+              <p className="text-slate-600 dark:text-slate-300">
                 {t('biometricAuth.subtitle')}
               </p>
             </div>
@@ -187,7 +187,7 @@ export const BiometricAuthScreen = () => {
                     <p className="font-semibold text-slate-900 dark:text-white">
                       {loading ? t('biometricAuth.authenticating') : t('biometricAuth.biometricButton')}
                     </p>
-                    <p className="text-sm text-slate-600 dark:text-slate-400">
+                    <p className="text-sm text-slate-600 dark:text-slate-300">
                       {t('biometricAuth.fingerprintDescription')}
                     </p>
                   </div>
@@ -214,7 +214,7 @@ export const BiometricAuthScreen = () => {
                     />
                     <button
                       onClick={() => setShowPin(!showPin)}
-                      className="absolute right-3 top-3 text-slate-500 dark:text-slate-400"
+                      className="absolute right-3 top-3 text-slate-500 dark:text-slate-300"
                     >
                       {showPin ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
@@ -226,7 +226,7 @@ export const BiometricAuthScreen = () => {
                   disabled={loading || pin.length < 4}
                   className={`w-full py-3 rounded-lg font-semibold transition-colors ${
                     loading || pin.length < 4
-                      ? 'bg-slate-300 dark:bg-slate-600 text-slate-500 dark:text-slate-400 cursor-not-allowed'
+                      ? 'bg-slate-300 dark:bg-slate-700 text-slate-500 dark:text-slate-300 cursor-not-allowed'
                       : 'bg-blue-600 hover:bg-blue-700 text-white'
                   }`}
                 >
@@ -244,7 +244,7 @@ export const BiometricAuthScreen = () => {
 
             {/* Footer */}
             <div className="mt-8 pt-8 border-t border-slate-200 dark:border-slate-700 text-center">
-              <p className="text-sm text-slate-600 dark:text-slate-400">
+              <p className="text-sm text-slate-600 dark:text-slate-300">
                 {t('biometricAuth.appName')}
               </p>
             </div>

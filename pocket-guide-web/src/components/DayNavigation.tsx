@@ -41,11 +41,11 @@ export const DayNavigation: React.FC<DayNavigationProps> = ({
 
       {/* Indicador de dia */}
       <div className="flex flex-col items-center gap-1">
-        <div className="text-sm font-semibold text-gray-600">
+        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
           Dia {currentDayNumber} de {totalDays}
         </div>
         {dayDate && (
-          <div className="text-xs text-gray-500">{dayDate}</div>
+          <div className="text-xs text-slate-600 dark:text-slate-400">{dayDate}</div>
         )}
       </div>
 

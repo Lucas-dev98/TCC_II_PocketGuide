@@ -351,7 +351,7 @@ export const DayDetailScreen: React.FC = () => {
             <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
               {trip?.destination || "Viagem"}
             </h1>
-            <p className="text-small text-slate-600 dark:text-slate-400">
+            <p className="text-small text-slate-600 dark:text-slate-300">
               {t('dayDetail.dayOf', { current: currentDay, total: totalDays })}
             </p>
           </div>
@@ -407,7 +407,7 @@ export const DayDetailScreen: React.FC = () => {
                 </div>
               )}
               {!trip.itinerary && (
-                <p className="text-small text-slate-600 dark:text-slate-400">
+                <p className="text-small text-slate-600 dark:text-slate-300">
                   {t('dayDetail.explorePlanned')}
                 </p>
               )}
@@ -421,7 +421,7 @@ export const DayDetailScreen: React.FC = () => {
             <h2 className="text-h2 font-bold text-slate-900 dark:text-white">
               {t('dayDetail.attractionsTitle')}
             </h2>
-            <p className="text-small text-slate-600 dark:text-slate-400 mt-1">
+            <p className="text-small text-slate-600 dark:text-slate-300 mt-1">
               {t('dayDetail.attractionsPlanned', { count: attractions.length })}
             </p>
           </div>
