@@ -2,14 +2,16 @@
  * Gemini AI Service - Intelligent Itinerary Generation
  * 
  * Features:
- * - Generate personalized travel itineraries using Google Gemini API
+ * - Generate personalized travel itineraries using Google Gemini API in multiple languages
  * - Get travel tips for destinations
  * - Describe destinations with AI-generated content
  * - Robust error handling with fallback itineraries
  * - Type-safe API responses
+ * - Multi-language support (PT-BR, EN-US, ES-ES)
  */
 
 import { Location } from "../types";
+import { generateItineraryPrompt, getSystemInstruction, LanguageCode } from "./promptTranslator";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -178,7 +180,8 @@ export const generateItineraryWithGemini = async (
   days: number,
   tags: string[],
   budget: string = 'mid',
-  groupType: string = 'couple'
+  groupType: string = 'couple',
+  language: LanguageCode = 'en-US'
 ): Promise<GeneratedItinerary | null> => {
   if (!GEMINI_API_KEY) {
     console.error('Gemini API key not configured');
@@ -186,9 +189,9 @@ export const generateItineraryWithGemini = async (
   }
 
   try {
-    const prompt = `${days}-day ${destination} itinerary (${budget} budget, ${groupType}, interests: ${tags.join(', ')})
-Return only JSON with ${days * 3} activities:
-{"itinerary":[{"day":1,"time":"09:00","name":"Place","duration":120,"reason":"Why","tip":"Tip","category":"Category","lat":0,"lng":0}]}`;
+    // Generate prompt in the specified language
+    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language);
+    const systemInstruction = getSystemInstruction(language);
 
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
@@ -198,7 +201,7 @@ Return only JSON with ${days * 3} activities:
       body: JSON.stringify({
         systemInstruction: {
           parts: [{
-            text: "Return only valid JSON. No markdown. No explanation. No thinking."
+            text: systemInstruction
           }]
         },
         contents: [

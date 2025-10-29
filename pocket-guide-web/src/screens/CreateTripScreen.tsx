@@ -11,6 +11,7 @@ import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
 import { Budget } from '../types'
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react'
+import i18n from 'i18next'
 
 /**
  * CreateTripScreen - Criação de nova viagem com IA
@@ -155,12 +156,14 @@ export default function CreateTripScreen() {
 
       // Gerar itinerário com IA
       console.log('🤖 Gerando itinerário com Gemini...');
+      const currentLanguage = (i18n.language || 'en-US') as 'pt-BR' | 'en-US' | 'es-ES';
       const itinerary = await generateItinerary(
         formData.destination,
         days,
         formData.interests,
         formData.budget,
-        'couple' // groupType padrão
+        'couple', // groupType padrão
+        currentLanguage
       );
 
       console.log('✅ Itinerário gerado:', itinerary?.length || 0, 'itens');

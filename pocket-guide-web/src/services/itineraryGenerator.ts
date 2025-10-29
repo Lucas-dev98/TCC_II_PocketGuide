@@ -2,11 +2,13 @@
  * itineraryGenerator.ts - Itinerary generation with fallback options
  * Uses Gemini API when available, falls back to local/predefined data
  * Includes retry logic and structured logging for resilience
+ * Supports multi-language generation (PT-BR, EN-US, ES-ES)
  */
 
 import { generateItineraryWithGemini } from './geminiItinerary';
 import { withRetry } from '../utils/retryService';
 import logger from './logger';
+import type { LanguageCode } from './promptTranslator';
 
 export interface ItineraryItem {
   day: number;
@@ -152,7 +154,8 @@ export const generateItinerary = async (
   days: number,
   tags: string[],
   budget: string = 'mid',
-  groupType: string = 'couple'
+  groupType: string = 'couple',
+  language: LanguageCode = 'en-US'
 ): Promise<ItineraryItem[]> => {
   try {
     logger.info('Generating itinerary', {
@@ -161,6 +164,7 @@ export const generateItinerary = async (
       tags,
       budget,
       groupType,
+      language,
     });
 
     // Try to use Gemini API first with retry logic for resilience
@@ -171,7 +175,8 @@ export const generateItinerary = async (
           days,
           tags,
           budget,
-          groupType
+          groupType,
+          language
         ),
       {
         maxRetries: 3,
