@@ -146,3 +146,316 @@ export function validateGenerateItineraryRequest(
 export function validateAttractions(data: unknown): Attraction[] {
   return z.array(AttractionSchema).parse(data);
 }
+
+/**
+ * ============================================================================
+ * AUTHENTICATION SCHEMAS
+ * ============================================================================
+ */
+
+/**
+ * Login/Sign-In schema
+ */
+export const LoginSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+  password: z
+    .string()
+    .min(6, 'Password must be at least 6 characters')
+    .max(100, 'Password is too long'),
+});
+
+export type Login = z.infer<typeof LoginSchema>;
+
+/**
+ * Sign-Up/Register schema
+ */
+export const SignUpSchema = z
+  .object({
+    email: z
+      .string()
+      .min(1, 'Email is required')
+      .email('Please enter a valid email address'),
+    name: z
+      .string()
+      .min(2, 'Name must be at least 2 characters')
+      .max(100, 'Name is too long')
+      .regex(/^[a-zA-Z\s'-]+$/, 'Name can only contain letters, spaces, hyphens, and apostrophes'),
+    password: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100, 'Password is too long')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain uppercase, lowercase, number, and special character'
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type SignUp = z.infer<typeof SignUpSchema>;
+
+/**
+ * Password reset request schema
+ */
+export const PasswordResetRequestSchema = z.object({
+  email: z
+    .string()
+    .min(1, 'Email is required')
+    .email('Please enter a valid email address'),
+});
+
+export type PasswordResetRequest = z.infer<typeof PasswordResetRequestSchema>;
+
+/**
+ * Password reset confirmation schema
+ */
+export const PasswordResetSchema = z
+  .object({
+    token: z.string().min(1, 'Reset token is required'),
+    newPassword: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100, 'Password is too long')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain uppercase, lowercase, number, and special character'
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  });
+
+export type PasswordReset = z.infer<typeof PasswordResetSchema>;
+
+/**
+ * ============================================================================
+ * USER PROFILE SCHEMAS
+ * ============================================================================
+ */
+
+/**
+ * User profile schema
+ */
+export const UserProfileSchema = z.object({
+  id: z.string(),
+  email: z.string().email(),
+  name: z.string().min(1),
+  avatarUrl: z.string().url().optional(),
+  language: z.enum(['pt', 'en', 'es']).default('en'),
+  theme: z.enum(['light', 'dark']).default('light'),
+  currency: z.string().length(3).default('USD'), // ISO 4217
+  preferences: UserPreferencesSchema.optional(),
+  createdAt: z.union([z.date(), z.string().datetime()]),
+  updatedAt: z.union([z.date(), z.string().datetime()]),
+});
+
+export type UserProfile = z.infer<typeof UserProfileSchema>;
+
+/**
+ * Update user profile schema
+ */
+export const UpdateProfileSchema = z.object({
+  name: z
+    .string()
+    .min(2, 'Name must be at least 2 characters')
+    .max(100, 'Name is too long')
+    .optional(),
+  language: z.enum(['pt', 'en', 'es']).optional(),
+  theme: z.enum(['light', 'dark']).optional(),
+  currency: z.string().length(3).optional(),
+});
+
+export type UpdateProfile = z.infer<typeof UpdateProfileSchema>;
+
+/**
+ * Change password schema
+ */
+export const ChangePasswordSchema = z
+  .object({
+    currentPassword: z.string().min(1, 'Current password is required'),
+    newPassword: z
+      .string()
+      .min(8, 'Password must be at least 8 characters')
+      .max(100, 'Password is too long')
+      .regex(
+        /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[@$!%*?&])[A-Za-z\d@$!%*?&]/,
+        'Password must contain uppercase, lowercase, number, and special character'
+      ),
+    confirmPassword: z.string(),
+  })
+  .refine((data) => data.newPassword === data.confirmPassword, {
+    message: 'Passwords do not match',
+    path: ['confirmPassword'],
+  })
+  .refine((data) => data.currentPassword !== data.newPassword, {
+    message: 'New password must be different from current password',
+    path: ['newPassword'],
+  });
+
+export type ChangePassword = z.infer<typeof ChangePasswordSchema>;
+
+/**
+ * ============================================================================
+ * SEARCH & FILTER SCHEMAS
+ * ============================================================================
+ */
+
+/**
+ * Trip search schema
+ */
+export const TripSearchSchema = z.object({
+  query: z.string().max(100).optional(),
+  destination: z.string().max(100).optional(),
+  startDate: z.union([z.date(), z.string().datetime()]).optional(),
+  endDate: z.union([z.date(), z.string().datetime()]).optional(),
+  budget: z.enum(['low', 'mid', 'high']).optional(),
+  groupType: z.enum(['solo', 'couple', 'family', 'friends']).optional(),
+  sortBy: z.enum(['date', 'name', 'recent']).default('date'),
+  limit: z.number().min(1).max(100).default(20),
+  offset: z.number().min(0).default(0),
+});
+
+export type TripSearch = z.infer<typeof TripSearchSchema>;
+
+/**
+ * Photo search schema
+ */
+export const PhotoSearchSchema = z.object({
+  query: z.string().min(1).max(100),
+  limit: z.number().min(1).max(30).default(12),
+});
+
+export type PhotoSearch = z.infer<typeof PhotoSearchSchema>;
+
+/**
+ * ============================================================================
+ * VALIDATION HELPERS - AUTHENTICATION
+ * ============================================================================
+ */
+
+export function validateLogin(data: unknown): Login {
+  return LoginSchema.parse(data);
+}
+
+export function validateLoginSafe(
+  data: unknown
+): { success: boolean; data?: Login; error?: string } {
+  try {
+    const login = LoginSchema.parse(data);
+    return { success: true, data: login };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const message = error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ');
+      return { success: false, error: message };
+    }
+    return { success: false, error: String(error) };
+  }
+}
+
+export function validateSignUp(data: unknown): SignUp {
+  return SignUpSchema.parse(data);
+}
+
+export function validateSignUpSafe(
+  data: unknown
+): { success: boolean; data?: SignUp; error?: string } {
+  try {
+    const signUp = SignUpSchema.parse(data);
+    return { success: true, data: signUp };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const message = error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ');
+      return { success: false, error: message };
+    }
+    return { success: false, error: String(error) };
+  }
+}
+
+export function validatePasswordReset(data: unknown): PasswordReset {
+  return PasswordResetSchema.parse(data);
+}
+
+export function validatePasswordResetRequest(
+  data: unknown
+): PasswordResetRequest {
+  return PasswordResetRequestSchema.parse(data);
+}
+
+/**
+ * ============================================================================
+ * VALIDATION HELPERS - PROFILE
+ * ============================================================================
+ */
+
+export function validateUserProfile(data: unknown): UserProfile {
+  return UserProfileSchema.parse(data);
+}
+
+export function validateUpdateProfile(data: unknown): UpdateProfile {
+  return UpdateProfileSchema.parse(data);
+}
+
+export function validateUpdateProfileSafe(
+  data: unknown
+): { success: boolean; data?: UpdateProfile; error?: string } {
+  try {
+    const profile = UpdateProfileSchema.parse(data);
+    return { success: true, data: profile };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const message = error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ');
+      return { success: false, error: message };
+    }
+    return { success: false, error: String(error) };
+  }
+}
+
+export function validateChangePassword(data: unknown): ChangePassword {
+  return ChangePasswordSchema.parse(data);
+}
+
+export function validateChangePasswordSafe(
+  data: unknown
+): { success: boolean; data?: ChangePassword; error?: string } {
+  try {
+    const changePassword = ChangePasswordSchema.parse(data);
+    return { success: true, data: changePassword };
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      const message = error.issues
+        .map((issue) => `${issue.path.join('.')}: ${issue.message}`)
+        .join(', ');
+      return { success: false, error: message };
+    }
+    return { success: false, error: String(error) };
+  }
+}
+
+/**
+ * ============================================================================
+ * VALIDATION HELPERS - SEARCH
+ * ============================================================================
+ */
+
+export function validateTripSearch(data: unknown): TripSearch {
+  return TripSearchSchema.parse(data);
+}
+
+export function validatePhotoSearch(data: unknown): PhotoSearch {
+  return PhotoSearchSchema.parse(data);
+}
+
