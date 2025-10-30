@@ -23,7 +23,8 @@
     "retry": "Try again",
     "offline": "Offline",
     "welcome": "Welcome",
-    "traveler": "Traveler"
+    "traveler": "Traveler",
+    "navigate": "Navigate"
   },
 
   "auth": {
@@ -66,7 +67,14 @@
     "expandSidebar": "Expand",
     "collapseSidebar": "Collapse",
     "previous": "Previous",
-    "next": "Next"
+    "next": "Next",
+    "navigate": "Navigate",
+    "route": "Route",
+    "distance": "Distance",
+    "duration": "Duration",
+    "steps": "Navigation Instructions",
+    "departure": "Departure",
+    "arrival": "Arrival"
   },
 
   "trips": {

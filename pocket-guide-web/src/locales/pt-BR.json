@@ -23,7 +23,8 @@
     "retry": "Tentar novamente",
     "offline": "Offline",
     "welcome": "Bem-vindo",
-    "traveler": "Viajante"
+    "traveler": "Viajante",
+    "navigate": "Navegar"
   },
 
   "auth": {
@@ -66,7 +67,14 @@
     "expandSidebar": "Expandir",
     "collapseSidebar": "Recolher",
     "previous": "Anterior",
-    "next": "Próximo"
+    "next": "Próximo",
+    "navigate": "Navegar",
+    "route": "Rota",
+    "distance": "Distância",
+    "duration": "Duração",
+    "steps": "Instruções de Navegação",
+    "departure": "Saída",
+    "arrival": "Chegada"
   },
 
   "trips": {

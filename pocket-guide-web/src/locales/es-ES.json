@@ -20,7 +20,8 @@
     "less": "Menos",
     "noData": "Sin datos",
     "retry": "Intentar de nuevo",
-    "offline": "Sin conexión"
+    "offline": "Sin conexión",
+    "navigate": "Navegar"
   },
 
   "auth": {
@@ -50,7 +51,14 @@
     "security": "Seguridad",
     "logout": "Cerrar Sesión",
     "expandSidebar": "Expandir",
-    "collapseSidebar": "Contraer"
+    "collapseSidebar": "Contraer",
+    "navigate": "Navegar",
+    "route": "Ruta",
+    "distance": "Distancia",
+    "duration": "Duración",
+    "steps": "Instrucciones de Navegación",
+    "departure": "Salida",
+    "arrival": "Llegada"
   },
 
   "trips": {
