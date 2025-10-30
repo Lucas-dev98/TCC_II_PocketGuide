@@ -45,11 +45,11 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
   if (!photos || photos.length === 0) {
     return (
       <div
-        className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 rounded-lg flex items-center justify-center"
+        className="w-full h-64 bg-gradient-to-br from-gray-100 to-gray-200 dark:from-slate-700 dark:to-slate-800 rounded-lg flex items-center justify-center"
         aria-label={`Sem fotos disponíveis para ${attractionName}`}
       >
         <div className="text-center">
-          <p className="text-gray-500 text-sm">Nenhuma foto disponível</p>
+          <p className="text-gray-500 dark:text-gray-400 text-sm">Nenhuma foto disponível</p>
         </div>
       </div>
     );
@@ -72,14 +72,14 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
         />
 
         {/* Overlay com informações */}
-        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/70 to-transparent p-4">
+        <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent p-4 dark:from-black/90 dark:via-black/60">
           <p className="text-white text-sm font-medium">{currentPhoto.attractionName}</p>
-          <p className="text-gray-300 text-xs mt-1">{currentPhoto.alt}</p>
+          <p className="text-gray-200 dark:text-gray-300 text-xs mt-1">{currentPhoto.alt}</p>
         </div>
 
         {/* Contador de fotos */}
         {photos.length > 1 && (
-          <div className="absolute top-4 right-4 bg-black/60 text-white text-xs font-medium px-3 py-1 rounded-full">
+          <div className="absolute top-4 right-4 bg-black/60 dark:bg-black/80 text-white text-xs font-medium px-3 py-1 rounded-full backdrop-blur-sm">
             {currentIndex + 1} / {photos.length}
           </div>
         )}
@@ -112,15 +112,15 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
 
       {/* Miniaturas (se houver mais de 1 foto) */}
       {photos.length > 1 && (
-        <div className="flex gap-2 mt-3 overflow-x-auto pb-2">
+        <div className="flex gap-2 mt-3 overflow-x-auto pb-2 bg-slate-50 dark:bg-slate-800 p-2 rounded-lg">
           {photos.map((photo, index) => (
             <button
               key={photo.id}
               onClick={() => setCurrentIndex(index)}
               className={`flex-shrink-0 w-16 h-16 rounded-lg overflow-hidden border-2 transition-all ${
                 index === currentIndex
-                  ? "border-indigo-500 ring-2 ring-indigo-300"
-                  : "border-gray-200 hover:border-gray-300"
+                  ? "border-indigo-500 dark:border-indigo-400 ring-2 ring-indigo-300 dark:ring-indigo-500/50"
+                  : "border-gray-200 dark:border-slate-600 hover:border-gray-300 dark:hover:border-slate-500"
               }`}
               aria-label={`Ir para foto ${index + 1}`}
               aria-current={index === currentIndex}
