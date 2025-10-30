@@ -47,6 +47,18 @@ class DirectionsService {
   private baseUrl = 'https://api.mapbox.com/directions/v5';
   private accessToken = import.meta.env.VITE_MAPBOX_API_KEY;
 
+  constructor() {
+    console.log('🧭 DirectionsService initialized with token:', {
+      hasToken: !!this.accessToken,
+      tokenLength: this.accessToken?.length || 0,
+      tokenPrefix: this.accessToken?.substring(0, 10) || 'NONE',
+    });
+
+    if (!this.accessToken) {
+      console.error('❌ VITE_MAPBOX_API_KEY não configurada! Verifique o arquivo .env');
+    }
+  }
+
   /**
    * Calcula a rota entre dois ou mais pontos
    * @param coordinates Array de [longitude, latitude]
@@ -112,8 +124,16 @@ class DirectionsService {
       // Construir parâmetros da query
       // Nota: Mapbox Directions API suporta apenas: overview, geometries, steps, continue_straight, waypoint_names, annotations, language
       // bannerInstructions e voiceInstructions não são parâmetros válidos
+      
+      console.log('🧭 Token info:', {
+        hasToken: !!this.accessToken,
+        tokenLength: this.accessToken?.length || 0,
+        tokenPrefix: this.accessToken?.substring(0, 15) || 'NONE',
+        encodedTokenLength: encodeURIComponent(this.accessToken || '').length,
+      });
+
       const queryParams = [
-        `access_token=${encodeURIComponent(this.accessToken)}`,
+        `access_token=${encodeURIComponent(this.accessToken || '')}`,
         `overview=${encodeURIComponent(options?.overview || 'full')}`,
         `geometries=${encodeURIComponent(options?.geometries || 'geojson')}`,
         `steps=${options?.steps ?? true}`,
@@ -123,6 +143,7 @@ class DirectionsService {
       const url = `${this.baseUrl}/mapbox/${profile}/${coordinatesString}?${queryParams}`;
 
       console.log('🧭 API URL (without token):', url.split('access_token=')[0] + 'access_token=***');
+      console.log('🧭 Full URL length:', url.length);
 
       const response = await fetch(url);
 
