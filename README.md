@@ -133,11 +133,19 @@ TCC_II_POCKET_GUIDE/
 
 ## 📖 DOCUMENTAÇÃO
 
-Toda a documentação está organizada em:
-- **docs/** - Guias técnicos, arquitetura, análises
-- **README.md** - Este arquivo (visão geral)
+Toda a documentação está organizada em `docs/`:
 
-Veja [docs/INDEX.md](docs/INDEX.md) para índice completo.
+| Tipo | Local |
+|------|-------|
+| 📚 **Índice Completo** | [docs/INDEX.md](docs/INDEX.md) |
+| 🎓 **TCC Presentation** | [docs/TCC_PRESENTATION_CHECKLIST.md](docs/TCC_PRESENTATION_CHECKLIST.md) |
+| 🏗️ **Arquitetura** | [docs/ARCHITECTURE_DEEP_DIVE.md](docs/ARCHITECTURE_DEEP_DIVE.md) |
+| 🚀 **Setup & Deploy** | [docs/SETUP.md](docs/SETUP.md) |
+| 🔐 **Segurança** | [docs/FIREBASE_SECURITY_RULES.md](docs/FIREBASE_SECURITY_RULES.md) |
+| 📱 **10 Features** | [docs/FEATURE_*.md](docs/) |
+| 🌍 **i18n (3 idiomas)** | [docs/I18N_FINAL_REPORT.md](docs/I18N_FINAL_REPORT.md) |
+
+**Total**: 35 documentos essenciais bem organizados em `docs/`
 
 ---
 
