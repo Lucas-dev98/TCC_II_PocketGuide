@@ -60,8 +60,6 @@ class DirectionsService {
       overview?: 'full' | 'simplified' | 'false';
       geometries?: 'geojson' | 'polyline' | 'polyline6';
       steps?: boolean;
-      bannerInstructions?: boolean;
-      voiceInstructions?: boolean;
       language?: string;
     }
   ): Promise<DirectionResponse> {
@@ -112,15 +110,13 @@ class DirectionsService {
       console.log('🧭 Formatted coordinates:', coordinatesString);
 
       // Construir parâmetros da query
-      // Nota: Mapbox espera parâmetros booleanos como true/false (sem aspas)
-      // Para isso, construímos a query string manualmente
+      // Nota: Mapbox Directions API suporta apenas: overview, geometries, steps, continue_straight, waypoint_names, annotations, language
+      // bannerInstructions e voiceInstructions não são parâmetros válidos
       const queryParams = [
         `access_token=${encodeURIComponent(this.accessToken)}`,
         `overview=${encodeURIComponent(options?.overview || 'full')}`,
         `geometries=${encodeURIComponent(options?.geometries || 'geojson')}`,
         `steps=${options?.steps ?? true}`,
-        `bannerInstructions=${options?.bannerInstructions ?? false}`,
-        `voiceInstructions=${options?.voiceInstructions ?? false}`,
         `language=${encodeURIComponent(options?.language || 'pt')}`,
       ].join('&');
 
