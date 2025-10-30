@@ -4,7 +4,7 @@
  * Com fallback para banco de dados local
  */
 
-import { searchCitiesLocal } from '../utils/citiesDatabase';
+import { searchCitiesLocal, getCountryFromCityLocal } from '../utils/citiesDatabase';
 
 interface GeocodeResult {
   id: string;
@@ -52,8 +52,28 @@ export async function searchCities(
   
   // PRIORIDADE 1: Verificar cache PRIMEIRO
   if (geocodeCache.has(cacheKey)) {
+    const cached = geocodeCache.get(cacheKey) || [];
+    
+    // Se cache tem entradas com "Unknown", tenta complementar com banco local
+    const hasUnknown = cached.some(s => s.country === 'Unknown' || !s.country);
+    if (hasUnknown) {
+      console.log('⚠️ Cache tem "Unknown", complementando com banco local...');
+      const enhanced = cached.map(suggestion => {
+        if (!suggestion.country || suggestion.country === 'Unknown') {
+          const country = getCountryFromCityLocal(suggestion.city);
+          return {
+            ...suggestion,
+            country: country || suggestion.country,
+          };
+        }
+        return suggestion;
+      });
+      geocodeCache.set(cacheKey, enhanced);
+      return enhanced;
+    }
+    
     console.log('💾 Cache hit:', cacheKey);
-    return geocodeCache.get(cacheKey) || [];
+    return cached;
   }
 
   // PRIORIDADE 2: Tentar banco de dados local (mais rápido e confiável)
@@ -115,10 +135,15 @@ export async function searchCities(
       .map((feature: GeocodeResult) => {
         // Extrair país do context (com fallback)
         const countryContext = feature.context?.find(ctx => ctx.id?.startsWith('country.'));
-        const country = countryContext?.name || 'Unknown';
+        let country = countryContext?.name || '';
         
         // Nome da cidade (sem país) - com fallback seguro
         const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.name || '';
+        
+        // Se não tem país mas tem cityName, tenta buscar no banco local
+        if (!country && cityName) {
+          country = getCountryFromCityLocal(cityName) || '';
+        }
         
         return {
           city: cityName,
@@ -127,6 +152,21 @@ export async function searchCities(
         };
       })
       .filter((s: CitySuggestion) => s.city && s.country); // Remover entradas inválidas
+
+    // Se não teve resultados na API, tenta o banco local como fallback final
+    if (suggestions.length === 0) {
+      console.log('⚠️ API retornou 0 resultados, tentando banco local...');
+      const localFallback = searchCitiesLocal(query);
+      if (localFallback.length > 0) {
+        const localSuggestions = localFallback.map(city => ({
+          city: city.name,
+          country: city.country,
+          coordinates: [0, 0] as [number, number],
+        }));
+        geocodeCache.set(cacheKey, localSuggestions);
+        return localSuggestions;
+      }
+    }
 
     // Remover duplicatas
     const uniqueSuggestions = Array.from(
