@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState, lazy, Suspense } from "react";
+import React, { useEffect, useMemo, useState, lazy, Suspense, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, MapPin } from "lucide-react";
 import { Button, Skeleton, EmptyState, useToast, Card } from "@/components";
@@ -34,6 +34,9 @@ export const DayDetailScreen: React.FC = () => {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [attractions, setAttractions] = useState<AttractionDetail[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
+  
+  // Ref para o mapa (scroll automático)
+  const mapRef = useRef<HTMLDivElement>(null);
   
   // Usar Zustand store
   const { trips } = useTripsStore();
@@ -303,6 +306,16 @@ export const DayDetailScreen: React.FC = () => {
     });
   }, [trip?.startDate, currentDay]);
 
+  // Scroll automático para o mapa quando uma rota é calculada
+  useEffect(() => {
+    if (currentRoute && mapRef.current) {
+      console.log('🗺️ DayDetailScreen: Scrolling to map...');
+      setTimeout(() => {
+        mapRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 300); // Pequeno delay para dar tempo da rota ser renderizada
+    }
+  }, [currentRoute]);
+
   // Voltar para viagem
   const handleBackToTrip = () => {
     navigate(`/trip/${tripId}`);
@@ -546,28 +559,30 @@ export const DayDetailScreen: React.FC = () => {
 
         {/* Mapa com localizações do dia */}
         {attractions.length > 0 && (
-          <Card className="shadow-md border-slate-200 dark:border-slate-700">
-            <Card.Header title={t('dayDetail.routeMap')} />
-            <Card.Body>
-              <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
-                <MapboxMap
-                  attractions={attractions.map((a) => ({
-                    name: a.name,
-                    reason: a.reason,
-                    lat: a.location?.lat || 0,
-                    lng: a.location?.lng || 0,
-                  }))}
-                  height="400px"
-                  onAttractionSelect={(attraction) => {
-                    debug.log("Localização selecionada:", attraction);
-                  }}
-                  route={currentRoute}
-                  routeOrigin={currentOrigin?.location}
-                  routeDestination={currentDestination?.location}
-                />
-              </Suspense>
-            </Card.Body>
-          </Card>
+          <div ref={mapRef}>
+            <Card className="shadow-md border-slate-200 dark:border-slate-700">
+              <Card.Header title={t('dayDetail.routeMap')} />
+              <Card.Body>
+                <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
+                  <MapboxMap
+                    attractions={attractions.map((a) => ({
+                      name: a.name,
+                      reason: a.reason,
+                      lat: a.location?.lat || 0,
+                      lng: a.location?.lng || 0,
+                    }))}
+                    height="400px"
+                    onAttractionSelect={(attraction) => {
+                      debug.log("Localização selecionada:", attraction);
+                    }}
+                    route={currentRoute}
+                    routeOrigin={currentOrigin?.location}
+                    routeDestination={currentDestination?.location}
+                  />
+                </Suspense>
+              </Card.Body>
+            </Card>
+          </div>
         )}
       </main>
       </div>

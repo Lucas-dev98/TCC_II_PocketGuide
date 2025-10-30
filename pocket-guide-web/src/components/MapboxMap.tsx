@@ -184,119 +184,146 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
     debug.log('🗺️ MapboxMap: Rendering route on map');
 
-    // Remove existing route layer and source
-    if (routeLayerRef.current && routeSourceRef.current) {
+    // Função para renderizar rota (aguarda mapa estar pronto)
+    const renderRoute = () => {
+      if (!map.current) return;
+
+      // Verificar se o mapa e estilo estão prontos
+      if (!map.current.isStyleLoaded()) {
+        debug.log('🗺️ MapboxMap: Style not loaded yet, waiting...');
+        map.current.once('styledata', renderRoute);
+        return;
+      }
+
+      // Remove existing route layer and source
+      if (routeLayerRef.current && routeSourceRef.current) {
+        try {
+          if (map.current.getLayer(routeLayerRef.current)) {
+            map.current.removeLayer(routeLayerRef.current);
+          }
+          if (map.current.getSource(routeSourceRef.current)) {
+            map.current.removeSource(routeSourceRef.current);
+          }
+        } catch (error) {
+          debug.error('❌ MapboxMap: Error removing existing route:', error);
+        }
+      }
+
+      // Create unique IDs for this route
+      const sourceId = `route-source-${Date.now()}`;
+      const layerId = `route-layer-${Date.now()}`;
+
+      routeSourceRef.current = sourceId;
+      routeLayerRef.current = layerId;
+
+      // Add GeoJSON source for route geometry
       try {
-        map.current.removeLayer(routeLayerRef.current);
-        map.current.removeSource(routeSourceRef.current);
+        map.current.addSource(sourceId, {
+          type: 'geojson',
+          data: {
+            type: 'Feature',
+            geometry: route.geometry as unknown as GeoJSON.Geometry,
+            properties: {},
+          } as GeoJSON.Feature,
+        });
+
+        // Add route layer
+        map.current.addLayer({
+          id: layerId,
+          type: 'line',
+          source: sourceId,
+          layout: {
+            'line-join': 'round',
+            'line-cap': 'round',
+          },
+          paint: {
+            'line-color': '#6366F1', // Indigo
+            'line-width': 3,
+            'line-opacity': 0.8,
+          },
+        }, 'waterway-label'); // Insert before waterway labels
+
+        debug.log('✅ MapboxMap: Route rendered successfully');
+
+        // Fit map to route bounds if we have origin and destination
+        if (routeOrigin && routeDestination) {
+          try {
+            // Validate coordinates
+            const isValidOrigin = 
+              typeof routeOrigin.lng === 'number' && 
+              typeof routeOrigin.lat === 'number' &&
+              routeOrigin.lng >= -180 && routeOrigin.lng <= 180 &&
+              routeOrigin.lat >= -90 && routeOrigin.lat <= 90;
+            
+            const isValidDestination = 
+              typeof routeDestination.lng === 'number' && 
+              typeof routeDestination.lat === 'number' &&
+              routeDestination.lng >= -180 && routeDestination.lng <= 180 &&
+              routeDestination.lat >= -90 && routeDestination.lat <= 90;
+
+            if (!isValidOrigin || !isValidDestination) {
+              debug.warn('⚠️ MapboxMap: Invalid route coordinates', { routeOrigin, routeDestination });
+              return;
+            }
+
+            // Calculate distance between origin and destination
+            const lngDiff = Math.abs(routeOrigin.lng - routeDestination.lng);
+            const latDiff = Math.abs(routeOrigin.lat - routeDestination.lat);
+            const distance = Math.sqrt(lngDiff * lngDiff + latDiff * latDiff);
+
+            debug.log('🗺️ MapboxMap: Route distance (degrees):', distance);
+
+            // If points are very close (less than 0.01 degrees), use a fixed zoom
+            if (distance < 0.01) {
+              debug.warn('⚠️ MapboxMap: Origin and destination are too close, using fixed zoom');
+              const centerLng = (routeOrigin.lng + routeDestination.lng) / 2;
+              const centerLat = (routeOrigin.lat + routeDestination.lat) / 2;
+              
+              map.current?.flyTo({
+                center: [centerLng, centerLat],
+                zoom: 14,
+                duration: 1000,
+              });
+            } else {
+              // Normal fit bounds for distant points
+              const bounds = new mapboxgl.LngLatBounds();
+              bounds.extend([routeOrigin.lng, routeOrigin.lat]);
+              bounds.extend([routeDestination.lng, routeDestination.lat]);
+
+              try {
+                map.current?.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 18 });
+              } catch (fitError) {
+                debug.warn('⚠️ MapboxMap: fitBounds failed, using flyTo instead');
+                const centerLng = (routeOrigin.lng + routeDestination.lng) / 2;
+                const centerLat = (routeOrigin.lat + routeDestination.lat) / 2;
+                map.current?.flyTo({
+                  center: [centerLng, centerLat],
+                  zoom: 14,
+                  duration: 1000,
+                });
+              }
+            }
+
+            // Add markers for origin and destination
+            new mapboxgl.Marker({ color: '#22C55E' }) // Green
+              .setLngLat([routeOrigin.lng, routeOrigin.lat])
+              .setPopup(new mapboxgl.Popup().setHTML('<strong>Saída</strong>'))
+              .addTo(map.current!);
+
+            new mapboxgl.Marker({ color: '#EF4444' }) // Red
+              .setLngLat([routeDestination.lng, routeDestination.lat])
+              .setPopup(new mapboxgl.Popup().setHTML('<strong>Destino</strong>'))
+              .addTo(map.current!);
+          } catch (error) {
+            debug.error('❌ MapboxMap: Error fitting bounds to route:', error);
+          }
+        }
       } catch (error) {
-        debug.error('❌ MapboxMap: Error removing existing route:', error);
-      }
-    }
-
-    // Create unique IDs for this route
-    const sourceId = `route-source-${Date.now()}`;
-    const layerId = `route-layer-${Date.now()}`;
-
-    routeSourceRef.current = sourceId;
-    routeLayerRef.current = layerId;
-
-    // Add GeoJSON source for route geometry
-    try {
-      map.current.addSource(sourceId, {
-        type: 'geojson',
-        data: {
-          type: 'Feature',
-          geometry: route.geometry as unknown as GeoJSON.Geometry,
-          properties: {},
-        } as GeoJSON.Feature,
-      });
-
-      // Add route layer
-      map.current.addLayer({
-        id: layerId,
-        type: 'line',
-        source: sourceId,
-        layout: {
-          'line-join': 'round',
-          'line-cap': 'round',
-        },
-        paint: {
-          'line-color': '#6366F1', // Indigo
-          'line-width': 3,
-          'line-opacity': 0.8,
-        },
-      }, 'waterway-label'); // Insert before waterway labels
-
-      debug.log('✅ MapboxMap: Route rendered successfully');
-
-      // Fit map to route bounds if we have origin and destination
-      if (routeOrigin && routeDestination) {
-        try {
-          // Validate coordinates
-          const isValidOrigin = 
-            typeof routeOrigin.lng === 'number' && 
-            typeof routeOrigin.lat === 'number' &&
-            routeOrigin.lng >= -180 && routeOrigin.lng <= 180 &&
-            routeOrigin.lat >= -90 && routeOrigin.lat <= 90;
-          
-          const isValidDestination = 
-            typeof routeDestination.lng === 'number' && 
-            typeof routeDestination.lat === 'number' &&
-            routeDestination.lng >= -180 && routeDestination.lng <= 180 &&
-            routeDestination.lat >= -90 && routeDestination.lat <= 90;
-
-          if (!isValidOrigin || !isValidDestination) {
-            debug.warn('⚠️ MapboxMap: Invalid route coordinates', { routeOrigin, routeDestination });
-            return;
-          }
-
-          const bounds = new mapboxgl.LngLatBounds();
-          bounds.extend([routeOrigin.lng, routeOrigin.lat]);
-          bounds.extend([routeDestination.lng, routeDestination.lat]);
-
-          // Verify bounds are valid before fitting
-          if (bounds.isEmpty()) {
-            debug.warn('⚠️ MapboxMap: Empty bounds - origin and destination are the same');
-            // Just fly to the origin instead
-            map.current?.flyTo({
-              center: [routeOrigin.lng, routeOrigin.lat],
-              zoom: 15,
-              duration: 1000,
-            });
-          } else {
-            map.current?.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 18 });
-          }
-
-          // Add markers for origin and destination
-          new mapboxgl.Marker({ color: '#22C55E' }) // Green
-            .setLngLat([routeOrigin.lng, routeOrigin.lat])
-            .setPopup(new mapboxgl.Popup().setHTML('<strong>Saída</strong>'))
-            .addTo(map.current!);
-
-          new mapboxgl.Marker({ color: '#EF4444' }) // Red
-            .setLngLat([routeDestination.lng, routeDestination.lat])
-            .setPopup(new mapboxgl.Popup().setHTML('<strong>Destino</strong>'))
-            .addTo(map.current!);
-        } catch (error) {
-          debug.error('❌ MapboxMap: Error fitting bounds to route:', error);
-        }
-      }
-    } catch (error) {
-      debug.error('❌ MapboxMap: Error rendering route:', error);
-    }
-
-    return () => {
-      // Cleanup route layers on unmount
-      if (routeLayerRef.current && routeSourceRef.current && map.current) {
-        try {
-          map.current.removeLayer(routeLayerRef.current);
-          map.current.removeSource(routeSourceRef.current);
-        } catch (error) {
-          // Source/layer might already be removed
-        }
+        debug.error('❌ MapboxMap: Error rendering route:', error);
       }
     };
+
+    renderRoute();
   }, [route, routeOrigin, routeDestination]);
 
   // Handle navigation between attractions
