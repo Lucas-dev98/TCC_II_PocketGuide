@@ -166,6 +166,14 @@ export default function CreateTripScreen() {
       return true
     }
 
+    if (step === 3) {
+      if (!formData.budget) {
+        showError(t('createTrip.invalidBudget') || 'Selecione um orçamento')
+        return false
+      }
+      return true
+    }
+
     return true
   }
 
