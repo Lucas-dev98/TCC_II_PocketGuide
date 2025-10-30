@@ -154,4 +154,3 @@ Se quiser expandir a experiência:
 - Sugerir cidades por proximidade
 
 Mas agora o **autocomplete funciona perfeitamente!** 🚀
-

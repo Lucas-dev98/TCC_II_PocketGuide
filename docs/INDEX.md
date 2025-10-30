@@ -54,6 +54,14 @@ Bem-vindo à documentação do **Pocket Guide**, um app web de planejamento de v
 - `UNSPLASH_API_STATUS.md` - Unsplash API
 - `UNSPLASH_QUICK_START.md` - Quick start Unsplash
 
+### 🎯 Pocket Guide Web (Atualizações Recentes)
+Documentação sobre melhorias e fixes recentes no sub-projeto web:
+- [POCKET_GUIDE_WEB/AUTOCOMPLETE_FIXED.md](./POCKET_GUIDE_WEB/AUTOCOMPLETE_FIXED.md) - API Mapbox corrigida
+- [POCKET_GUIDE_WEB/MAPBOX_API_FIX.md](./POCKET_GUIDE_WEB/MAPBOX_API_FIX.md) - Análise técnica
+- [POCKET_GUIDE_WEB/DATE_VALIDATION_IMPLEMENTATION.md](./POCKET_GUIDE_WEB/DATE_VALIDATION_IMPLEMENTATION.md) - Validação de datas
+
+Para histórico de soluções anteriores: [POCKET_GUIDE_WEB/HISTORY/](./POCKET_GUIDE_WEB/HISTORY/)
+
 ---
 
 ## 🎯 Por Caso de Uso
