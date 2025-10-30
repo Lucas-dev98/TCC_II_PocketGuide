@@ -24,7 +24,7 @@ export const DayNavigation: React.FC<DayNavigationProps> = ({
 
   return (
     <div
-      className="flex items-center justify-between gap-4 bg-white/80 backdrop-blur-sm border-b border-gray-200 p-4 sticky top-0 z-10"
+      className="flex items-center justify-between gap-4 bg-white/80 dark:bg-slate-800/80 backdrop-blur-sm border-b border-gray-200 dark:border-slate-700 p-4 sticky top-0 z-10"
       aria-label="Navegação entre dias"
     >
       {/* Botão anterior */}
@@ -41,11 +41,11 @@ export const DayNavigation: React.FC<DayNavigationProps> = ({
 
       {/* Indicador de dia */}
       <div className="flex flex-col items-center gap-1">
-        <div className="text-sm font-semibold text-slate-700 dark:text-slate-200">
+        <div className="text-sm font-semibold text-slate-900 dark:text-white">
           Dia {currentDayNumber} de {totalDays}
         </div>
         {dayDate && (
-          <div className="text-xs text-slate-600 dark:text-slate-400">{dayDate}</div>
+          <div className="text-xs text-slate-700 dark:text-slate-300">{dayDate}</div>
         )}
       </div>
 
