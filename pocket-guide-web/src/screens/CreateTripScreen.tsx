@@ -54,7 +54,7 @@ export default function CreateTripScreen() {
   const { user } = useAuth()
   const { t } = useI18n()
   const { addTrip } = useTripsStore()
-  const { showError } = useToast()
+  const { showError, showSuccess } = useToast()
   
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isLoading, setIsLoading] = useState(false)
@@ -188,7 +188,8 @@ export default function CreateTripScreen() {
       await addTrip(tripData)
 
       // Toast sucesso e redirecionar para home
-      showError(t('createTrip.tripCreatedSuccess'))
+      setIsLoading(false)
+      showSuccess(t('createTrip.tripCreatedSuccess'))
       console.log('🏠 Redirecionando para home...')
       navigate('/home')
     } catch (err) {
