@@ -112,17 +112,19 @@ class DirectionsService {
       console.log('🧭 Formatted coordinates:', coordinatesString);
 
       // Construir parâmetros da query
-      const params = new URLSearchParams({
-        access_token: this.accessToken,
-        overview: options?.overview || 'full',
-        geometries: options?.geometries || 'geojson',
-        steps: (options?.steps ?? true).toString(),
-        bannerInstructions: (options?.bannerInstructions ?? false).toString(),
-        voiceInstructions: (options?.voiceInstructions ?? false).toString(),
-        language: options?.language || 'pt',
-      });
+      // Nota: Mapbox espera parâmetros booleanos como true/false (sem aspas)
+      // Para isso, construímos a query string manualmente
+      const queryParams = [
+        `access_token=${encodeURIComponent(this.accessToken)}`,
+        `overview=${encodeURIComponent(options?.overview || 'full')}`,
+        `geometries=${encodeURIComponent(options?.geometries || 'geojson')}`,
+        `steps=${options?.steps ?? true}`,
+        `bannerInstructions=${options?.bannerInstructions ?? false}`,
+        `voiceInstructions=${options?.voiceInstructions ?? false}`,
+        `language=${encodeURIComponent(options?.language || 'pt')}`,
+      ].join('&');
 
-      const url = `${this.baseUrl}/mapbox/${profile}/${coordinatesString}?${params.toString()}`;
+      const url = `${this.baseUrl}/mapbox/${profile}/${coordinatesString}?${queryParams}`;
 
       console.log('🧭 API URL (without token):', url.split('access_token=')[0] + 'access_token=***');
 
