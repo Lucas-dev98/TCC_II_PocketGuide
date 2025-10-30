@@ -9,6 +9,7 @@ import { Input } from '../components/Input'
 import { Card } from '../components/Card'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
+import { CityAutocomplete } from '../components/CityAutocomplete'
 import { generateItinerary } from '../services/itineraryGenerator'
 import { Budget } from '../types'
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react'
@@ -75,6 +76,14 @@ export default function CreateTripScreen() {
     } else {
       setStep((step - 1) as 1 | 2 | 3);
     }
+  };
+
+  const handleCitySelect = (city: string, country: string) => {
+    setFormData((prev) => ({
+      ...prev,
+      destination: city,
+      country: country,
+    }))
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -264,14 +273,25 @@ export default function CreateTripScreen() {
             </Card.Header>
 
             <Card.Body className="space-y-4">
-              <Input
-                label={t('createTrip.destinationLabel')}
-                name="destination"
-                placeholder={t('createTrip.destinationPlaceholder')}
-                value={formData.destination}
-                onChange={handleInputChange}
-                autoFocus
-              />
+              <div>
+                <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                  {t('createTrip.destinationLabel')}
+                </label>
+                <CityAutocomplete
+                  value={formData.destination}
+                  onCitySelect={handleCitySelect}
+                  placeholder={t('createTrip.destinationPlaceholder')}
+                  language={i18n.language.split('-')[0]}
+                />
+              </div>
+
+              {/* Visual Feedback: País preenchido automaticamente */}
+              {formData.country && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-center gap-2">
+                  <span className="text-green-600 dark:text-green-400 font-medium">✓ País:</span>
+                  <span className="text-green-700 dark:text-green-300">{formData.country}</span>
+                </div>
+              )}
 
               <Input
                 label={t('createTrip.countryLabel')}
@@ -279,6 +299,7 @@ export default function CreateTripScreen() {
                 placeholder={t('createTrip.countryPlaceholder')}
                 value={formData.country}
                 onChange={handleInputChange}
+                disabled
               />
             </Card.Body>
 
