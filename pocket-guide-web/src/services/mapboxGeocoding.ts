@@ -8,8 +8,9 @@ import { searchCitiesLocal, getCountryFromCityLocal } from '../utils/citiesDatab
 
 interface GeocodeResult {
   id: string;
-  name: string;
-  place_name: string;
+  name?: string;
+  text?: string;
+  place_name?: string;
   place_type: string[];
   geometry: {
     type: string;
@@ -17,7 +18,9 @@ interface GeocodeResult {
   };
   context?: Array<{
     id: string;
-    name: string;
+    name?: string;
+    text?: string;
+    text_pt?: string;
     short_code?: string;
   }>;
 }
@@ -75,6 +78,8 @@ export async function searchCities(
   
   try {
     const mapboxToken = import.meta.env.VITE_MAPBOX_API_KEY;
+    console.log('🔑 Token configurado:', !!mapboxToken && mapboxToken.length > 0);
+    
     if (!mapboxToken || mapboxToken.trim() === '') {
       console.warn('⚠️ VITE_MAPBOX_API_KEY não configurada, usando apenas banco local');
       // Retornar banco local como fallback
@@ -94,13 +99,18 @@ export async function searchCities(
     url.searchParams.set('limit', '10');
     url.searchParams.set('language', language === 'pt' ? 'pt' : language === 'es' ? 'es' : 'en');
 
+    console.log('📡 Chamando API Mapbox:', url.toString().split('pk.')[0] + 'pk.***');
+    
     const response = await fetch(url.toString(), { signal: AbortSignal.timeout(5000) });
     
+    console.log('📦 Response status:', response.status, response.statusText);
+    
     if (!response.ok) {
-      throw new Error(`Mapbox API error: ${response.status}`);
+      throw new Error(`Mapbox API error: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
+    console.log('📊 Dados recebidos:', data);
     
     if (!data.features || !Array.isArray(data.features)) {
       throw new Error('Invalid Mapbox response');
@@ -109,12 +119,16 @@ export async function searchCities(
     // Processar resultados
     const suggestions: CitySuggestion[] = data.features
       .map((feature: GeocodeResult) => {
-        // Extrair país do context (com fallback)
+        // Extrair país do context
+        // Mapbox retorna o contexto com 'text' ou 'text_pt' (não 'name')
         const countryContext = feature.context?.find(ctx => ctx.id?.startsWith('country.'));
-        let country = countryContext?.name || '';
+        let country = countryContext?.name || countryContext?.text_pt || countryContext?.text || '';
         
         // Nome da cidade (sem país) - com fallback seguro
-        const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.name || '';
+        // feature.place_name está no formato "Cidade, Região, País"
+        const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.text || feature.name || '';
+        
+        console.log('🏙️ Processando:', { cityName, country, hasContext: !!countryContext });
         
         // Se não tem país, tenta buscar no banco local
         if (!country && cityName) {
@@ -127,7 +141,13 @@ export async function searchCities(
           coordinates: feature.geometry?.coordinates as [number, number] || [0, 0],
         };
       })
-      .filter((s: CitySuggestion) => s.city && s.country); // Remover entradas inválidas
+      .filter((s: CitySuggestion) => {
+        const isValid = s.city && s.country;
+        if (!isValid) {
+          console.log('❌ Filtrada sugestão inválida:', s);
+        }
+        return isValid;
+      }); // Remover entradas inválidas
 
     // Se não teve resultados válidos na API, tenta o banco local como fallback final
     if (suggestions.length === 0) {
