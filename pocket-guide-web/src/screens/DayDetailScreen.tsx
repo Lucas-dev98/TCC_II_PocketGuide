@@ -453,16 +453,30 @@ export const DayDetailScreen: React.FC = () => {
                 onAttractionClick={(attraction) => {
                   debug.log("Atração clicada:", attraction);
                 }}
-                onNavigate={(destination) => {
-                  // Se há uma atração anterior (origem), calcular rota dela para o destino
-                  const currentIndex = attractions.findIndex(a => a.id === destination.id);
-                  const originAttraction = currentIndex > 0 
-                    ? attractions[currentIndex - 1] 
+                onNavigate={(destination, destinationIndex) => {
+                  console.log('🧭 DayDetailScreen.onNavigate called:', {
+                    destination: destination.name,
+                    destinationIndex,
+                    attractionsCount: attractions.length,
+                  });
+
+                  // Use o índice diretamente em vez de procurar
+                  const originAttraction = destinationIndex > 0 
+                    ? attractions[destinationIndex - 1] 
                     : null;
 
+                  console.log('🧭 Origin attraction:', {
+                    found: !!originAttraction,
+                    name: originAttraction?.name,
+                    location: originAttraction?.location,
+                    index: destinationIndex - 1,
+                  });
+
                   if (originAttraction) {
+                    console.log('✅ Calling calculateRoute...');
                     calculateRoute(originAttraction, destination, 'driving');
                   } else {
+                    console.warn('❌ No origin attraction found at index:', destinationIndex - 1);
                     showError(t('navigation.noOriginPoint') || 'Nenhum ponto de partida');
                   }
                 }}

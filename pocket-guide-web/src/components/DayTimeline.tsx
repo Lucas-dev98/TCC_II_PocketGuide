@@ -9,7 +9,7 @@ import { useRouteStore } from "../store/routeStore";
 interface DayTimelineProps {
   attractions: AttractionDetail[];
   onAttractionClick?: (attraction: AttractionDetail) => void;
-  onNavigate?: (attraction: AttractionDetail) => void;
+  onNavigate?: (attraction: AttractionDetail, index: number) => void;
 }
 
 /**
@@ -24,12 +24,12 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
   const { t } = useI18n();
   const { isLoadingRoute, setRouteSummaryOpen } = useRouteStore();
 
-  const handleNavigate = (attraction: AttractionDetail) => {
+  const handleNavigate = (attraction: AttractionDetail, index: number) => {
     // Mostrar resumo da rota quando navegação é iniciada
     setRouteSummaryOpen(true);
     
     if (onNavigate) {
-      onNavigate(attraction);
+      onNavigate(attraction, index);
     }
   };
   if (!attractions || attractions.length === 0) {
@@ -182,12 +182,9 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                 <div className="pt-2 border-t border-gray-100 dark:border-slate-700">
                   <NavigateButton
                     attraction={attraction}
-                    onNavigate={
-                      onNavigate ||
-                      ((attr) => {
-                        handleNavigate(attr);
-                      })
-                    }
+                    onNavigate={(attr) => {
+                      handleNavigate(attr, index);
+                    }}
                     isLoading={isLoadingRoute}
                     disabled={!attraction.location?.lat || !attraction.location?.lng}
                   />
