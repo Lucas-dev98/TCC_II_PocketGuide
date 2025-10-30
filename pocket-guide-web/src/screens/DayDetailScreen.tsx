@@ -458,29 +458,56 @@ export const DayDetailScreen: React.FC = () => {
                     destination: destination.name,
                     destinationIndex,
                     attractionsCount: attractions.length,
+                    destinationLocation: destination.location,
                   });
 
                   // Define rota com base na posição da atração na timeline
                   if (destinationIndex === 0) {
                     // Primeira atração: navegar TO (de local atual para primeira atração)
-                    if (trip && destination.location) {
-                      // Criar ponto de origem como primeira atração (navegação do ponto inicial)
-                      const originPoint: AttractionDetail = {
-                        ...destination,
-                        name: trip.destination || 'Ponto Inicial',
-                        location: destination.location, // usar mesma localização para rota
-                      };
-                      console.log('✅ Navigating TO first attraction');
-                      calculateRoute(originPoint, destination, 'driving');
-                    } else {
-                      console.warn('⚠️ No location data available');
-                      showError(t('navigation.noOriginPoint') || 'Ponto de partida não disponível');
+                    if (!destination.location || !destination.location.lat || !destination.location.lng) {
+                      console.warn('⚠️ No location data available for first attraction');
+                      showError(t('navigation.noOriginPoint') || 'Localização da atração não disponível');
+                      return;
                     }
+
+                    // Criar ponto de origem com pequeno offset da primeira atração
+                    // (não pode ser o mesmo ponto)
+                    const offset = 0.001; // ~111 metros
+                    const originPoint: AttractionDetail = {
+                      id: `origin-${Date.now()}`,
+                      day: destination.day,
+                      time: destination.time,
+                      name: trip?.destination || 'Ponto Inicial',
+                      duration: 0,
+                      reason: 'Ponto de partida',
+                      location: {
+                        lat: destination.location.lat + offset,
+                        lng: destination.location.lng + offset,
+                        address: trip?.destination || 'Ponto de partida',
+                        name: trip?.destination || 'Ponto de partida',
+                      },
+                      category: 'outro',
+                    };
+                    console.log('✅ Navigating TO first attraction:', {
+                      from: originPoint.location,
+                      to: destination.location,
+                    });
+                    calculateRoute(originPoint, destination, 'driving');
                   } else if (destinationIndex < attractions.length - 1) {
                     // Atrações do meio: navegar FROM current TO next attraction
                     const originAttraction = attractions[destinationIndex - 1];
                     const nextAttraction = attractions[destinationIndex + 1];
-                    console.log('✅ Navigating FROM', originAttraction.name, 'TO', nextAttraction.name);
+                    
+                    if (!originAttraction.location || !nextAttraction.location) {
+                      console.warn('⚠️ Missing location data for route');
+                      showError(t('navigation.noOriginPoint') || 'Localização não disponível');
+                      return;
+                    }
+
+                    console.log('✅ Navigating FROM', originAttraction.name, 'TO', nextAttraction.name, {
+                      from: originAttraction.location,
+                      to: nextAttraction.location,
+                    });
                     calculateRoute(originAttraction, nextAttraction, 'driving');
                   } else {
                     // Última atração: sem próxima para navegar
