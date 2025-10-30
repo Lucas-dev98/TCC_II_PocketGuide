@@ -70,6 +70,15 @@ export default function CreateTripScreen() {
     description: '',
   })
 
+  // Função para obter data de hoje em formato YYYY-MM-DD
+  const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
   const handleGoBack = () => {
     if (step === 1) {
       navigate('/home');
@@ -332,6 +341,7 @@ export default function CreateTripScreen() {
                   type="date"
                   value={formData.startDate}
                   onChange={handleInputChange}
+                  min={getTodayDateString()}
                 />
 
                 <Input
@@ -340,6 +350,7 @@ export default function CreateTripScreen() {
                   type="date"
                   value={formData.endDate}
                   onChange={handleInputChange}
+                  min={formData.startDate || getTodayDateString()}
                 />
               </Card.Body>
             </Card>
