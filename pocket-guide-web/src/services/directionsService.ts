@@ -82,6 +82,15 @@ class DirectionsService {
 
       // Validar coordenadas
       coordinates.forEach((coord, idx) => {
+        console.log(`🧭 Validating coordinate ${idx}:`, {
+          longitude: coord.longitude,
+          longitude_type: typeof coord.longitude,
+          longitude_isFinite: Number.isFinite(coord.longitude),
+          latitude: coord.latitude,
+          latitude_type: typeof coord.latitude,
+          latitude_isFinite: Number.isFinite(coord.latitude),
+        });
+
         if (!Number.isFinite(coord.longitude) || !Number.isFinite(coord.latitude)) {
           throw new Error(
             `Coordenada ${idx} inválida: lng=${coord.longitude}, lat=${coord.latitude}`
