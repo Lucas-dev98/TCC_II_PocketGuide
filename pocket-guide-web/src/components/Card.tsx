@@ -39,13 +39,13 @@ const elevationClasses = {
 }
 
 const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, action, children, className = '' }) => (
-  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-border dark:border-border-dark', className)}>
+  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700', className)}>
     {children ? (
       children
     ) : (
       <div>
         {title && <h3 className="text-h3 font-semibold text-slate-900 dark:text-white">{title}</h3>}
-        {subtitle && <p className="text-small text-slate-600 dark:text-slate-300">{subtitle}</p>}
+        {subtitle && <p className="text-small text-slate-600 dark:text-slate-400">{subtitle}</p>}
       </div>
     )}
     {action && <div>{action}</div>}
@@ -59,7 +59,7 @@ const CardBodyComponent: React.FC<CardBodyProps> = ({ children, className = '' }
 )
 
 const CardFooterComponent: React.FC<CardFooterProps> = ({ children, className = '' }) => (
-  <div className={clsx('mt-4 pt-4 border-t border-border dark:border-border-dark', className)}>
+  <div className={clsx('mt-4 pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
     {children}
   </div>
 )
@@ -77,7 +77,7 @@ const CardComponent: React.FC<CardProps> = ({
         'card-base',
         'bg-white dark:bg-slate-800',
         'rounded-lg',
-        'border border-border dark:border-border-dark',
+        'border border-slate-200 dark:border-slate-700',
         elevationClasses[elevation],
         'p-4',
         isInteractive && 'card-interactive',
