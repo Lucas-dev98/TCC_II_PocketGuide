@@ -1,10 +1,11 @@
 import React, { useEffect, useRef, useState } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import { Attraction } from '../types';
+import { Attraction, Location } from '../types';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { debug } from '../utils/debug';
 import { useI18n } from '../hooks/useI18n';
+import { DirectionRoute } from '../services/directionsService';
 
 interface MapboxMapProps {
   attractions?: (Attraction | any)[];
@@ -12,6 +13,9 @@ interface MapboxMapProps {
   center?: [number, number];
   height?: string;
   onAttractionSelect?: (attraction: any, index: number) => void;
+  route?: DirectionRoute | null;
+  routeOrigin?: Location | null;
+  routeDestination?: Location | null;
 }
 
 /**
@@ -23,6 +27,9 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   center = [0, 0],
   height = '400px',
   onAttractionSelect,
+  route,
+  routeOrigin,
+  routeDestination,
 }) => {
   const { t } = useI18n()
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -30,6 +37,8 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   const markersRef = useRef<mapboxgl.Marker[]>([]);
   const [selectedIndex, setSelectedIndex] = useState<number>(0);
   const attractionsRef = useRef(attractions);
+  const routeLayerRef = useRef<string | null>(null);
+  const routeSourceRef = useRef<string | null>(null);
 
   const mapboxToken = import.meta.env.VITE_MAPBOX_API_KEY;
 
@@ -168,6 +177,94 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
       });
     }
   }, [selectedIndex]);
+
+  // Render route on map
+  useEffect(() => {
+    if (!map.current || !route) return;
+
+    debug.log('🗺️ MapboxMap: Rendering route on map');
+
+    // Remove existing route layer and source
+    if (routeLayerRef.current && routeSourceRef.current) {
+      try {
+        map.current.removeLayer(routeLayerRef.current);
+        map.current.removeSource(routeSourceRef.current);
+      } catch (error) {
+        debug.error('❌ MapboxMap: Error removing existing route:', error);
+      }
+    }
+
+    // Create unique IDs for this route
+    const sourceId = `route-source-${Date.now()}`;
+    const layerId = `route-layer-${Date.now()}`;
+
+    routeSourceRef.current = sourceId;
+    routeLayerRef.current = layerId;
+
+    // Add GeoJSON source for route geometry
+    try {
+      map.current.addSource(sourceId, {
+        type: 'geojson',
+        data: {
+          type: 'Feature',
+          geometry: route.geometry as unknown as GeoJSON.Geometry,
+          properties: {},
+        } as GeoJSON.Feature,
+      });
+
+      // Add route layer
+      map.current.addLayer({
+        id: layerId,
+        type: 'line',
+        source: sourceId,
+        layout: {
+          'line-join': 'round',
+          'line-cap': 'round',
+        },
+        paint: {
+          'line-color': '#6366F1', // Indigo
+          'line-width': 3,
+          'line-opacity': 0.8,
+        },
+      }, 'waterway-label'); // Insert before waterway labels
+
+      debug.log('✅ MapboxMap: Route rendered successfully');
+
+      // Fit map to route bounds if we have origin and destination
+      if (routeOrigin && routeDestination) {
+        const bounds = new mapboxgl.LngLatBounds();
+        bounds.extend([routeOrigin.lng, routeOrigin.lat]);
+        bounds.extend([routeDestination.lng, routeDestination.lat]);
+
+        map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
+
+        // Add markers for origin and destination
+        new mapboxgl.Marker({ color: '#22C55E' }) // Green
+          .setLngLat([routeOrigin.lng, routeOrigin.lat])
+          .setPopup(new mapboxgl.Popup().setHTML('<strong>Saída</strong>'))
+          .addTo(map.current);
+
+        new mapboxgl.Marker({ color: '#EF4444' }) // Red
+          .setLngLat([routeDestination.lng, routeDestination.lat])
+          .setPopup(new mapboxgl.Popup().setHTML('<strong>Destino</strong>'))
+          .addTo(map.current);
+      }
+    } catch (error) {
+      debug.error('❌ MapboxMap: Error rendering route:', error);
+    }
+
+    return () => {
+      // Cleanup route layers on unmount
+      if (routeLayerRef.current && routeSourceRef.current && map.current) {
+        try {
+          map.current.removeLayer(routeLayerRef.current);
+          map.current.removeSource(routeSourceRef.current);
+        } catch (error) {
+          // Source/layer might already be removed
+        }
+      }
+    };
+  }, [route, routeOrigin, routeDestination]);
 
   // Handle navigation between attractions
   const handlePrevious = () => {

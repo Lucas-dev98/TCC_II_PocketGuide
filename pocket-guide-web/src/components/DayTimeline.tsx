@@ -3,10 +3,13 @@ import { MapPin, Clock, Star, AlertCircle } from "lucide-react";
 import { Card, Badge } from "@/components";
 import { AttractionDetail } from "@/types";
 import useI18n from "../hooks/useI18n";
+import { NavigateButton } from "./NavigateButton";
+import { useRouteStore } from "../store/routeStore";
 
 interface DayTimelineProps {
   attractions: AttractionDetail[];
   onAttractionClick?: (attraction: AttractionDetail) => void;
+  onNavigate?: (attraction: AttractionDetail) => void;
 }
 
 /**
@@ -16,8 +19,19 @@ interface DayTimelineProps {
 export const DayTimeline: React.FC<DayTimelineProps> = ({
   attractions,
   onAttractionClick,
+  onNavigate,
 }) => {
-  const { t } = useI18n()
+  const { t } = useI18n();
+  const { isLoadingRoute, setRouteSummaryOpen } = useRouteStore();
+
+  const handleNavigate = (attraction: AttractionDetail) => {
+    // Mostrar resumo da rota quando navegação é iniciada
+    setRouteSummaryOpen(true);
+    
+    if (onNavigate) {
+      onNavigate(attraction);
+    }
+  };
   if (!attractions || attractions.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg">
@@ -163,6 +177,21 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                     </p>
                   </div>
                 )}
+
+                {/* Navigation Button */}
+                <div className="pt-2 border-t border-gray-100 dark:border-slate-700">
+                  <NavigateButton
+                    attraction={attraction}
+                    onNavigate={
+                      onNavigate ||
+                      ((attr) => {
+                        handleNavigate(attr);
+                      })
+                    }
+                    isLoading={isLoadingRoute}
+                    disabled={!attraction.location?.lat || !attraction.location?.lng}
+                  />
+                </div>
               </div>
             </Card>
           </div>
