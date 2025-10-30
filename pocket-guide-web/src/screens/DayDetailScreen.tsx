@@ -460,24 +460,32 @@ export const DayDetailScreen: React.FC = () => {
                     attractionsCount: attractions.length,
                   });
 
-                  // Use o índice diretamente em vez de procurar
-                  const originAttraction = destinationIndex > 0 
-                    ? attractions[destinationIndex - 1] 
-                    : null;
-
-                  console.log('🧭 Origin attraction:', {
-                    found: !!originAttraction,
-                    name: originAttraction?.name,
-                    location: originAttraction?.location,
-                    index: destinationIndex - 1,
-                  });
-
-                  if (originAttraction) {
-                    console.log('✅ Calling calculateRoute...');
-                    calculateRoute(originAttraction, destination, 'driving');
+                  // Define rota com base na posição da atração na timeline
+                  if (destinationIndex === 0) {
+                    // Primeira atração: navegar TO (de local atual para primeira atração)
+                    if (trip && destination.location) {
+                      // Criar ponto de origem como primeira atração (navegação do ponto inicial)
+                      const originPoint: AttractionDetail = {
+                        ...destination,
+                        name: trip.destination || 'Ponto Inicial',
+                        location: destination.location, // usar mesma localização para rota
+                      };
+                      console.log('✅ Navigating TO first attraction');
+                      calculateRoute(originPoint, destination, 'driving');
+                    } else {
+                      console.warn('⚠️ No location data available');
+                      showError(t('navigation.noOriginPoint') || 'Ponto de partida não disponível');
+                    }
+                  } else if (destinationIndex < attractions.length - 1) {
+                    // Atrações do meio: navegar FROM current TO next attraction
+                    const originAttraction = attractions[destinationIndex - 1];
+                    const nextAttraction = attractions[destinationIndex + 1];
+                    console.log('✅ Navigating FROM', originAttraction.name, 'TO', nextAttraction.name);
+                    calculateRoute(originAttraction, nextAttraction, 'driving');
                   } else {
-                    console.warn('❌ No origin attraction found at index:', destinationIndex - 1);
-                    showError(t('navigation.noOriginPoint') || 'Nenhum ponto de partida');
+                    // Última atração: sem próxima para navegar
+                    console.warn('⚠️ Last attraction - no next attraction to navigate to');
+                    showError(t('navigation.lastAttraction') || 'Esta é a última atração do dia');
                   }
                 }}
               />

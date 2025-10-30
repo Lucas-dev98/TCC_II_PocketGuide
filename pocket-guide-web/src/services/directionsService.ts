@@ -66,6 +66,12 @@ class DirectionsService {
     }
   ): Promise<DirectionResponse> {
     try {
+      console.log('🧭 DirectionsService.getDirections called with:', {
+        coordinatesCount: coordinates.length,
+        coordinates: coordinates.map(c => ({ lat: c.latitude, lng: c.longitude })),
+        profile,
+      });
+
       if (coordinates.length < 2) {
         throw new Error('Pelo menos 2 coordenadas são necessárias');
       }
@@ -74,10 +80,27 @@ class DirectionsService {
         throw new Error('Máximo de 25 coordenadas permitidas');
       }
 
+      // Validar coordenadas
+      coordinates.forEach((coord, idx) => {
+        if (!Number.isFinite(coord.longitude) || !Number.isFinite(coord.latitude)) {
+          throw new Error(
+            `Coordenada ${idx} inválida: lng=${coord.longitude}, lat=${coord.latitude}`
+          );
+        }
+        if (coord.longitude < -180 || coord.longitude > 180) {
+          throw new Error(`Longitude ${idx} fora do range: ${coord.longitude}`);
+        }
+        if (coord.latitude < -90 || coord.latitude > 90) {
+          throw new Error(`Latitude ${idx} fora do range: ${coord.latitude}`);
+        }
+      });
+
       // Formatar coordenadas como string semicolonada
       const coordinatesString = coordinates
         .map((coord) => `${coord.longitude},${coord.latitude}`)
         .join(';');
+
+      console.log('🧭 Formatted coordinates:', coordinatesString);
 
       // Construir parâmetros da query
       const params = new URLSearchParams({
@@ -92,10 +115,16 @@ class DirectionsService {
 
       const url = `${this.baseUrl}/mapbox/${profile}/${coordinatesString}?${params.toString()}`;
 
+      console.log('🧭 API URL (without token):', url.split('access_token=')[0] + 'access_token=***');
+
       const response = await fetch(url);
 
+      console.log('🧭 API Response status:', response.status);
+
       if (!response.ok) {
-        throw new Error(`Erro ao calcular rota: ${response.statusText}`);
+        const errorText = await response.text();
+        console.error('🧭 API Error response:', errorText);
+        throw new Error(`Erro ao calcular rota: ${response.status} ${response.statusText}`);
       }
 
       const data: DirectionResponse = await response.json();
@@ -120,19 +149,15 @@ class DirectionsService {
   async getQuickRoute(
     origin: DirectionCoordinate,
     destination: DirectionCoordinate,
-    profile: 'driving' | 'walking' | 'cycling' = 'driving'
-  ): Promise<DirectionRoute> {
-    const response = await this.getDirections([origin, destination], profile, {
-      overview: 'full',
-      geometries: 'geojson',
-      steps: true,
+    profile: 'driving' | 'walking' | 'cycling' | 'driving-traffic' = 'driving'
+  ): Promise<DirectionResponse> {
+    console.log('🧭 DirectionsService.getQuickRoute called with:', {
+      origin: { lat: origin.latitude, lng: origin.longitude },
+      destination: { lat: destination.latitude, lng: destination.longitude },
+      profile,
     });
 
-    if (!response.routes || response.routes.length === 0) {
-      throw new Error('Nenhuma rota encontrada');
-    }
-
-    return response.routes[0];
+    return this.getDirections([origin, destination], profile);
   }
 
   /**

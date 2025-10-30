@@ -59,7 +59,8 @@
     "steps": "Instrucciones de Navegación",
     "departure": "Salida",
     "arrival": "Llegada",
-    "noOriginPoint": "No hay punto de salida disponible"
+    "noOriginPoint": "No hay punto de salida disponible",
+    "lastAttraction": "Esta es la última atracción del día"
   },
 
   "trips": {

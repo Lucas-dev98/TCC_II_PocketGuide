@@ -23,8 +23,20 @@ export const NavigateButton: React.FC<NavigateButtonProps> = ({
   const { t } = useI18n();
 
   const handleClick = () => {
+    console.log('🧭 NavigateButton clicked', {
+      attractionName: attraction.name,
+      isLoading,
+      disabled,
+      lat: attraction.location?.lat,
+      lng: attraction.location?.lng,
+      hasValidCoordinates,
+    });
+
     if (!isLoading && !disabled && attraction.location.lat && attraction.location.lng) {
+      console.log('✅ Calling onNavigate for:', attraction.name);
       onNavigate(attraction);
+    } else {
+      console.warn('❌ Navigation blocked:', { isLoading, disabled, hasValidCoordinates });
     }
   };
 

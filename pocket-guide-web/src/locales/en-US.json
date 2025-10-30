@@ -63,7 +63,7 @@
     "profile": "Profile",
     "share": "Share",
     "security": "Security",
-    "logout": "Sign out",
+    "logout": "Logout",
     "expandSidebar": "Expand",
     "collapseSidebar": "Collapse",
     "previous": "Previous",
@@ -75,7 +75,8 @@
     "steps": "Navigation Instructions",
     "departure": "Departure",
     "arrival": "Arrival",
-    "noOriginPoint": "No departure point available"
+    "noOriginPoint": "No origin point available",
+    "lastAttraction": "This is the last attraction of the day"
   },
 
   "trips": {

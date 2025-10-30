@@ -52,7 +52,36 @@ export const useNavigation = (): UseNavigationReturn => {
       profile: 'driving' | 'walking' | 'cycling' | 'driving-traffic' = 'driving'
     ) => {
       try {
-        // Validar coordenadas
+        // Log inicial com dados brutos
+        console.log('🧭 useNavigation.calculateRoute START:', {
+          origin: {
+            name: origin.name,
+            location: origin.location,
+            raw: JSON.stringify(origin.location),
+          },
+          destination: {
+            name: destination.name,
+            location: destination.location,
+            raw: JSON.stringify(destination.location),
+          },
+          profile,
+        });
+
+        // Validar coordenadas com logs detalhados
+        console.log('🧭 Validating origin coordinates:', {
+          lat: origin.location?.lat,
+          lat_type: typeof origin.location?.lat,
+          lng: origin.location?.lng,
+          lng_type: typeof origin.location?.lng,
+        });
+
+        console.log('🧭 Validating destination coordinates:', {
+          lat: destination.location?.lat,
+          lat_type: typeof destination.location?.lat,
+          lng: destination.location?.lng,
+          lng_type: typeof destination.location?.lng,
+        });
+
         const originValid = 
           typeof origin.location?.lat === 'number' && 
           typeof origin.location?.lng === 'number' &&
@@ -73,6 +102,11 @@ export const useNavigation = (): UseNavigationReturn => {
           destination.location.lng >= -180 && 
           destination.location.lng <= 180;
 
+        console.log('🧭 Validation results:', {
+          originValid,
+          destinationValid,
+        });
+
         if (!originValid || !destinationValid) {
           const missingOrigin = !originValid ? 'origem' : '';
           const missingDestination = !destinationValid ? 'destino' : '';
@@ -83,14 +117,15 @@ export const useNavigation = (): UseNavigationReturn => {
         setLoadingRoute(true);
         setRouteError(null);
 
-        console.log('🧭 useNavigation: Calculando rota', {
-          origin: origin.name,
-          destination: destination.name,
-          profile,
-        });
-
         // Chamar serviço de direções
         const quickProfile = profile === 'driving-traffic' ? 'driving' : profile;
+        
+        console.log('🧭 Calling directionsService.getQuickRoute:', {
+          origin: { lat: origin.location.lat, lng: origin.location.lng },
+          destination: { lat: destination.location.lat, lng: destination.location.lng },
+          profile: quickProfile,
+        });
+
         const route = await directionsService.getQuickRoute(
           {
             latitude: origin.location.lat,
@@ -103,12 +138,17 @@ export const useNavigation = (): UseNavigationReturn => {
           quickProfile
         );
 
-        setCurrentRoute(route);
+        if (!route.routes || route.routes.length === 0) {
+          throw new Error('Nenhuma rota encontrada');
+        }
+
+        const firstRoute = route.routes[0];
+        setCurrentRoute(firstRoute);
         setRouteSummaryOpen(true);
 
         console.log('✅ useNavigation: Rota calculada com sucesso', {
-          distance: route.distance,
-          duration: route.duration,
+          distance: firstRoute.distance,
+          duration: firstRoute.duration,
         });
       } catch (error) {
         const errorMessage =
