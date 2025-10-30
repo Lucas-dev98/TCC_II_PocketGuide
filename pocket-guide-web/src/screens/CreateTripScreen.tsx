@@ -60,6 +60,17 @@ export default function CreateTripScreen() {
   const [step, setStep] = useState<1 | 2 | 3>(1)
   const [isLoading, setIsLoading] = useState(false)
   
+  // Obter a data de hoje no formato YYYY-MM-DD
+  const getTodayDateString = (): string => {
+    const today = new Date();
+    const year = today.getFullYear();
+    const month = String(today.getMonth() + 1).padStart(2, '0');
+    const day = String(today.getDate()).padStart(2, '0');
+    return `${year}-${month}-${day}`;
+  };
+
+  const minDate = getTodayDateString();
+  
   const [formData, setFormData] = useState<FormData>({
     destination: '',
     country: '',
@@ -125,10 +136,29 @@ export default function CreateTripScreen() {
         showError(t('createTrip.invalidEndDate'))
         return false
       }
-      if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+
+      // Validar se as datas estão no passado
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      
+      const startDate = new Date(formData.startDate);
+      startDate.setHours(0, 0, 0, 0);
+      
+      const endDate = new Date(formData.endDate);
+      endDate.setHours(0, 0, 0, 0);
+
+      // Data de início não pode ser no passado
+      if (startDate < today) {
+        showError('A data de início não pode ser no passado')
+        return false
+      }
+
+      // Data de fim deve ser depois da data de início
+      if (endDate <= startDate) {
         showError(t('createTrip.invalidDateRange'))
         return false
       }
+
       if (formData.interests.length === 0) {
         showError(t('createTrip.invalidInterests'))
         return false
@@ -332,6 +362,7 @@ export default function CreateTripScreen() {
                   type="date"
                   value={formData.startDate}
                   onChange={handleInputChange}
+                  min={minDate}
                 />
 
                 <Input
@@ -340,6 +371,7 @@ export default function CreateTripScreen() {
                   type="date"
                   value={formData.endDate}
                   onChange={handleInputChange}
+                  min={minDate}
                 />
               </Card.Body>
             </Card>
