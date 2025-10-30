@@ -23,50 +23,116 @@ interface UnsplashResponse {
 }
 
 const ATTRACTION_SEARCH_QUERIES: { [key: string]: string } = {
-  'colosseum': 'colosseum rome',
-  'colosseo': 'colosseum rome',
-  'roman forum': 'roman forum rome',
-  'palatine hill': 'palatine hill rome',
-  'monti': 'monti rome',
-  'trevi fountain': 'trevi fountain',
-  'vatican': 'vatican city',
-  'vatican city': 'vatican city',
-  'restaurante': 'italian restaurant',
-  'restaurant': 'italian restaurant',
-  'pizza': 'pizza italian',
-  'pasta': 'pasta italian',
-  'café': 'coffee shop',
-  'coffee': 'coffee shop',
-  'lunch': 'food meal',
-  'dinner': 'food dining',
-  'breakfast': 'breakfast food',
-  'museu': 'museum rome',
-  'museo': 'museum rome',
-  'museum': 'museum rome',
-  'gallery': 'art gallery',
-  'art': 'art exhibition',
-  'nature': 'nature landscape',
-  'natureza': 'nature landscape',
-  'park': 'park nature',
-  'garden': 'garden flowers',
-  'beach': 'beach coast',
-  'ocean': 'ocean seascape',
-  'mountain': 'mountain landscape',
-  'hiking': 'hiking trail',
-  'shopping': 'shopping mall',
-  'market': 'market street',
-  'compra': 'shopping',
-  'compras': 'shopping mall',
-  'leisure': 'leisure activity',
-  'entertainment': 'entertainment',
-  'relax': 'relaxation spa',
-  'spa': 'spa wellness',
-  'landmark': 'landmark historic',
-  'travel': 'travel destination',
-  'trip': 'travel adventure',
-  'attraction': 'tourist attraction',
-  'tour': 'guided tour',
-  'walk': 'walking tour',
+  // Rome Landmarks
+  'colosseum': 'colosseum rome architecture',
+  'colosseo': 'colosseum rome architecture',
+  'coliseu': 'colosseum rome architecture',
+  'roman forum': 'roman forum rome ancient',
+  'foro romano': 'roman forum rome ancient',
+  'palatine hill': 'palatine hill rome ruins',
+  'monte palatino': 'palatine hill rome ruins',
+  'monti': 'monti neighborhood rome street',
+  'trevi fountain': 'trevi fountain rome water',
+  'fontana di trevi': 'trevi fountain rome',
+  'vatican': 'vatican city vatican museum art',
+  'vatican city': 'vatican city vatican museum',
+  'basilica di san pietro': 'st peter basilica vatican',
+  'st peter': 'st peter basilica vatican',
+  'pantheon': 'pantheon rome ancient architecture',
+  'cappella sistina': 'sistine chapel vatican',
+  'sistine chapel': 'sistine chapel vatican ceiling',
+
+  // Food & Dining
+  'restaurante': 'italian restaurant cuisine dining',
+  'restaurant': 'italian restaurant cuisine dining',
+  'pizzeria': 'pizzeria pizza restaurant italy',
+  'pizza': 'authentic italian pizza wood oven',
+  'pasta': 'authentic italian pasta cooking',
+  'trattoria': 'trattoria italian restaurant dining',
+  'café': 'italian coffee shop espresso',
+  'coffee': 'italian espresso coffee shop',
+  'gelato': 'gelato italian ice cream dessert',
+  'gelati': 'gelato italian ice cream dessert',
+  'lunch': 'italian lunch meal restaurant',
+  'dinner': 'italian dinner meal restaurant',
+  'breakfast': 'italian breakfast food morning',
+  'wine': 'italian wine vineyard tasting',
+
+  // Museums & Art
+  'museu': 'museum art gallery exhibition',
+  'museo': 'museum art gallery exhibition',
+  'museum': 'museum art gallery exhibition',
+  'gallery': 'art gallery exhibition paintings',
+  'galeria': 'art gallery exhibition paintings',
+  'art': 'art exhibition paintings sculptures',
+  'arte': 'art exhibition paintings sculptures',
+  'exhibit': 'art exhibition museum gallery',
+
+  // Nature & Parks
+  'nature': 'nature landscape outdoor scenery',
+  'natureza': 'nature landscape outdoor scenery',
+  'park': 'park nature garden outdoor',
+  'parque': 'park nature garden outdoor',
+  'garden': 'garden flowers botanical plants',
+  'jardim': 'garden flowers botanical plants',
+  'forest': 'forest nature trees woodland',
+  'floresta': 'forest nature trees woodland',
+  'beach': 'beach sand coast seaside',
+  'praia': 'beach sand coast seaside',
+  'ocean': 'ocean seascape water horizon',
+  'oceano': 'ocean seascape water horizon',
+  'mountain': 'mountain landscape peak altitude',
+  'montanha': 'mountain landscape peak altitude',
+  'hiking': 'hiking trail mountain nature',
+  'trilha': 'hiking trail mountain nature',
+  'waterfall': 'waterfall water nature scenic',
+  'cachoeira': 'waterfall water nature scenic',
+
+  // Shopping & Markets
+  'shopping': 'shopping mall stores retail',
+  'market': 'market street vendors local',
+  'mercado': 'market street vendors local',
+  'compra': 'shopping mall stores retail',
+  'compras': 'shopping mall stores retail',
+  'shop': 'shopping street stores retail',
+  'loja': 'shopping street stores retail',
+
+  // Leisure & Entertainment
+  'leisure': 'leisure activity relaxation vacation',
+  'entertainment': 'entertainment show performance cultural',
+  'relax': 'relaxation spa wellness retreat',
+  'spa': 'spa wellness massage treatment',
+  'bem-estar': 'wellness spa health retreat',
+  'night life': 'nightlife bar club entertainment',
+  'noitada': 'nightlife bar club entertainment',
+
+  // Historic & Tourist
+  'landmark': 'landmark historic monument architectural',
+  'marco': 'landmark historic monument architectural',
+  'monumento': 'monument historic architectural landmark',
+  'historic': 'historic site old architecture',
+  'histórico': 'historic site old architecture',
+  'travel': 'travel destination tourism scenic',
+  'viagem': 'travel destination tourism scenic',
+  'trip': 'travel adventure tourism destination',
+  'attraction': 'tourist attraction landmark destination',
+  'atração': 'tourist attraction landmark destination',
+  'tour': 'guided tour sightseeing tourist',
+  'passeio': 'guided tour sightseeing tourist',
+  'walk': 'walking tour city street exploration',
+  'caminhada': 'walking tour city street exploration',
+
+  // Specific locations
+  'eiffel': 'eiffel tower paris monument',
+  'paris': 'paris city architecture landmark',
+  'london': 'london city bridge landmark',
+  'barcelona': 'barcelona city architecture',
+  'madrid': 'madrid city architecture',
+  'berlin': 'berlin city landmark history',
+  'amsterdam': 'amsterdam city canal architecture',
+  'lisbon': 'lisbon city architecture viewpoint',
+  'athens': 'athens greece acropolis ancient',
+  'istanbul': 'istanbul turkey mosque architecture',
 };
 
 const FALLBACK_GRADIENTS: { [key: string]: { gradient: string; emoji: string } } = {
@@ -115,11 +181,14 @@ export class PhotoService {
       const query = this.getSearchQuery(attractionName);
       debug.log(`   → Query de busca: "${query}"`);
 
+      // Buscar múltiplas imagens e selecionar a melhor (mais likes/relevante)
       const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
       url.searchParams.set('query', query);
       url.searchParams.set('client_id', this.UNSPLASH_API_KEY);
-      url.searchParams.set('per_page', '1');
+      url.searchParams.set('per_page', '10'); // Buscar 10 para selecionar melhor
       url.searchParams.set('orientation', 'landscape');
+      url.searchParams.set('order_by', 'relevant'); // Ordenar por relevância
+      url.searchParams.set('content_filter', 'high'); // Filtro de conteúdo seguro
 
       const response = await retryService.fetchWithRetry(url.toString(), {
         headers: {
@@ -139,20 +208,36 @@ export class PhotoService {
         return null;
       }
 
-      const image = data.results[0];
+      // Selecionar a imagem melhor classificada (por likes e downloads)
+      const bestImage = this.selectBestImage(data.results);
+      
       const photo: PhotoSource = {
-        url: image.urls.regular,
+        url: bestImage.urls.regular,
         source: 'unsplash',
         width: 1200,
         height: 600,
       };
 
-      debug.log(`✅ Imagem encontrada: ${image.user.name}`);
+      debug.log(`✅ Imagem encontrada: ${bestImage.user.name}`);
       return photo;
     } catch (error) {
       debug.error(`❌ Erro ao buscar Unsplash:`, error);
       return null;
     }
+  }
+
+  private static selectBestImage(images: UnsplashImage[]): UnsplashImage {
+    // Filtrar imagens com boa qualidade (mais likes/downloads)
+    const scored = images.map((img: any) => ({
+      image: img,
+      score: (img.likes || 0) * 2 + (img.downloads || 0) * 1.5,
+    }));
+
+    // Ordenar por score e pegar a melhor
+    scored.sort((a, b) => b.score - a.score);
+    
+    // Retornar primeira com score decente ou a primeira se nenhuma tiver
+    return scored[0]?.image || images[0];
   }
 
   private static getSearchQuery(attractionName: string): string {
