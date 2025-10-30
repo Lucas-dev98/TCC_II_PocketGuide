@@ -20,9 +20,9 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
   const { t } = useI18n()
   if (!attractions || attractions.length === 0) {
     return (
-      <div className="flex flex-col items-center justify-center py-12">
-        <AlertCircle className="w-12 h-12 text-gray-300 mb-3" />
-        <p className="text-gray-500 text-center">
+      <div className="flex flex-col items-center justify-center py-12 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 rounded-lg">
+        <AlertCircle className="w-12 h-12 text-gray-300 dark:text-slate-600 mb-3" />
+        <p className="text-gray-500 dark:text-slate-400 text-center">
           Nenhuma atração programada para este dia
         </p>
       </div>
@@ -48,22 +48,22 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
           {/* Timeline linha */}
           <div className="flex flex-col items-center">
             {/* Ponto */}
-            <div className="w-4 h-4 rounded-full bg-indigo-500 border-4 border-white shadow-lg" />
+            <div className="w-4 h-4 rounded-full bg-indigo-500 border-4 border-white dark:border-slate-800 shadow-lg" />
             {/* Linha para próxima atração */}
             {index < sortedAttractions.length - 1 && (
-              <div className="w-1 h-24 bg-gradient-to-b from-indigo-500 to-indigo-200 mt-2" />
+              <div className="w-1 h-24 bg-gradient-to-b from-indigo-500 to-indigo-200 dark:from-indigo-600 dark:to-indigo-800 mt-2" />
             )}
           </div>
 
           {/* Conteúdo da atração */}
           <div className="flex-1 pt-1">
             <Card
-              className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden"
+              className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border-slate-200 dark:border-slate-700"
               onClick={() => onAttractionClick?.(attraction)}
             >
               {/* Foto da atração */}
               {attraction.photos && attraction.photos.length > 0 ? (
-                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 overflow-hidden relative group flex items-center justify-center">
+                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/20 overflow-hidden relative group flex items-center justify-center">
                   <img
                     src={attraction.photos[0].url}
                     alt={attraction.photos[0].alt}
@@ -86,10 +86,10 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                   />
                 </div>
               ) : (
-                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 flex items-center justify-center">
+                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/40 dark:to-indigo-800/30 flex items-center justify-center">
                   <div className="text-center">
-                    <MapPin className="w-8 h-8 text-indigo-300 mx-auto mb-2" />
-                    <p className="text-sm text-indigo-600">{attraction.name}</p>
+                    <MapPin className="w-8 h-8 text-indigo-300 dark:text-indigo-600 mx-auto mb-2" />
+                    <p className="text-sm text-indigo-600 dark:text-indigo-400">{attraction.name}</p>
                   </div>
                 </div>
               )}
@@ -99,8 +99,8 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1">
                     <div className="flex items-center gap-2">
-                      <Clock className="w-4 h-4 text-indigo-500 flex-shrink-0" />
-                      <span className="font-semibold text-sm text-indigo-600">
+                      <Clock className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
+                      <span className="font-semibold text-sm text-indigo-600 dark:text-indigo-400">
                         {attraction.time || t('time.notDefined')}
                       </span>
                     </div>
@@ -110,14 +110,14 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                       </Badge>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
                     {attraction.name}
                   </h3>
                 </div>
 
                 {/* Descrição */}
                 {attraction.reason && (
-                  <p className="text-sm text-gray-600 line-clamp-2">
+                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                     {attraction.reason}
                   </p>
                 )}
@@ -125,8 +125,8 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                 {/* Localização */}
                 {attraction.location && (
                   <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-gray-400 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 line-clamp-1">
+                    <MapPin className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-600 dark:text-gray-400 line-clamp-1">
                       {attraction.location.address ||
                         `${attraction.location.lat}, ${attraction.location.lng}`}
                     </span>
@@ -157,8 +157,8 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
 
                 {/* Tips */}
                 {attraction.tip && (
-                  <div className="pt-2 border-t border-gray-100">
-                    <p className="text-xs text-gray-600 italic">
+                  <div className="pt-2 border-t border-gray-100 dark:border-slate-700">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 italic">
                       💭 {attraction.tip}
                     </p>
                   </div>
