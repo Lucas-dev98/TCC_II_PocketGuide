@@ -6,6 +6,12 @@ export interface PhotoSource {
   source: 'unsplash' | 'pexels' | 'fallback';
   width: number;
   height: number;
+  // Attribution metadata for Unsplash compliance
+  photographer?: string;
+  photographerUrl?: string;
+  unsplashLink?: string;
+  photoId?: string;
+  downloadLocation?: string;
 }
 
 interface UnsplashImage {
@@ -14,7 +20,15 @@ interface UnsplashImage {
   };
   user: {
     name: string;
+    username?: string;
+    links?: {
+      html?: string;
+    };
   };
+  links?: {
+    download_location?: string;
+  };
+  id?: string;
 }
 
 interface UnsplashResponse {
@@ -149,6 +163,7 @@ export class PhotoService {
   private static readonly UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_API_KEY || '';
   private static readonly UNSPLASH_BASE_URL = 'https://api.unsplash.com';
   private static readonly CACHE = new Map<string, PhotoSource>();
+  private static downloadedPhotos = new Map<string, any>(); // Track photos with metadata
 
   static async generatePhotoUrl(attractionName: string): Promise<PhotoSource> {
     try {
@@ -173,6 +188,41 @@ export class PhotoService {
     } catch (error) {
       debug.error(`❌ Erro gerando foto para "${attractionName}":`, error);
       return this.getFallbackPhoto(attractionName);
+    }
+  }
+
+  /**
+   * Track photo download to Unsplash API
+   * Required for production-level access
+   * @param photoId - Unsplash photo ID
+   * @param downloadLocation - Unsplash download endpoint URL
+   */
+  static async trackPhotoDownload(photoId: string, downloadLocation: string): Promise<void> {
+    if (!photoId || !downloadLocation) {
+      debug.warn('⚠️ Photo ID or download location missing - cannot track download');
+      return;
+    }
+
+    try {
+      debug.log(`📊 Rastreando download de foto: ${photoId}`);
+      
+      const response = await retryService.fetchWithRetry(downloadLocation, {
+        headers: {
+          'User-Agent': 'PocketGuide/1.0',
+        },
+      });
+
+      if (response.ok) {
+        debug.log(`✅ Download rastreado com sucesso: ${photoId}`);
+        this.downloadedPhotos.set(photoId, {
+          tracked: true,
+          timestamp: new Date().toISOString(),
+        });
+      } else {
+        debug.warn(`⚠️ Falha ao rastrear download: ${response.statusText}`);
+      }
+    } catch (error) {
+      debug.error(`❌ Erro ao rastrear download:`, error);
     }
   }
 
@@ -216,6 +266,12 @@ export class PhotoService {
         source: 'unsplash',
         width: 1200,
         height: 600,
+        // Attribution metadata for production compliance
+        photographer: bestImage.user.name,
+        photographerUrl: bestImage.user.links?.html || `https://unsplash.com/@${bestImage.user.username}`,
+        photoId: bestImage.id,
+        downloadLocation: bestImage.links?.download_location,
+        unsplashLink: `https://unsplash.com/photos/${bestImage.id}`,
       };
 
       debug.log(`✅ Imagem encontrada: ${bestImage.user.name}`);

@@ -2,6 +2,8 @@ import React, { useState, useCallback } from "react";
 import { ChevronLeft, ChevronRight, X } from "lucide-react";
 import { Button } from "@/components";
 import { PhotoData } from "@/types";
+import PhotoAttribution from "@/components/PhotoAttribution";
+import PhotoService from "@/services/photoService";
 
 interface DayGalleryProps {
   photos: PhotoData[];
@@ -29,6 +31,17 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
     setCurrentIndex((prev) => (prev === photos.length - 1 ? 0 : prev + 1));
   }, [photos.length]);
 
+  // Track photo download when expanded (Unsplash compliance)
+  const handlePhotoExpanded = useCallback(() => {
+    const photo = photos[currentIndex];
+    if (photo?.photoId && photo?.downloadLocation) {
+      PhotoService.trackPhotoDownload(photo.photoId, photo.downloadLocation).catch((error) => {
+        console.warn('Failed to track photo download:', error);
+      });
+    }
+    setIsExpanded(true);
+  }, [currentIndex, photos]);
+
   if (!photos || photos.length === 0) {
     return (
       <div
@@ -54,7 +67,7 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
           src={currentPhoto.url}
           alt={currentPhoto.alt}
           className="w-full h-96 object-cover cursor-pointer transition-transform duration-300 hover:scale-105"
-          onClick={() => setIsExpanded(true)}
+          onClick={handlePhotoExpanded}
           loading="lazy"
         />
 
@@ -121,6 +134,24 @@ export const DayGallery: React.FC<DayGalleryProps> = ({
             </button>
           ))}
         </div>
+      )}
+
+      {/* Photographer Attribution - Unsplash Compliance */}
+      {currentPhoto && (
+        <PhotoAttribution 
+          photo={{
+            url: currentPhoto.url,
+            source: (currentPhoto.source as 'unsplash' | 'pexels' | 'fallback') || 'fallback',
+            width: currentPhoto.width || 1200,
+            height: currentPhoto.height || 600,
+            photographer: currentPhoto.photographer,
+            photographerUrl: currentPhoto.photographerUrl,
+            unsplashLink: currentPhoto.unsplashLink,
+            photoId: currentPhoto.photoId,
+            downloadLocation: currentPhoto.downloadLocation,
+          }}
+          compact={true}
+        />
       )}
 
       {/* Modal expandido */}

@@ -229,6 +229,12 @@ export interface PhotoData {
   source?: "gemini" | "google" | "unsplash" | "pexels" | "fallback" | "local" | "placeholder";
   width?: number;
   height?: number;
+  // Attribution metadata for Unsplash compliance
+  photographer?: string;
+  photographerUrl?: string;
+  unsplashLink?: string;
+  photoId?: string;
+  downloadLocation?: string;
 }
 
 /**

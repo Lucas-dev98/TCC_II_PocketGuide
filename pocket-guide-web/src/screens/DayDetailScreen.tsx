@@ -506,11 +506,20 @@ async function generatePhotosForAttraction(attraction: any): Promise<PhotoData[]
         alt: `${attraction.name} - foto ${i + 1}`,
         attractionName: attraction.name,
         source: photoSource.source,
+        width: photoSource.width,
+        height: photoSource.height,
+        // Attribution metadata for Unsplash compliance
+        photographer: photoSource.photographer,
+        photographerUrl: photoSource.photographerUrl,
+        unsplashLink: photoSource.unsplashLink,
+        photoId: photoSource.photoId,
+        downloadLocation: photoSource.downloadLocation,
       });
       
       debug.log(`✅ Foto ${i + 1} gerada para "${attraction.name}":`);
       debug.log(`   URL: ${photoSource.url}`);
       debug.log(`   Source: ${photoSource.source}`);
+      debug.log(`   Photographer: ${photoSource.photographer}`);
     } catch (error) {
       debug.error(`❌ Erro gerando foto ${i + 1} para "${attraction.name}":`, error);
     }
