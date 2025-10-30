@@ -232,22 +232,55 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
       // Fit map to route bounds if we have origin and destination
       if (routeOrigin && routeDestination) {
-        const bounds = new mapboxgl.LngLatBounds();
-        bounds.extend([routeOrigin.lng, routeOrigin.lat]);
-        bounds.extend([routeDestination.lng, routeDestination.lat]);
+        try {
+          // Validate coordinates
+          const isValidOrigin = 
+            typeof routeOrigin.lng === 'number' && 
+            typeof routeOrigin.lat === 'number' &&
+            routeOrigin.lng >= -180 && routeOrigin.lng <= 180 &&
+            routeOrigin.lat >= -90 && routeOrigin.lat <= 90;
+          
+          const isValidDestination = 
+            typeof routeDestination.lng === 'number' && 
+            typeof routeDestination.lat === 'number' &&
+            routeDestination.lng >= -180 && routeDestination.lng <= 180 &&
+            routeDestination.lat >= -90 && routeDestination.lat <= 90;
 
-        map.current.fitBounds(bounds, { padding: 80, duration: 1000 });
+          if (!isValidOrigin || !isValidDestination) {
+            debug.warn('⚠️ MapboxMap: Invalid route coordinates', { routeOrigin, routeDestination });
+            return;
+          }
 
-        // Add markers for origin and destination
-        new mapboxgl.Marker({ color: '#22C55E' }) // Green
-          .setLngLat([routeOrigin.lng, routeOrigin.lat])
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>Saída</strong>'))
-          .addTo(map.current);
+          const bounds = new mapboxgl.LngLatBounds();
+          bounds.extend([routeOrigin.lng, routeOrigin.lat]);
+          bounds.extend([routeDestination.lng, routeDestination.lat]);
 
-        new mapboxgl.Marker({ color: '#EF4444' }) // Red
-          .setLngLat([routeDestination.lng, routeDestination.lat])
-          .setPopup(new mapboxgl.Popup().setHTML('<strong>Destino</strong>'))
-          .addTo(map.current);
+          // Verify bounds are valid before fitting
+          if (bounds.isEmpty()) {
+            debug.warn('⚠️ MapboxMap: Empty bounds - origin and destination are the same');
+            // Just fly to the origin instead
+            map.current?.flyTo({
+              center: [routeOrigin.lng, routeOrigin.lat],
+              zoom: 15,
+              duration: 1000,
+            });
+          } else {
+            map.current?.fitBounds(bounds, { padding: 80, duration: 1000, maxZoom: 18 });
+          }
+
+          // Add markers for origin and destination
+          new mapboxgl.Marker({ color: '#22C55E' }) // Green
+            .setLngLat([routeOrigin.lng, routeOrigin.lat])
+            .setPopup(new mapboxgl.Popup().setHTML('<strong>Saída</strong>'))
+            .addTo(map.current!);
+
+          new mapboxgl.Marker({ color: '#EF4444' }) // Red
+            .setLngLat([routeDestination.lng, routeDestination.lat])
+            .setPopup(new mapboxgl.Popup().setHTML('<strong>Destino</strong>'))
+            .addTo(map.current!);
+        } catch (error) {
+          debug.error('❌ MapboxMap: Error fitting bounds to route:', error);
+        }
       }
     } catch (error) {
       debug.error('❌ MapboxMap: Error rendering route:', error);

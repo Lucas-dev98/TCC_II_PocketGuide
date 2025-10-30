@@ -53,13 +53,30 @@ export const useNavigation = (): UseNavigationReturn => {
     ) => {
       try {
         // Validar coordenadas
-        if (
-          !origin.location?.lat ||
-          !origin.location?.lng ||
-          !destination.location?.lat ||
-          !destination.location?.lng
-        ) {
-          throw new Error('Coordenadas inválidas para origem ou destino');
+        const originValid = 
+          typeof origin.location?.lat === 'number' && 
+          typeof origin.location?.lng === 'number' &&
+          origin.location.lat !== 0 &&
+          origin.location.lng !== 0 &&
+          origin.location.lat >= -90 && 
+          origin.location.lat <= 90 &&
+          origin.location.lng >= -180 && 
+          origin.location.lng <= 180;
+
+        const destinationValid = 
+          typeof destination.location?.lat === 'number' && 
+          typeof destination.location?.lng === 'number' &&
+          destination.location.lat !== 0 &&
+          destination.location.lng !== 0 &&
+          destination.location.lat >= -90 && 
+          destination.location.lat <= 90 &&
+          destination.location.lng >= -180 && 
+          destination.location.lng <= 180;
+
+        if (!originValid || !destinationValid) {
+          const missingOrigin = !originValid ? 'origem' : '';
+          const missingDestination = !destinationValid ? 'destino' : '';
+          throw new Error(`Coordenadas inválidas para ${missingOrigin}${missingOrigin && missingDestination ? ' e ' : ''}${missingDestination}`);
         }
 
         setOriginAndDestination(origin, destination);
