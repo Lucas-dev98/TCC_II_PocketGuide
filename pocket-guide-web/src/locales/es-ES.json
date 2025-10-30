@@ -58,7 +58,8 @@
     "duration": "Duración",
     "steps": "Instrucciones de Navegación",
     "departure": "Salida",
-    "arrival": "Llegada"
+    "arrival": "Llegada",
+    "noOriginPoint": "No hay punto de salida disponible"
   },
 
   "trips": {

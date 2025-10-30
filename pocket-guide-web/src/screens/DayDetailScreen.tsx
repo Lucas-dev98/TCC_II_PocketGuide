@@ -6,7 +6,9 @@ import { MainLayout } from "@/components/Layout";
 import { DayNavigation } from "@/components/DayNavigation";
 import { DayGallery } from "@/components/DayGallery";
 import { DayTimeline } from "@/components/DayTimeline";
+import { RouteSummary } from "@/components/RouteSummary";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
+import { useNavigation } from "@/hooks/useNavigation";
 import useI18n from "@/hooks/useI18n";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
@@ -35,6 +37,16 @@ export const DayDetailScreen: React.FC = () => {
   
   // Usar Zustand store
   const { trips } = useTripsStore();
+
+  // Hook de navegação
+  const {
+    calculateRoute,
+    clearRoute,
+    currentRoute,
+    currentOrigin,
+    currentDestination,
+    isLoadingRoute,
+  } = useNavigation();
 
   // Validar parâmetros
   if (!tripId || !dayNumber) {
@@ -441,6 +453,19 @@ export const DayDetailScreen: React.FC = () => {
                 onAttractionClick={(attraction) => {
                   debug.log("Atração clicada:", attraction);
                 }}
+                onNavigate={(destination) => {
+                  // Se há uma atração anterior (origem), calcular rota dela para o destino
+                  const currentIndex = attractions.findIndex(a => a.id === destination.id);
+                  const originAttraction = currentIndex > 0 
+                    ? attractions[currentIndex - 1] 
+                    : null;
+
+                  if (originAttraction) {
+                    calculateRoute(originAttraction, destination, 'driving');
+                  } else {
+                    showError(t('navigation.noOriginPoint') || 'Nenhum ponto de partida');
+                  }
+                }}
               />
             </>
           ) : (
@@ -459,6 +484,17 @@ export const DayDetailScreen: React.FC = () => {
           )}
         </section>
 
+        {/* Resumo da Rota */}
+        {currentRoute && currentOrigin && currentDestination && (
+          <RouteSummary
+            route={currentRoute}
+            origin={currentOrigin.name || currentOrigin.location?.address}
+            destination={currentDestination.name || currentDestination.location?.address}
+            isLoading={isLoadingRoute}
+            onClose={clearRoute}
+          />
+        )}
+
         {/* Mapa com localizações do dia */}
         {attractions.length > 0 && (
           <Card className="shadow-md border-slate-200 dark:border-slate-700">
@@ -476,6 +512,9 @@ export const DayDetailScreen: React.FC = () => {
                   onAttractionSelect={(attraction) => {
                     debug.log("Localização selecionada:", attraction);
                   }}
+                  route={currentRoute}
+                  routeOrigin={currentOrigin?.location}
+                  routeDestination={currentDestination?.location}
                 />
               </Suspense>
             </Card.Body>
