@@ -1,32 +1,38 @@
 # 🌍 Pocket Guide - AI Travel Itinerary App
 
-**Status:** ✅ **PRODUCTION READY**
+**Status:** ✅ **PRODUCTION READY**  
+**Last Update:** 30 de outubro de 2025
 
 Uma aplicação web de planejamento de viagens alimentada por IA que gera itinerários personalizados usando Google Gemini e exibe locais em mapa interativo com Mapbox.
 
 ---
 
-## 📊 **Estrutura do Projeto (LIMPA)**
+## 🎯 **Estrutura Organizada (100% LIMPA)**
 
 ```
 pocket-guide/
-├── pocket-guide-web/              # ✅ APLICAÇÃO REACT (ATIVA)
-│   ├── src/
-│   │   ├── screens/               # Telas (Login, Home, CreateTrip, TripDetail)
-│   │   ├── components/            # Componentes reutilizáveis
-│   │   ├── services/              # Firebase, Gemini, Mapbox
-│   │   ├── store/                 # Zustand state management
-│   │   └── utils/                 # Helpers
-│   ├── dist/                      # Build otimizado
-│   ├── package.json
-│   └── vite.config.ts
+├── README.md ✨ ÚNICO NA RAIZ!
 │
-├── archived_react_native/         # 📦 CÓDIGO ANTIGO (React Native - Descontinuado)
-├── docs_archived/                 # 📚 DOCUMENTAÇÃO ANTIGA
-├── .env                           # Variáveis de ambiente
-├── .gitignore                     # Git ignore rules
-└── README.md                      # Este arquivo
+├── pocket-guide-web/              # ✅ APLICAÇÃO REACT
+│   ├── README.md (Quick Start)
+│   ├── STATUS.md (Visão Geral)
+│   └── src/ (Código da app)
+│
+├── docs/                          # 📚 DOCUMENTAÇÃO CENTRALIZADA
+│   ├── INDEX.md (Índice central)
+│   ├── FEATURES/ (10 features)
+│   │   ├── DARK_MODE/ 📁 5 arquivos
+│   │   └── LOADING_ANIMATION/ 📁 11 arquivos
+│   ├── POCKET_GUIDE_WEB/ 📁 Atualizações recentes
+│   │   ├── HISTORY/ 📚 13 arquivos
+│   ├── HISTORY/ 📚 Histórico geral
+│   └── ... (resto organizado)
+│
+├── archived_react_native/         # 📦 Código antigo
+└── .env, package.json, etc
 ```
+
+**✨ Resultado:** Apenas 1 arquivo .md na raiz! Tudo organizado e fácil de encontrar!
 
 ---
 
