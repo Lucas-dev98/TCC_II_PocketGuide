@@ -1,4 +1,4 @@
-name: Test & Build
+name: Test, Lint and Build
 
 on:
   push:
@@ -7,79 +7,48 @@ on:
     branches: [main, develop]
 
 jobs:
-  test:
+  test-lint-build:
     runs-on: ubuntu-latest
-    
-    strategy:
-      matrix:
-        node-version: [18.x, 20.x]
     
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js ${{ matrix.node-version }}
+      - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: ${{ matrix.node-version }}
+          node-version: '20'
           cache: 'npm'
 
       - name: Install dependencies
+        working-directory: ./pocket-guide-web
         run: npm ci
 
       - name: Run type check
+        working-directory: ./pocket-guide-web
         run: npm run type-check
+
+      - name: Run linter
+        working-directory: ./pocket-guide-web
+        run: npm run lint
 
       - name: Run tests
-        run: npm test -- validation.test.ts integration.test.ts --coverage
+        working-directory: ./pocket-guide-web
+        run: npm run test
 
-      - name: Upload coverage
-        uses: codecov/codecov-action@v3
-        with:
-          files: ./coverage/lcov.info
-          flags: unittests
-          name: codecov-umbrella
+      - name: Generate coverage report
+        working-directory: ./pocket-guide-web
+        run: npm run test:coverage
 
       - name: Build app
-        run: npm run build 2>/dev/null || echo "Build succeeded (or skipped)"
+        working-directory: ./pocket-guide-web
+        run: npm run build
 
-  backend-test:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v3
+        if: always()
         with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: cd backend && npm ci
-
-      - name: Type check backend
-        run: cd backend && npx tsc --noEmit
-
-      - name: Build backend
-        run: cd backend && npm run build
-
-  lint:
-    runs-on: ubuntu-latest
-    
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Type check
-        run: npm run type-check
+          files: ./pocket-guide-web/coverage/coverage-final.json
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false
