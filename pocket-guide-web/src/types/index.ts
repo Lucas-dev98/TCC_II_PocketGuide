@@ -86,6 +86,7 @@ export interface Trip {
   description?: string;
   imageUrl?: string;
   itinerary?: any;
+  groupType?: "solo" | "casal" | "amigos" | "família" | "group";
 }
 
 /**

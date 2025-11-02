@@ -48,6 +48,7 @@ interface FormData {
   budget: Budget
   interests: string[]
   description: string
+  groupType: 'solo' | 'casal' | 'amigos' | 'família' | 'group'
 }
 
 export default function CreateTripScreen() {
@@ -68,6 +69,7 @@ export default function CreateTripScreen() {
     budget: 'médio',
     interests: [],
     description: '',
+    groupType: 'casal',
   })
 
   // Função para obter data de hoje em formato YYYY-MM-DD
@@ -181,7 +183,7 @@ export default function CreateTripScreen() {
         days,
         formData.interests,
         formData.budget,
-        'couple', // groupType padrão
+        formData.groupType,
         currentLanguage
       );
 
@@ -195,6 +197,7 @@ export default function CreateTripScreen() {
         startDate: formData.startDate,
         endDate: formData.endDate,
         budget: formData.budget,
+        groupType: formData.groupType,
         interests: formData.interests,
         description: formData.description,
         itinerary: itinerary ? { itinerary } : null,
@@ -435,6 +438,30 @@ export default function CreateTripScreen() {
                   <option value="econômico">{t('createTrip.budgetEconomic')}</option>
                   <option value="médio">{t('createTrip.budgetMedium')}</option>
                   <option value="luxo">{t('createTrip.budgetLuxury')}</option>
+                </select>
+              </div>
+
+              {/* Group Type */}
+              <div>
+                <label className="block text-small font-medium text-slate-700 dark:text-slate-300 mb-2">
+                  {t('createTrip.groupTypeLabel')}
+                </label>
+                <select
+                  name="groupType"
+                  value={formData.groupType}
+                  onChange={(e) =>
+                    setFormData((prev) => ({
+                      ...prev,
+                      groupType: e.target.value as 'solo' | 'casal' | 'amigos' | 'família' | 'group',
+                    }))
+                  }
+                  className="input-base"
+                >
+                  <option value="solo">{t('createTrip.groupTypeSolo')}</option>
+                  <option value="casal">{t('createTrip.groupTypeCouple')}</option>
+                  <option value="amigos">{t('createTrip.groupTypeFriends')}</option>
+                  <option value="família">{t('createTrip.groupTypeFamily')}</option>
+                  <option value="group">{t('createTrip.groupTypeGroup')}</option>
                 </select>
               </div>
 

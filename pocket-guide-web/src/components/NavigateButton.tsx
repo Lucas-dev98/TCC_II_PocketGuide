@@ -22,6 +22,14 @@ export const NavigateButton: React.FC<NavigateButtonProps> = ({
 }) => {
   const { t } = useI18n();
 
+  // Validar coordenadas primeiro
+  const hasValidCoordinates = 
+    attraction.location &&
+    typeof attraction.location.lat === 'number' && 
+    typeof attraction.location.lng === 'number' &&
+    !isNaN(attraction.location.lat) && 
+    !isNaN(attraction.location.lng);
+
   const handleClick = () => {
     console.log('🧭 NavigateButton clicked', {
       attractionName: attraction.name,
@@ -32,19 +40,13 @@ export const NavigateButton: React.FC<NavigateButtonProps> = ({
       hasValidCoordinates,
     });
 
-    if (!isLoading && !disabled && attraction.location.lat && attraction.location.lng) {
+    if (!isLoading && !disabled && hasValidCoordinates) {
       console.log('✅ Calling onNavigate for:', attraction.name);
       onNavigate(attraction);
     } else {
       console.warn('❌ Navigation blocked:', { isLoading, disabled, hasValidCoordinates });
     }
   };
-
-  const hasValidCoordinates = 
-    typeof attraction.location.lat === 'number' && 
-    typeof attraction.location.lng === 'number' &&
-    !isNaN(attraction.location.lat) && 
-    !isNaN(attraction.location.lng);
 
   return (
     <button
