@@ -11,7 +11,6 @@ interface MapboxMapProps {
   attractions?: (Attraction | any)[];
   zoom?: number;
   center?: [number, number];
-  height?: string;
   onAttractionSelect?: (attraction: any, index: number) => void;
   route?: DirectionRoute | null;
   routeOrigin?: Location | null;
@@ -25,7 +24,6 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   attractions = [],
   zoom = 12,
   center = [0, 0],
-  height = '400px',
   onAttractionSelect,
   route,
   routeOrigin,
@@ -70,7 +68,18 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
 
     debug.log('🗺️ MapboxMap: Map initialized');
 
+    // Add ResizeObserver to handle container size changes
+    const resizeObserver = new ResizeObserver(() => {
+      if (map.current) {
+        debug.log('🗺️ MapboxMap: Container resized, triggering map.resize()');
+        map.current.resize();
+      }
+    });
+
+    resizeObserver.observe(mapContainer.current);
+
     return () => {
+      resizeObserver.disconnect();
       // Don't remove map on unmount to avoid re-renders
     };
   }, [mapboxToken, center, zoom]);
@@ -340,17 +349,13 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
   };
 
   return (
-    <div className="relative">
-      <div
-        ref={mapContainer}
-        style={{
-          width: '100%',
-          height: height,
-          borderRadius: '8px',
-          overflow: 'hidden',
-        }}
-        className="border-2 border-gray-200 dark:border-gray-700"
-      />
+    <div className="relative w-full">
+      <div className="mapbox-wrapper">
+        <div
+          ref={mapContainer}
+          className="mapbox-container-mobile border-2 border-gray-200 dark:border-gray-700"
+        />
+      </div>
       
       {/* Navigation Controls */}
       {attractions.length > 1 && (

@@ -237,3 +237,57 @@ html.dark *:focus-visible {
   color: #111827 !important;
 }
 
+/* ===== RESPONSIVE MAPBOX CONTAINER ===== */
+.mapbox-container-mobile {
+  width: 100%;
+  height: 300px !important;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+@media (min-width: 768px) {
+  .mapbox-container-mobile {
+    height: 400px !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .mapbox-container-mobile {
+    height: 500px !important;
+  }
+}
+
+/* Ensure map canvas is always visible and properly sized */
+.mapboxgl-canvas {
+  width: 100% !important;
+  height: 100% !important;
+}
+
+/* ===== RESPONSIVE DESIGN ===== */
+@media (max-width: 640px) {
+  /* Reduce padding on mobile for more content space */
+  .card-base {
+    @apply p-3;
+  }
+
+  .btn-base {
+    @apply text-sm px-3 py-2;
+  }
+
+  .text-h1 {
+    font-size: 28px;
+  }
+
+  .text-h2 {
+    font-size: 24px;
+  }
+
+  .text-h3 {
+    font-size: 18px;
+  }
+
+  .container-mobile {
+    @apply px-2 py-2;
+  }
+}
+

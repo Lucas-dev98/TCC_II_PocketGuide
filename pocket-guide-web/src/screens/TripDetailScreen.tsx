@@ -393,7 +393,7 @@ export default function TripDetailScreen() {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-20">
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800 pb-20 overflow-x-hidden">
       {/* Mobile Header - Hidden on Desktop */}
       <header className="lg:hidden bg-gradient-to-r from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 border-b border-slate-200 dark:border-slate-700">
         <div className="max-w-4xl mx-auto px-4 py-8">
@@ -580,7 +580,6 @@ export default function TripDetailScreen() {
                       lng: attr.lng !== undefined ? attr.lng : attr.location?.lng,
                     }))
                   )}
-                  height="400px"
                   onAttractionSelect={(attraction, index) => {
                     setSelectedAttractionIndex(index);
                     debug.log('🗺️ Atração selecionada no mapa:', attraction, 'índice:', index);

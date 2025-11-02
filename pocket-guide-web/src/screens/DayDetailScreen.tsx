@@ -359,7 +359,7 @@ export const DayDetailScreen: React.FC = () => {
 
   return (
     <MainLayout>
-      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20">
+      <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 overflow-x-hidden">
       {/* Header com navegação */}
       <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
         <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
@@ -560,7 +560,7 @@ export const DayDetailScreen: React.FC = () => {
           <div ref={mapRef}>
             <Card className="shadow-md border-slate-200 dark:border-slate-700">
               <Card.Header title={t('dayDetail.routeMap')} />
-              <Card.Body>
+              <Card.Body className="p-0">
                 <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
                   <MapboxMap
                     attractions={attractions.map((a) => ({
@@ -569,7 +569,6 @@ export const DayDetailScreen: React.FC = () => {
                       lat: a.location?.lat || 0,
                       lng: a.location?.lng || 0,
                     }))}
-                    height="400px"
                     onAttractionSelect={(attraction) => {
                       debug.log("Localização selecionada:", attraction);
                     }}
