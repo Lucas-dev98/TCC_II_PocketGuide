@@ -30,9 +30,10 @@ interface DaySchedule {
 }
 
 class PDFService {
-  private readonly DEFAULT_COLOR: [number, number, number] = [51, 65, 85] // slate-700
+  private readonly DEFAULT_COLOR: [number, number, number] = [30, 41, 59] // slate-800
   private readonly PRIMARY_COLOR: [number, number, number] = [59, 130, 246] // blue-600
   private readonly SUCCESS_COLOR: [number, number, number] = [34, 197, 94] // green-600
+  private readonly DANGER_COLOR: [number, number, number] = [239, 68, 68] // red-600
   private readonly TEXT_LIGHT: [number, number, number] = [100, 116, 139] // slate-500
   private readonly BORDER_COLOR: [number, number, number] = [226, 232, 240] // slate-300
   private readonly BG_LIGHT: [number, number, number] = [241, 245, 249] // slate-100
@@ -134,86 +135,107 @@ class PDFService {
     pageHeight: number,
     width: number
   ): void {
-    let yPos = pageHeight * 0.3
+    let yPos = pageHeight * 0.2
 
-    // DESTINO - Grande
-    pdf.setFontSize(42)
+    // DESTINO - Grande e em destaque
+    pdf.setFontSize(48)
     pdf.setTextColor(...this.PRIMARY_COLOR)
     pdf.setFont('helvetica', 'bold')
     pdf.text(`✈️ ${trip.destination}`, pageWidth / 2, yPos, { align: 'center' })
-    yPos += 18
+    yPos += 20
 
-    // País
+    // País - subtítulo
     if (trip.country) {
-      pdf.setFontSize(16)
+      pdf.setFontSize(14)
       pdf.setTextColor(...this.TEXT_LIGHT)
       pdf.setFont('helvetica', 'normal')
       pdf.text(trip.country, pageWidth / 2, yPos, { align: 'center' })
-      yPos += 15
+      yPos += 12
     }
 
-    // Linha divisória
-    pdf.setDrawColor(...this.BORDER_COLOR)
-    pdf.line(x + 20, yPos, pageWidth - x - 20, yPos)
-    yPos += 12
+    // Linha divisória elegante
+    pdf.setDrawColor(...this.PRIMARY_COLOR)
+    pdf.setLineWidth(1)
+    pdf.line(pageWidth / 2 - 30, yPos, pageWidth / 2 + 30, yPos)
+    yPos += 16
 
-    // Informações principais em grid
+    // Informações principais em grid 2x2
     const infoData = [
       {
-        label: '📅 Datas',
-        value: `${formatDate(trip.startDate)} a ${formatDate(trip.endDate)}`
+        label: '📅 DATAS',
+        value: `${formatDate(trip.startDate)} até ${formatDate(trip.endDate)}`
       },
       {
-        label: '📊 Dias',
-        value: this.calculateDays(trip.startDate, trip.endDate)
+        label: '🗓️ DURAÇÃO',
+        value: `${this.calculateDays(trip.startDate, trip.endDate)} dias`
       },
       {
-        label: '💰 Orçamento',
+        label: '💰 ORÇAMENTO',
         value: this.getBudgetLabel(trip.budget)
       },
       {
-        label: '🏷️ Categoria',
+        label: '👥 TIPO',
         value: this.getGroupTypeLabel(trip.groupType)
       },
     ]
 
-    const boxWidth = (width - 6) / 2
-    const boxHeight = 14
+    const boxWidth = (width - 8) / 2
+    const boxHeight = 18
+    const boxPadding = 2
 
     for (let i = 0; i < infoData.length; i++) {
       const row = Math.floor(i / 2)
       const col = i % 2
-      const boxX = x + col * (boxWidth + 3)
-      const boxY = yPos + row * (boxHeight + 4)
+      const boxX = x + col * (boxWidth + 4)
+      const boxY = yPos + row * (boxHeight + 6)
 
-      // Box background
+      // Box background com borda
       pdf.setFillColor(...this.BG_LIGHT)
-      pdf.setDrawColor(...this.BORDER_COLOR)
+      pdf.setDrawColor(...this.PRIMARY_COLOR)
+      pdf.setLineWidth(0.8)
       pdf.rect(boxX, boxY, boxWidth, boxHeight, 'FD')
 
-      // Label
-      pdf.setFontSize(8)
-      pdf.setTextColor(...this.TEXT_LIGHT)
+      // Label - MAIÚSCULO
+      pdf.setFontSize(9)
+      pdf.setTextColor(...this.PRIMARY_COLOR)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(infoData[i].label, boxX + 2, boxY + 3.5)
+      pdf.text(infoData[i].label, boxX + boxPadding + 1, boxY + 5)
 
-      // Value
-      pdf.setFontSize(10)
+      // Value - destaque
+      pdf.setFontSize(11)
       pdf.setTextColor(...this.DEFAULT_COLOR)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(infoData[i].value, boxX + 2, boxY + 9.5)
+      pdf.setFont('helvetica', 'bold')
+      const splitValue = pdf.splitTextToSize(infoData[i].value, boxWidth - 4)
+      pdf.text(splitValue, boxX + boxPadding + 1, boxY + 11)
     }
 
-    yPos += 40
+    yPos += 50
 
-    // Descrição
+    // Descrição da viagem (se existir)
     if (trip.description) {
       pdf.setFontSize(10)
       pdf.setTextColor(...this.TEXT_LIGHT)
       pdf.setFont('helvetica', 'normal')
+      
+      pdf.setFillColor(245, 247, 250)
+      pdf.rect(x, yPos - 2, width, 1, 'F')
+      
+      yPos += 3
+      
       const splitDesc = pdf.splitTextToSize(trip.description, width - 4)
-      pdf.text(splitDesc, pageWidth / 2, yPos, { align: 'center', maxWidth: width })
+      pdf.text(splitDesc, x + 2, yPos)
+      yPos += splitDesc.length * 4 + 3
+      
+      pdf.rect(x, yPos + 1, width, 1, 'F')
     }
+
+    // Rodapé da capa
+    yPos = pageHeight - 20
+    pdf.setFontSize(8)
+    pdf.setTextColor(...this.TEXT_LIGHT)
+    pdf.setFont('helvetica', 'italic')
+    pdf.text('Seu guia de viagem personalizado pelo Pocket Guide', pageWidth / 2, yPos, { align: 'center' })
+    pdf.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, yPos + 5, { align: 'center' })
   }
 
   /**
@@ -229,29 +251,29 @@ class PDFService {
     pageWidth: number,
     _pageHeight: number
   ): number {
-    // Background
+    // Background gradiente simulado (retângulo azul)
     pdf.setFillColor(...this.PRIMARY_COLOR)
-    pdf.rect(0, y - 2, pageWidth, 14, 'F')
+    pdf.rect(0, y - 2, pageWidth, 16, 'F')
 
-    // Dia
-    pdf.setFontSize(24)
+    // Dia número em grande
+    pdf.setFontSize(28)
     pdf.setTextColor(255, 255, 255)
     pdf.setFont('helvetica', 'bold')
-    pdf.text(`Dia ${daySchedule.dayNumber}`, x, y + 8)
+    pdf.text(`DIA ${daySchedule.dayNumber}`, x, y + 9)
 
     // Data (se disponível)
     if (daySchedule.date) {
-      pdf.setFontSize(10)
+      pdf.setFontSize(11)
       pdf.setTextColor(255, 255, 255)
       pdf.setFont('helvetica', 'normal')
-      pdf.text(daySchedule.date, pageWidth - x - 20, y + 8, { align: 'right' })
+      pdf.text(daySchedule.date, pageWidth - x - 20, y + 9, { align: 'right' })
     }
 
-    return y + 18
+    return y + 22
   }
 
   /**
-   * Atrações do dia
+   * Atrações do dia com formatação melhorada
    */
   private addDayAttractions(
     pdf: jsPDF,
@@ -262,14 +284,14 @@ class PDFService {
     pageHeight: number
   ): number {
     const margin = 12
-    const attractionSpacing = 8
+    const minBottomSpace = 20
 
     if (daySchedule.attractions.length === 0) {
-      pdf.setFontSize(10)
+      pdf.setFontSize(11)
       pdf.setTextColor(...this.TEXT_LIGHT)
       pdf.setFont('helvetica', 'italic')
-      pdf.text('Sem atrações neste dia', x, y)
-      return y + 10
+      pdf.text('✨ Nenhuma atração agendada para este dia', x, y + 5)
+      return y + 15
     }
 
     // Sort by time
@@ -277,97 +299,133 @@ class PDFService {
       (a.time || '').localeCompare(b.time || '')
     )
 
-    for (const attraction of sorted) {
+    for (let idx = 0; idx < sorted.length; idx++) {
+      const attraction = sorted[idx]
+      const isLast = idx === sorted.length - 1
+
       // Check page break
-      if (y + 20 > pageHeight - margin) {
+      if (y + minBottomSpace > pageHeight - margin) {
         pdf.addPage()
         y = margin
       }
 
-      // Timeline dot + vertical line
-      const dotX = x + 2
-      const dotY = y + 2.5
-      
-      // Dot
-      pdf.setFillColor(...this.PRIMARY_COLOR)
-      pdf.circle(dotX, dotY, 1.2, 'F')
+      // Timeline visual
+      const dotX = x + 3
+      const dotY = y + 3
 
-      // Vertical line (se não for última atração)
-      if (sorted.indexOf(attraction) < sorted.length - 1) {
+      // Dot (cor diferente: primeira é verde, restantes são azul)
+      const dotColor = idx === 0 ? this.SUCCESS_COLOR : this.PRIMARY_COLOR
+      pdf.setFillColor(...dotColor)
+      pdf.circle(dotX, dotY, 1.4, 'F')
+
+      // Vertical line connecting to next
+      if (!isLast) {
         pdf.setDrawColor(...this.PRIMARY_COLOR)
-        pdf.setLineWidth(0.4)
-        pdf.line(dotX, dotY + 1.2, dotX, y + attractionSpacing + 5)
+        pdf.setLineWidth(0.5)
+        pdf.line(dotX, dotY + 1.4, dotX, y + 24)
       }
 
-      const contentX = x + 8
+      // Card background leve
+      pdf.setFillColor(248, 250, 252)
+      pdf.setDrawColor(...this.BORDER_COLOR)
+      pdf.setLineWidth(0.3)
+      pdf.rect(x + 6, y - 1, width - 6, 1, 'F')
 
-      // TIME + NAME (Destaque)
-      pdf.setFontSize(11)
+      const contentX = x + 10
+      let lineY = y
+
+      // ⏰ HORÁRIO - bem visível
+      pdf.setFontSize(12)
+      pdf.setTextColor(...this.DANGER_COLOR)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(`${attraction.time || '--:--'}`, contentX, lineY + 4)
+
+      // 📍 NOME - destaque principal
+      pdf.setFontSize(12)
       pdf.setTextColor(...this.DEFAULT_COLOR)
       pdf.setFont('helvetica', 'bold')
-      const timeText = `${attraction.time || '--:--'} - ${attraction.name}`
-      const splitName = pdf.splitTextToSize(timeText, width - 8)
-      pdf.text(splitName, contentX, y + 2)
-      y += splitName.length * 4
+      const nameX = contentX + 18
+      const nameWidth = width - 28
+      const splitName = pdf.splitTextToSize(attraction.name, nameWidth)
+      pdf.text(splitName, nameX, lineY + 4)
+      lineY += Math.max(5, splitName.length * 4) + 2
 
-      // RAZÃO/CATEGORIA
-      pdf.setFontSize(9)
-      pdf.setTextColor(...this.SUCCESS_COLOR)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(`📌 ${attraction.reason || 'Atração'}`, contentX, y + 3)
-      y += 5
+      // 📝 RAZÃO/DESCRIÇÃO
+      if (attraction.reason) {
+        pdf.setFontSize(9)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'normal')
+        const splitReason = pdf.splitTextToSize(attraction.reason, nameWidth - 2)
+        pdf.text(splitReason, contentX, lineY + 1)
+        lineY += splitReason.length * 3.2 + 1
+      }
 
-      // ENDEREÇO (se disponível)
+      // 📍 ENDEREÇO - se disponível
       if (attraction.location?.address) {
         pdf.setFontSize(8)
-        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setTextColor(100, 100, 100)
         pdf.setFont('helvetica', 'normal')
-        const splitAddr = pdf.splitTextToSize(`📍 ${attraction.location.address}`, width - 10)
-        pdf.text(splitAddr, contentX + 1, y + 1)
-        y += splitAddr.length * 3.5
+        const splitAddr = pdf.splitTextToSize(`📍 ${attraction.location.address}`, nameWidth - 2)
+        pdf.text(splitAddr, contentX + 1, lineY + 1)
+        lineY += splitAddr.length * 2.8 + 0.5
       }
 
-      // COORDENADAS GPS (se disponível)
+      // 🗺️ COORDENADAS GPS - compacto
       if (attraction.location?.lat && attraction.location?.lng) {
         pdf.setFontSize(7)
-        pdf.setTextColor(128, 128, 128)
+        pdf.setTextColor(140, 140, 140)
         pdf.setFont('helvetica', 'normal')
-        const coords = `GPS: ${attraction.location.lat.toFixed(4)}, ${attraction.location.lng.toFixed(4)}`
-        pdf.text(coords, contentX + 1, y + 1)
-        y += 3.5
+        const coords = `🗺️ ${attraction.location.lat.toFixed(4)}, ${attraction.location.lng.toFixed(4)}`
+        pdf.text(coords, contentX + 1, lineY + 1)
+        lineY += 2.5
       }
 
-      // DURAÇÃO + DICAS (na mesma linha se possível)
-      const details: string[] = []
+      // Detalhes adicionais em uma linha
+      const detailsLine: string[] = []
       if (attraction.duration) {
-        details.push(`⏱️ ${attraction.duration} min`)
-      }
-      if (attraction.tip) {
-        details.push(`💡 ${attraction.tip}`)
+        detailsLine.push(`⏱️ ${attraction.duration} min`)
       }
 
-      if (details.length > 0) {
+      if (detailsLine.length > 0) {
         pdf.setFontSize(8)
-        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setTextColor(...this.PRIMARY_COLOR)
         pdf.setFont('helvetica', 'normal')
-        const detailsText = details.join(' | ')
-        const splitDetails = pdf.splitTextToSize(detailsText, width - 10)
-        pdf.text(splitDetails, contentX + 1, y + 2)
-        y += splitDetails.length * 3.5
+        pdf.text(detailsLine.join(' • '), contentX, lineY + 2)
+        lineY += 3
       }
 
-      // NOTAS (se existir)
-      if (attraction.notes) {
+      // 💡 DICAS - em destaque suave
+      if (attraction.tip) {
+        pdf.setFillColor(254, 243, 199)
+        pdf.setDrawColor(...this.BORDER_COLOR)
+        pdf.setLineWidth(0.2)
+        pdf.rect(contentX - 1, lineY + 1, nameWidth + 2, 4, 'FD')
+
         pdf.setFontSize(8)
-        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setTextColor(120, 100, 20)
         pdf.setFont('helvetica', 'italic')
-        const splitNotes = pdf.splitTextToSize(`Nota: ${attraction.notes}`, width - 10)
-        pdf.text(splitNotes, contentX + 1, y + 2)
-        y += splitNotes.length * 3.5
+        const splitTip = pdf.splitTextToSize(`💡 ${attraction.tip}`, nameWidth - 2)
+        pdf.text(splitTip, contentX, lineY + 3)
+        lineY += splitTip.length * 2.8 + 1
       }
 
-      // Spacing
-      y += attractionSpacing - 2
+      // 📝 NOTAS ADICIONAIS
+      if (attraction.notes) {
+        pdf.setFillColor(225, 239, 254)
+        pdf.setDrawColor(...this.BORDER_COLOR)
+        pdf.setLineWidth(0.2)
+        pdf.rect(contentX - 1, lineY + 1, nameWidth + 2, 4, 'FD')
+
+        pdf.setFontSize(8)
+        pdf.setTextColor(20, 80, 120)
+        pdf.setFont('helvetica', 'italic')
+        const splitNotes = pdf.splitTextToSize(`📝 ${attraction.notes}`, nameWidth - 2)
+        pdf.text(splitNotes, contentX, lineY + 3)
+        lineY += splitNotes.length * 2.8 + 1
+      }
+
+      // Espaço entre atrações
+      y = lineY + 6
     }
 
     return y
