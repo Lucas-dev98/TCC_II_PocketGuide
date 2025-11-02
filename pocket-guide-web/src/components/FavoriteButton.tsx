@@ -43,24 +43,18 @@ export function FavoriteButton({
     lg: 'w-10 h-10',
   }
 
-  const iconSizeClasses = {
-    sm: 'w-4 h-4',
-    md: 'w-5 h-5',
-    lg: 'w-6 h-6',
-  }
-
   if (variant === 'filled') {
     return (
       <button
         onClick={(e) => handleToggle(e)}
         className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all ${
           isFavorite
-            ? 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 hover:bg-red-200 dark:hover:bg-red-900/50'
-            : 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
+            ? 'bg-red-600 dark:bg-red-700 text-white hover:bg-red-700 dark:hover:bg-red-600'
+            : 'bg-gray-600 dark:bg-gray-700 text-white hover:bg-gray-700 dark:hover:bg-gray-600'
         } ${className}`}
       >
         <svg
-          className={`${iconSizeClasses.md} transition-all ${isFavorite ? 'fill-current' : ''}`}
+          className={`w-4 h-4 transition-all ${isFavorite ? 'fill-current' : ''}`}
           fill={isFavorite ? 'currentColor' : 'none'}
           stroke="currentColor"
           viewBox="0 0 24 24"
@@ -72,7 +66,7 @@ export function FavoriteButton({
             d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"
           />
         </svg>
-        <span>{isFavorite ? t('components.favoriteButton.added') : t('components.favoriteButton.add')}</span>
+        <span className="hidden sm:inline">{isFavorite ? t('components.favoriteButton.added') : t('components.favoriteButton.add')}</span>
       </button>
     )
   }

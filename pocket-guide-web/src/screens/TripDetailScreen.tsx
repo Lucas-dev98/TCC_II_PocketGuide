@@ -411,10 +411,10 @@ export default function TripDetailScreen() {
           <p className="text-body text-slate-600 dark:text-slate-300 mb-6">{trip.country}</p>
 
           {/* Action buttons - Share, Export, Favorite */}
-          <div className="flex gap-3 mb-6 flex-wrap">
+          <div className="flex gap-2 sm:gap-3 mb-6 flex-wrap items-center">
             <ShareButton trip={trip} variant="filled" />
             <ExportButton trip={trip} variant="filled" />
-            <FavoriteButton tripId={trip.id} size="md" />
+            <FavoriteButton tripId={trip.id} variant="filled" />
           </div>
 
           {/* Quick info */}
@@ -450,10 +450,10 @@ export default function TripDetailScreen() {
           <p className="text-lg text-slate-600 dark:text-slate-300 mb-6">{trip.country}</p>
 
           {/* Action buttons - Share, Export, Favorite */}
-          <div className="flex gap-3 mb-6 flex-wrap">
+          <div className="flex gap-2 sm:gap-3 mb-6 flex-wrap items-center">
             <ShareButton trip={trip} variant="filled" />
             <ExportButton trip={trip} variant="filled" />
-            <FavoriteButton tripId={trip.id} size="md" />
+            <FavoriteButton tripId={trip.id} variant="filled" />
           </div>
 
           {/* Quick info */}
