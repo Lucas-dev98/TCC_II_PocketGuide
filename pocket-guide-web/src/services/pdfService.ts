@@ -416,9 +416,65 @@ class PDFService {
   private organizeDaySchedules(trip: Trip): DaySchedule[] {
     const schedules: DaySchedule[] = []
 
-    if (!trip.attractions || trip.attractions.length === 0) {
+    // Extrair atrações de várias possíveis localizações
+    let attractions: Attraction[] = []
+
+    // 1. Verificar trip.attractions direto
+    if (trip.attractions && trip.attractions.length > 0) {
+      console.log('📌 Atrações encontradas em trip.attractions')
+      attractions = trip.attractions
+    }
+    // 2. Verificar trip.itinerary
+    else if (trip.itinerary) {
+      console.log('📌 Itinerário encontrado em trip.itinerary')
+      
+      let itinerary = trip.itinerary
+      
+      // Se for string, fazer parse
+      if (typeof itinerary === 'string') {
+        try {
+          itinerary = JSON.parse(itinerary)
+        } catch (error) {
+          console.error('❌ Erro ao fazer parse do itinerary:', error)
+          itinerary = {}
+        }
+      }
+
+      // 🔧 SUPORTE A DUPLA ENCAPSULAÇÃO: { itinerary: { itinerary: [...] } }
+      // Quando vem do CreateTripScreen, pode estar encapsulado duas vezes
+      if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
+        console.log(`📌 Detectada DUPLA ENCAPSULAÇÃO: itinerary.itinerary`)
+        attractions = itinerary.itinerary
+      }
+      // Extrair atrações do itinerário
+      else if (itinerary.days && Array.isArray(itinerary.days)) {
+        // Formato: { days: [{ attractions: [...] }] }
+        console.log(`📌 Itinerário com ${itinerary.days.length} dias`)
+        
+        itinerary.days.forEach((day: any, dayIndex: number) => {
+          if (day.attractions && Array.isArray(day.attractions)) {
+            day.attractions.forEach((attr: any) => {
+              attractions.push({
+                ...attr,
+                day: dayIndex + 1, // Garantir que day está definido
+              } as Attraction)
+            })
+          }
+        })
+      } else if (itinerary.attractions && Array.isArray(itinerary.attractions)) {
+        // Formato: { attractions: [...] }
+        console.log(`📌 Itinerário com array flat de atrações`)
+        attractions = itinerary.attractions
+      }
+    }
+
+    console.log(`📊 Total de atrações extraídas: ${attractions.length}`)
+
+    if (attractions.length === 0) {
       // Criar estrutura vazia se não houver atrações
       const days = this.calculateDays(trip.startDate, trip.endDate)
+      console.log(`⚠️ Sem atrações. Criando ${days} dias vazios`)
+      
       for (let i = 1; i <= parseInt(days); i++) {
         schedules.push({
           dayNumber: i,
@@ -431,20 +487,21 @@ class PDFService {
     const grouped = new Map<number, Attraction[]>()
 
     // Agrupar por dia
-    trip.attractions.forEach(attraction => {
-      if (!grouped.has(attraction.day)) {
-        grouped.set(attraction.day, [])
+    attractions.forEach(attraction => {
+      const dayNum = attraction.day || 1
+      if (!grouped.has(dayNum)) {
+        grouped.set(dayNum, [])
       }
-      grouped.get(attraction.day)!.push(attraction)
+      grouped.get(dayNum)!.push(attraction)
     })
 
     // Criar schedules
-    grouped.forEach((attractions, dayNumber) => {
+    grouped.forEach((groupedAttractions, dayNumber) => {
       const date = this.calculateDateForDay(trip.startDate, dayNumber)
       schedules.push({
         dayNumber,
         date,
-        attractions: attractions.sort((a, b) => (a.time || '').localeCompare(b.time || '')),
+        attractions: groupedAttractions.sort((a, b) => (a.time || '').localeCompare(b.time || '')),
       })
     })
 
