@@ -436,5 +436,22 @@
     "url": "URL inválida",
     "number": "Debe ser un número",
     "date": "Fecha inválida"
+  },
+
+  "components": {
+    "exportButton": {
+      "exportPDF": "Exportar PDF",
+      "exportError": "Error al exportar PDF"
+    },
+    "shareButton": {
+      "share": "Compartir",
+      "copied": "Copiado al portapapeles"
+    },
+    "favoriteButton": {
+      "addToFavorites": "Añadir a favoritos",
+      "removeFromFavorites": "Eliminar de favoritos",
+      "addedToFavorites": "Añadido a favoritos",
+      "removedFromFavorites": "Eliminado de favoritos"
+    }
   }
 }

@@ -490,5 +490,22 @@
     "url": "Invalid URL",
     "number": "Must be a number",
     "date": "Invalid date"
+  },
+
+  "components": {
+    "exportButton": {
+      "exportPDF": "Export PDF",
+      "exportError": "Error exporting PDF"
+    },
+    "shareButton": {
+      "share": "Share",
+      "copied": "Copied to clipboard"
+    },
+    "favoriteButton": {
+      "addToFavorites": "Add to favorites",
+      "removeFromFavorites": "Remove from favorites",
+      "addedToFavorites": "Added to favorites",
+      "removedFromFavorites": "Removed from favorites"
+    }
   }
 }
