@@ -502,6 +502,8 @@
       "copied": "Copiado para a área de transferência"
     },
     "favoriteButton": {
+      "add": "Favoritar",
+      "added": "Favoritado",
       "addToFavorites": "Adicionar aos favoritos",
       "removeFromFavorites": "Remover dos favoritos",
       "addedToFavorites": "Adicionado aos favoritos",

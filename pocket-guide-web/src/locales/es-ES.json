@@ -448,6 +448,8 @@
       "copied": "Copiado al portapapeles"
     },
     "favoriteButton": {
+      "add": "Favoritar",
+      "added": "Favoritado",
       "addToFavorites": "Añadir a favoritos",
       "removeFromFavorites": "Eliminar de favoritos",
       "addedToFavorites": "Añadido a favoritos",

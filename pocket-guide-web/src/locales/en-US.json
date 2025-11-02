@@ -502,6 +502,8 @@
       "copied": "Copied to clipboard"
     },
     "favoriteButton": {
+      "add": "Favorite",
+      "added": "Favorited",
       "addToFavorites": "Add to favorites",
       "removeFromFavorites": "Remove from favorites",
       "addedToFavorites": "Added to favorites",
