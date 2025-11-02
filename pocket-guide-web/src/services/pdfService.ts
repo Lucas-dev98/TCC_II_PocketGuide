@@ -1,30 +1,44 @@
 /**
- * pdfService.ts - Service for generating trip PDFs
+ * pdfService.ts - Enhanced service for generating detailed trip PDFs
  * 
  * Features:
- * - Generates PDF with complete trip details
- * - Professional styling with images
+ * - Complete itinerary with all attraction details
+ * - Professional multi-page layout
+ * - Organized by day with times, addresses, durations
+ * - Summary page with trip overview
+ * - Responsive styling with colors and sections
  * - Support for landscape and portrait
- * - Automatic download
+ * - Automatic page breaks and numbering
  */
 
 import { jsPDF } from 'jspdf'
 import html2canvas from 'html2canvas'
 import { Trip, Attraction } from '../types'
+import { formatDate } from '../utils/formatDate'
 
 interface PDFOptions {
   format?: 'A4' | 'letter'
   orientation?: 'portrait' | 'landscape'
-  includeMap?: boolean
   includePhotos?: boolean
   t?: (key: string) => string
 }
 
+interface DaySchedule {
+  dayNumber: number
+  date?: string
+  attractions: Attraction[]
+}
+
 class PDFService {
   private readonly DEFAULT_COLOR: [number, number, number] = [51, 65, 85] // slate-700
+  private readonly PRIMARY_COLOR: [number, number, number] = [59, 130, 246] // blue-600
+  private readonly SUCCESS_COLOR: [number, number, number] = [34, 197, 94] // green-600
+  private readonly TEXT_LIGHT: [number, number, number] = [100, 116, 139] // slate-500
+  private readonly BORDER_COLOR: [number, number, number] = [226, 232, 240] // slate-300
+  private readonly BG_LIGHT: [number, number, number] = [241, 245, 249] // slate-100
 
   /**
-   * Exporta viagem como PDF
+   * Exporta viagem completa como PDF detalhado
    */
   async exportTripToPDF(trip: Trip, options: PDFOptions = {}): Promise<void> {
     const {
@@ -39,125 +53,57 @@ class PDFService {
         format,
       })
 
-      // Page setup
+      // Setup
       const pageWidth = pdf.internal.pageSize.getWidth()
       const pageHeight = pdf.internal.pageSize.getHeight()
-      const margin = 15
+      const margin = 12
       const contentWidth = pageWidth - 2 * margin
 
-      let yPosition = margin
+      // Organizar atrações por dia
+      const daySchedules = this.organizeDaySchedules(trip)
 
-      // Header com destination
-      yPosition = this.addHeader(pdf, trip, margin, yPosition, contentWidth)
+      // PAGE 1: Capa/Resumo
+      this.addCoverPage(pdf, trip, margin, pageWidth, pageHeight, contentWidth)
 
-      // Trip info grid
-      yPosition = this.addTripInfo(pdf, trip, margin, yPosition, contentWidth)
+      // PAGES 2+: Itinerário por dia
+      for (let i = 0; i < daySchedules.length; i++) {
+        pdf.addPage()
+        let yPos = margin
 
-      // Add space
-      yPosition += 5
-
-      // Itinerary
-      yPosition = this.addItinerary(
-        pdf,
-        trip,
-        margin,
-        yPosition,
-        contentWidth,
-        pageHeight
-      )
-
-      // Footer
-      this.addFooter(pdf, pageWidth, pageHeight)
-
-      // Download
-      const filename = `${trip.destination.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`
-      pdf.save(filename)
-    } catch (error) {
-      console.error('Erro ao exportar PDF:', error)
-      throw new Error('Não foi possível exportar o PDF')
-    }
-  }
-
-  /**
-   * Exporta múltiplas viagens como PDF único
-   */
-  async exportMultipleTripsToPDF(
-    trips: Trip[],
-    title: string = 'Minhas Viagens',
-    options: PDFOptions = {}
-  ): Promise<void> {
-    const {
-      format = 'A4',
-      orientation = 'portrait',
-    } = options
-
-    try {
-      const pdf = new jsPDF({
-        orientation,
-        unit: 'mm',
-        format,
-      })
-
-      const pageWidth = pdf.internal.pageSize.getWidth()
-      const pageHeight = pdf.internal.pageSize.getHeight()
-      const margin = 15
-
-      // Main title
-      pdf.setFontSize(24)
-      pdf.setTextColor(...this.DEFAULT_COLOR)
-      pdf.text(title, margin, margin + 5)
-
-      let pageNumber = 1
-      let isFirstPage = true
-
-      // Add trips
-      for (let i = 0; i < trips.length; i++) {
-        if (!isFirstPage) {
-          pdf.addPage()
-        }
-
-        const trip = trips[i]
-        let yPosition = margin + (isFirstPage ? 15 : 10)
-
-        // Trip header
-        yPosition = this.addHeader(pdf, trip, margin, yPosition, pageWidth - 2 * margin)
-
-        // Trip info
-        yPosition = this.addTripInfo(pdf, trip, margin, yPosition, pageWidth - 2 * margin)
-
-        // Itinerary
-        yPosition = this.addItinerary(
+        yPos = this.addDayHeader(
           pdf,
+          daySchedules[i],
           trip,
           margin,
-          yPosition + 5,
-          pageWidth - 2 * margin,
+          yPos,
+          contentWidth,
+          pageWidth,
           pageHeight
         )
 
-        // Page number
-        pdf.setFontSize(10)
-        pdf.setTextColor(128, 128, 128)
-        pdf.text(
-          `Página ${pageNumber}`,
-          pageWidth / 2,
-          pageHeight - 10,
-          { align: 'center' }
+        yPos = this.addDayAttractions(
+          pdf,
+          daySchedules[i],
+          margin,
+          yPos,
+          contentWidth,
+          pageHeight
         )
 
-        isFirstPage = false
-        pageNumber++
+        // Footer em cada página
+        this.addPageFooter(pdf, i + 2, daySchedules.length + 1, pageWidth, pageHeight, margin)
       }
 
-      // Footer
-      this.addFooter(pdf, pageWidth, pageHeight)
+      // Footer da primeira página
+      pdf.setPage(1)
+      this.addPageFooter(pdf, 1, daySchedules.length + 1, pageWidth, pageHeight, margin)
 
       // Download
-      const filename = `viagens_${new Date().toISOString().split('T')[0]}.pdf`
+      const filename = `${trip.destination.replace(/\s+/g, '_')}_itinerario_${new Date().toISOString().split('T')[0]}.pdf`
       pdf.save(filename)
     } catch (error) {
-      console.error('Erro ao exportar PDFs:', error)
-      throw new Error('Não foi possível exportar os PDFs')
+      console.error('❌ Erro ao exportar PDF:', error)
+      throw new Error('Não foi possível exportar o PDF')
     }
   }
 
@@ -172,229 +118,386 @@ class PDFService {
       })
       return canvas.toDataURL('image/png')
     } catch (error) {
-      console.error('Erro ao converter HTML para imagem:', error)
+      console.error('❌ Erro ao converter HTML para imagem:', error)
       throw error
     }
   }
 
-  // ==================== Private Methods ====================
-
   /**
-   * Adiciona header com destination
+   * Página de capa com informações gerais
    */
-  private addHeader(
+  private addCoverPage(
     pdf: jsPDF,
     trip: Trip,
     x: number,
-    y: number,
+    pageWidth: number,
+    pageHeight: number,
     width: number
-  ): number {
-    // Destination title
-    pdf.setFontSize(20)
-    pdf.setTextColor(...this.DEFAULT_COLOR)
-    pdf.text(`✈️ ${trip.destination}`, x, y)
+  ): void {
+    let yPos = pageHeight * 0.3
 
-    y += 7
+    // DESTINO - Grande
+    pdf.setFontSize(42)
+    pdf.setTextColor(...this.PRIMARY_COLOR)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text(`✈️ ${trip.destination}`, pageWidth / 2, yPos, { align: 'center' })
+    yPos += 18
 
-    // Description
-    if (trip.description) {
-      pdf.setFontSize(11)
-      pdf.setTextColor(100, 116, 139) // slate-500
-      const splitText = pdf.splitTextToSize(trip.description, width)
-      pdf.text(splitText, x, y)
-      y += splitText.length * 4
+    // País
+    if (trip.country) {
+      pdf.setFontSize(16)
+      pdf.setTextColor(...this.TEXT_LIGHT)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text(trip.country, pageWidth / 2, yPos, { align: 'center' })
+      yPos += 15
     }
 
-    return y
-  }
+    // Linha divisória
+    pdf.setDrawColor(...this.BORDER_COLOR)
+    pdf.line(x + 20, yPos, pageWidth - x - 20, yPos)
+    yPos += 12
 
-  /**
-   * Adiciona grid de informações da viagem
-   */
-  private addTripInfo(
-    pdf: jsPDF,
-    trip: Trip,
-    x: number,
-    y: number,
-    width: number
-  ): number {
-    const boxHeight = 15
-    const boxMargin = 3
-    const infoBoxWidth = (width - boxMargin * 2) / 3
+    // Informações principais em grid
+    const infoData = [
+      {
+        label: '📅 Datas',
+        value: `${formatDate(trip.startDate)} a ${formatDate(trip.endDate)}`
+      },
+      {
+        label: '📊 Dias',
+        value: this.calculateDays(trip.startDate, trip.endDate)
+      },
+      {
+        label: '💰 Orçamento',
+        value: this.getBudgetLabel(trip.budget)
+      },
+      {
+        label: '🏷️ Categoria',
+        value: this.getGroupTypeLabel(trip.groupType)
+      },
+    ]
 
-    // Background
-    pdf.setFillColor(241, 245, 249) // slate-100
-    pdf.setDrawColor(226, 232, 240) // slate-300
+    const boxWidth = (width - 6) / 2
+    const boxHeight = 14
 
-    // Info boxes
-    const infoBoxes = []
+    for (let i = 0; i < infoData.length; i++) {
+      const row = Math.floor(i / 2)
+      const col = i % 2
+      const boxX = x + col * (boxWidth + 3)
+      const boxY = yPos + row * (boxHeight + 4)
 
-    if (trip.startDate) {
-      infoBoxes.push({
-        label: 'Início',
-        value: new Date(trip.startDate).toLocaleDateString('pt-BR'),
-      })
-    }
-
-    if (trip.endDate) {
-      infoBoxes.push({
-        label: 'Fim',
-        value: new Date(trip.endDate).toLocaleDateString('pt-BR'),
-      })
-    }
-
-    if (trip.budget) {
-      infoBoxes.push({
-        label: 'Orçamento',
-        value: trip.budget,
-      })
-    }
-
-    // Draw boxes
-    infoBoxes.forEach((box, index) => {
-      const boxX = x + (infoBoxWidth + boxMargin) * index
-      pdf.rect(boxX, y, infoBoxWidth, boxHeight, 'FD')
+      // Box background
+      pdf.setFillColor(...this.BG_LIGHT)
+      pdf.setDrawColor(...this.BORDER_COLOR)
+      pdf.rect(boxX, boxY, boxWidth, boxHeight, 'FD')
 
       // Label
       pdf.setFontSize(8)
-      pdf.setTextColor(100, 116, 139)
-      pdf.text(box.label, boxX + 2, y + 4)
+      pdf.setTextColor(...this.TEXT_LIGHT)
+      pdf.setFont('helvetica', 'bold')
+      pdf.text(infoData[i].label, boxX + 2, boxY + 3.5)
 
       // Value
       pdf.setFontSize(10)
       pdf.setTextColor(...this.DEFAULT_COLOR)
-      pdf.text(box.value, boxX + 2, y + 10)
-    })
+      pdf.setFont('helvetica', 'normal')
+      pdf.text(infoData[i].value, boxX + 2, boxY + 9.5)
+    }
 
-    return y + boxHeight + 3
+    yPos += 40
+
+    // Descrição
+    if (trip.description) {
+      pdf.setFontSize(10)
+      pdf.setTextColor(...this.TEXT_LIGHT)
+      pdf.setFont('helvetica', 'normal')
+      const splitDesc = pdf.splitTextToSize(trip.description, width - 4)
+      pdf.text(splitDesc, pageWidth / 2, yPos, { align: 'center', maxWidth: width })
+    }
   }
 
   /**
-   * Adiciona itinerário
+   * Header do dia com resumo
    */
-  private addItinerary(
+  private addDayHeader(
     pdf: jsPDF,
-    trip: Trip,
+    daySchedule: DaySchedule,
+    _trip: Trip,
+    x: number,
+    y: number,
+    _width: number,
+    pageWidth: number,
+    _pageHeight: number
+  ): number {
+    // Background
+    pdf.setFillColor(...this.PRIMARY_COLOR)
+    pdf.rect(0, y - 2, pageWidth, 14, 'F')
+
+    // Dia
+    pdf.setFontSize(24)
+    pdf.setTextColor(255, 255, 255)
+    pdf.setFont('helvetica', 'bold')
+    pdf.text(`Dia ${daySchedule.dayNumber}`, x, y + 8)
+
+    // Data (se disponível)
+    if (daySchedule.date) {
+      pdf.setFontSize(10)
+      pdf.setTextColor(255, 255, 255)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text(daySchedule.date, pageWidth - x - 20, y + 8, { align: 'right' })
+    }
+
+    return y + 18
+  }
+
+  /**
+   * Atrações do dia
+   */
+  private addDayAttractions(
+    pdf: jsPDF,
+    daySchedule: DaySchedule,
     x: number,
     y: number,
     width: number,
     pageHeight: number
   ): number {
-    const margin = 15
-    const lineHeight = 6
+    const margin = 12
+    const attractionSpacing = 8
 
-    // Group by day
-    const byDay = this.groupAttractionsByDay(trip.attractions)
-    const days = Object.keys(byDay).sort((a, b) => parseInt(a) - parseInt(b))
+    if (daySchedule.attractions.length === 0) {
+      pdf.setFontSize(10)
+      pdf.setTextColor(...this.TEXT_LIGHT)
+      pdf.setFont('helvetica', 'italic')
+      pdf.text('Sem atrações neste dia', x, y)
+      return y + 10
+    }
 
-    // Itinerary title
-    pdf.setFontSize(14)
-    pdf.setTextColor(...this.DEFAULT_COLOR)
-    pdf.text('Itinerário', x, y)
-    y += 8
+    // Sort by time
+    const sorted = [...daySchedule.attractions].sort((a, b) =>
+      (a.time || '').localeCompare(b.time || '')
+    )
 
-    // Days
-    for (const dayStr of days) {
-      const dayNumber = parseInt(dayStr)
-      const attractions = byDay[dayNumber] || []
-
-      // Check if need new page
-      if (y + attractions.length * 8 > pageHeight - margin) {
+    for (const attraction of sorted) {
+      // Check page break
+      if (y + 20 > pageHeight - margin) {
         pdf.addPage()
         y = margin
       }
 
-      // Day header
-      pdf.setFontSize(12)
+      // Timeline dot + vertical line
+      const dotX = x + 2
+      const dotY = y + 2.5
+      
+      // Dot
+      pdf.setFillColor(...this.PRIMARY_COLOR)
+      pdf.circle(dotX, dotY, 1.2, 'F')
+
+      // Vertical line (se não for última atração)
+      if (sorted.indexOf(attraction) < sorted.length - 1) {
+        pdf.setDrawColor(...this.PRIMARY_COLOR)
+        pdf.setLineWidth(0.4)
+        pdf.line(dotX, dotY + 1.2, dotX, y + attractionSpacing + 5)
+      }
+
+      const contentX = x + 8
+
+      // TIME + NAME (Destaque)
+      pdf.setFontSize(11)
       pdf.setTextColor(...this.DEFAULT_COLOR)
-      pdf.text(`Dia ${dayNumber}`, x, y)
-      y += 6
+      pdf.setFont('helvetica', 'bold')
+      const timeText = `${attraction.time || '--:--'} - ${attraction.name}`
+      const splitName = pdf.splitTextToSize(timeText, width - 8)
+      pdf.text(splitName, contentX, y + 2)
+      y += splitName.length * 4
 
-      // Attractions
-      attractions.forEach((attraction: Attraction) => {
-        // Time + Name
-        pdf.setFontSize(10)
-        pdf.setTextColor(...this.DEFAULT_COLOR)
-        const timeText = `${attraction.time} - ${attraction.name}`
-        const splitText = pdf.splitTextToSize(timeText, width - 5)
-        pdf.text(splitText, x + 3, y)
-        y += splitText.length * lineHeight
+      // RAZÃO/CATEGORIA
+      pdf.setFontSize(9)
+      pdf.setTextColor(...this.SUCCESS_COLOR)
+      pdf.setFont('helvetica', 'normal')
+      pdf.text(`📌 ${attraction.reason || 'Atração'}`, contentX, y + 3)
+      y += 5
 
-        // Duration + Tip (if exists)
-        if (attraction.duration || attraction.tip) {
-          pdf.setFontSize(9)
-          pdf.setTextColor(100, 116, 139)
+      // ENDEREÇO (se disponível)
+      if (attraction.location?.address) {
+        pdf.setFontSize(8)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'normal')
+        const splitAddr = pdf.splitTextToSize(`📍 ${attraction.location.address}`, width - 10)
+        pdf.text(splitAddr, contentX + 1, y + 1)
+        y += splitAddr.length * 3.5
+      }
 
-          let detailText = ''
-          if (attraction.duration) {
-            detailText += `⏱ ${attraction.duration} min`
-          }
-          if (attraction.tip) {
-            detailText += ` | 💡 ${attraction.tip}`
-          }
+      // COORDENADAS GPS (se disponível)
+      if (attraction.location?.lat && attraction.location?.lng) {
+        pdf.setFontSize(7)
+        pdf.setTextColor(128, 128, 128)
+        pdf.setFont('helvetica', 'normal')
+        const coords = `GPS: ${attraction.location.lat.toFixed(4)}, ${attraction.location.lng.toFixed(4)}`
+        pdf.text(coords, contentX + 1, y + 1)
+        y += 3.5
+      }
 
-          const splitDetail = pdf.splitTextToSize(detailText, width - 8)
-          pdf.text(splitDetail, x + 5, y)
-          y += splitDetail.length * (lineHeight - 1)
-        }
+      // DURAÇÃO + DICAS (na mesma linha se possível)
+      const details: string[] = []
+      if (attraction.duration) {
+        details.push(`⏱️ ${attraction.duration} min`)
+      }
+      if (attraction.tip) {
+        details.push(`💡 ${attraction.tip}`)
+      }
 
-        y += 2
-      })
+      if (details.length > 0) {
+        pdf.setFontSize(8)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'normal')
+        const detailsText = details.join(' | ')
+        const splitDetails = pdf.splitTextToSize(detailsText, width - 10)
+        pdf.text(splitDetails, contentX + 1, y + 2)
+        y += splitDetails.length * 3.5
+      }
 
-      y += 3
+      // NOTAS (se existir)
+      if (attraction.notes) {
+        pdf.setFontSize(8)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'italic')
+        const splitNotes = pdf.splitTextToSize(`Nota: ${attraction.notes}`, width - 10)
+        pdf.text(splitNotes, contentX + 1, y + 2)
+        y += splitNotes.length * 3.5
+      }
+
+      // Spacing
+      y += attractionSpacing - 2
     }
 
     return y
   }
 
   /**
-   * Adiciona footer ao PDF
+   * Footer da página
    */
-  private addFooter(pdf: jsPDF, pageWidth: number, pageHeight: number): void {
-    const pageCount = pdf.getNumberOfPages()
+  private addPageFooter(
+    pdf: jsPDF,
+    pageNumber: number,
+    totalPages: number,
+    pageWidth: number,
+    pageHeight: number,
+    margin: number
+  ): void {
+    const footerY = pageHeight - 8
 
-    for (let i = 1; i <= pageCount; i++) {
-      pdf.setPage(i)
+    // Line
+    pdf.setDrawColor(...this.BORDER_COLOR)
+    pdf.setLineWidth(0.3)
+    pdf.line(margin, footerY - 2, pageWidth - margin, footerY - 2)
 
-      // Line
-      pdf.setDrawColor(226, 232, 240)
-      pdf.line(15, pageHeight - 12, pageWidth - 15, pageHeight - 12)
+    // Left: Generated date
+    pdf.setFontSize(8)
+    pdf.setTextColor(...this.TEXT_LIGHT)
+    pdf.setFont('helvetica', 'normal')
+    pdf.text(
+      `📋 Gerado em ${new Date().toLocaleDateString('pt-BR')} - Pocket Guide`,
+      margin,
+      footerY
+    )
 
-      // Date
-      pdf.setFontSize(9)
-      pdf.setTextColor(100, 116, 139)
-      pdf.text(
-        `Gerado em ${new Date().toLocaleDateString('pt-BR')} - Pocket Guide`,
-        15,
-        pageHeight - 7
-      )
-
-      // Page number
-      if (pageCount > 1) {
-        pdf.text(
-          `Página ${i}/${pageCount}`,
-          pageWidth - 30,
-          pageHeight - 7
-        )
-      }
-    }
+    // Right: Page number
+    pdf.text(
+      `Página ${pageNumber}/${totalPages}`,
+      pageWidth - margin - 20,
+      footerY,
+      { align: 'right' }
+    )
   }
 
   /**
-   * Agrupa atrações por dia
+   * Organiza atrações por dia com datas
    */
-  private groupAttractionsByDay(attractions?: Attraction[]): Record<number, Attraction[]> {
-    if (!attractions) return {}
+  private organizeDaySchedules(trip: Trip): DaySchedule[] {
+    const schedules: DaySchedule[] = []
 
-    const grouped: Record<number, Attraction[]> = {}
-    attractions.forEach(attraction => {
-      if (!grouped[attraction.day]) {
-        grouped[attraction.day] = []
+    if (!trip.attractions || trip.attractions.length === 0) {
+      // Criar estrutura vazia se não houver atrações
+      const days = this.calculateDays(trip.startDate, trip.endDate)
+      for (let i = 1; i <= parseInt(days); i++) {
+        schedules.push({
+          dayNumber: i,
+          attractions: [],
+        })
       }
-      grouped[attraction.day].push(attraction)
+      return schedules
+    }
+
+    const grouped = new Map<number, Attraction[]>()
+
+    // Agrupar por dia
+    trip.attractions.forEach(attraction => {
+      if (!grouped.has(attraction.day)) {
+        grouped.set(attraction.day, [])
+      }
+      grouped.get(attraction.day)!.push(attraction)
     })
 
-    return grouped
+    // Criar schedules
+    grouped.forEach((attractions, dayNumber) => {
+      const date = this.calculateDateForDay(trip.startDate, dayNumber)
+      schedules.push({
+        dayNumber,
+        date,
+        attractions: attractions.sort((a, b) => (a.time || '').localeCompare(b.time || '')),
+      })
+    })
+
+    return schedules.sort((a, b) => a.dayNumber - b.dayNumber)
+  }
+
+  /**
+   * Calcula data para um dia específico
+   */
+  private calculateDateForDay(startDate: Date | string, dayNumber: number): string {
+    const start = new Date(startDate)
+    const date = new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000)
+    return date.toLocaleDateString('pt-BR', { 
+      weekday: 'short', 
+      day: '2-digit', 
+      month: '2-digit' 
+    })
+  }
+
+  /**
+   * Calcula quantidade de dias
+   */
+  private calculateDays(startDate: Date | string, endDate: Date | string): string {
+    const start = new Date(startDate)
+    const end = new Date(endDate)
+    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+    return days.toString()
+  }
+
+  /**
+   * Label do orçamento
+   */
+  private getBudgetLabel(budget?: string): string {
+    const labels: Record<string, string> = {
+      'econômico': '💰 Econômico',
+      'médio': '💰💰 Médio',
+      'luxo': '💰💰💰 Luxo',
+    }
+    return labels[budget || ''] || 'Não definido'
+  }
+
+  /**
+   * Label do tipo de grupo
+   */
+  private getGroupTypeLabel(groupType?: string): string {
+    const labels: Record<string, string> = {
+      'solo': '🧑 Solo',
+      'casal': '👥 Casal',
+      'amigos': '👫 Amigos',
+      'família': '👨‍👩‍👧‍👦 Família',
+      'group': '👨‍👩‍👧 Grupo',
+    }
+    return labels[groupType || ''] || 'Não especificado'
   }
 }
 
