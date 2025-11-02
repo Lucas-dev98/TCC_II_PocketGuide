@@ -168,7 +168,7 @@ export const ExportButton = ({
         ) : (
           <>
             <FileDown className="w-4 h-4" />
-            <span className="hidden sm:inline">{t('components.exportButton.exportPDF')}</span>
+            <span className="hidden sm:block">{t('components.exportButton.exportPDF')}</span>
           </>
         )}
       </button>
