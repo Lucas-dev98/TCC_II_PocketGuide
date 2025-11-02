@@ -362,21 +362,21 @@ export const DayDetailScreen: React.FC = () => {
       <div className="min-h-screen bg-slate-50 dark:bg-slate-900 pb-20 overflow-x-hidden">
       {/* Header com navegação */}
       <header className="sticky top-0 z-20 bg-white/80 dark:bg-slate-800/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-700 shadow-sm">
-        <div className="max-w-6xl mx-auto px-4 py-4 flex items-center gap-4">
+        <div className="max-w-6xl mx-auto px-3 sm:px-4 py-3 sm:py-4 flex items-center gap-2 sm:gap-4 min-w-0">
           <Button
             variant="ghost"
             size="sm"
             onClick={handleBackToTrip}
-            className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700"
+            className="rounded-full hover:bg-slate-100 dark:hover:bg-slate-700 flex-shrink-0"
             aria-label={t('dayDetail.backToTripDetails')}
           >
-            <ArrowLeft className="w-5 h-5 text-slate-700 dark:text-slate-300" />
+            <ArrowLeft className="w-4 h-4 sm:w-5 sm:h-5 text-slate-700 dark:text-slate-300" />
           </Button>
-          <div className="flex-1">
-            <h1 className="text-h2 font-bold text-slate-900 dark:text-white">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-lg sm:text-h2 font-bold text-slate-900 dark:text-white truncate">
               {trip?.destination || "Viagem"}
             </h1>
-            <p className="text-small text-slate-600 dark:text-slate-300">
+            <p className="text-xs sm:text-small text-slate-600 dark:text-slate-300 truncate">
               {t('dayDetail.dayOf', { current: currentDay, total: totalDays })}
             </p>
           </div>
@@ -392,7 +392,7 @@ export const DayDetailScreen: React.FC = () => {
       </header>
 
       {/* Conteúdo principal */}
-      <main className="max-w-6xl mx-auto px-4 py-8 space-y-8">
+      <main className="max-w-6xl mx-auto px-3 sm:px-4 py-4 sm:py-8 space-y-4 sm:space-y-8">
         {/* Galeria de fotos (primeira atração ou placeholder) */}
         <section aria-label="Galeria de fotos do dia">
           {attractions.length > 0 && attractions[0].photos && attractions[0].photos.length > 0 ? (
@@ -401,13 +401,13 @@ export const DayDetailScreen: React.FC = () => {
               attractionName={attractions[0].name}
             />
           ) : (
-            <div className="w-full h-96 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900 dark:to-blue-900 rounded-lg shadow-md flex items-center justify-center">
-              <div className="text-center">
-                <MapPin className="w-12 h-12 text-indigo-400 dark:text-indigo-300 mx-auto mb-3" />
-                <p className="text-indigo-700 dark:text-indigo-200 font-semibold text-lg">
+            <div className="w-full h-64 sm:h-96 bg-gradient-to-br from-indigo-100 to-blue-50 dark:from-indigo-900 dark:to-blue-900 rounded-lg shadow-md flex items-center justify-center">
+              <div className="text-center px-4">
+                <MapPin className="w-10 h-10 sm:w-12 sm:h-12 text-indigo-400 dark:text-indigo-300 mx-auto mb-2 sm:mb-3" />
+                <p className="text-indigo-700 dark:text-indigo-200 font-semibold text-base sm:text-lg">
                   {trip?.destination || "Seu destino"}
                 </p>
-                <p className="text-indigo-600 dark:text-indigo-300 text-sm mt-1">
+                <p className="text-indigo-600 dark:text-indigo-300 text-xs sm:text-sm mt-1">
                   {t('dayDetail.exploreAttractions')}
                 </p>
               </div>
@@ -442,11 +442,11 @@ export const DayDetailScreen: React.FC = () => {
 
         {/* Timeline de atrações */}
         <section aria-label={t('dayDetail.attractions')}>
-          <div className="mb-6">
-            <h2 className="text-h2 font-bold text-slate-900 dark:text-white">
+          <div className="mb-4 sm:mb-6">
+            <h2 className="text-lg sm:text-h2 font-bold text-slate-900 dark:text-white">
               {t('dayDetail.attractionsTitle')}
             </h2>
-            <p className="text-small text-slate-600 dark:text-slate-300 mt-1">
+            <p className="text-xs sm:text-small text-slate-600 dark:text-slate-300 mt-1">
               {t('dayDetail.attractionsPlanned', { count: attractions.length })}
             </p>
           </div>
@@ -454,9 +454,9 @@ export const DayDetailScreen: React.FC = () => {
           {attractions.length > 0 ? (
             <>
               {photosLoading && (
-                <div className="mb-4 p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-3">
-                  <div className="animate-spin rounded-full h-5 w-5 border-2 border-blue-500 border-t-transparent" />
-                  <p className="text-small text-blue-700 dark:text-blue-300">
+                <div className="mb-4 p-3 sm:p-4 bg-blue-50 dark:bg-blue-900/30 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center gap-2 sm:gap-3">
+                  <div className="animate-spin rounded-full h-4 w-4 sm:h-5 sm:w-5 border-2 border-blue-500 border-t-transparent flex-shrink-0" />
+                  <p className="text-xs sm:text-small text-blue-700 dark:text-blue-300">
                     {t('dayDetail.loadingPhotos')}
                   </p>
                 </div>
@@ -557,11 +557,11 @@ export const DayDetailScreen: React.FC = () => {
 
         {/* Mapa com localizações do dia */}
         {attractions.length > 0 && (
-          <div ref={mapRef}>
-            <Card className="shadow-md border-slate-200 dark:border-slate-700">
+          <div ref={mapRef} className="w-full overflow-x-hidden">
+            <Card className="shadow-md border-slate-200 dark:border-slate-700 w-full">
               <Card.Header title={t('dayDetail.routeMap')} />
-              <Card.Body className="p-0">
-                <Suspense fallback={<Skeleton className="w-full h-96 rounded-lg" />}>
+              <Card.Body className="p-0 overflow-hidden">
+                <Suspense fallback={<Skeleton className="w-full h-64 sm:h-96 rounded-lg" />}>
                   <MapboxMap
                     attractions={attractions.map((a) => ({
                       name: a.name,

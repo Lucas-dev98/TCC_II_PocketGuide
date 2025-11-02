@@ -39,27 +39,27 @@ const elevationClasses = {
 }
 
 const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, action, children, className = '' }) => (
-  <div className={clsx('flex items-start justify-between mb-4 pb-4 border-b border-slate-200 dark:border-slate-700', className)}>
+  <div className={clsx('flex items-start justify-between gap-2 sm:gap-3 mb-3 sm:mb-4 pb-3 sm:pb-4 border-b border-slate-200 dark:border-slate-700 flex-wrap sm:flex-nowrap', className)}>
     {children ? (
       children
     ) : (
-      <div>
-        {title && <h3 className="text-h3 font-semibold text-slate-900 dark:text-white">{title}</h3>}
-        {subtitle && <p className="text-small text-slate-600 dark:text-slate-400">{subtitle}</p>}
+      <div className="flex-1 min-w-0">
+        {title && <h3 className="text-base sm:text-h3 font-semibold text-slate-900 dark:text-white truncate">{title}</h3>}
+        {subtitle && <p className="text-xs sm:text-small text-slate-600 dark:text-slate-400 truncate">{subtitle}</p>}
       </div>
     )}
-    {action && <div>{action}</div>}
+    {action && <div className="flex-shrink-0">{action}</div>}
   </div>
 )
 
 const CardBodyComponent: React.FC<CardBodyProps> = ({ children, className = '' }) => (
-  <div className={className}>
+  <div className={clsx('overflow-x-hidden', className)}>
     {children}
   </div>
 )
 
 const CardFooterComponent: React.FC<CardFooterProps> = ({ children, className = '' }) => (
-  <div className={clsx('mt-4 pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
+  <div className={clsx('mt-2 sm:mt-4 pt-2 sm:pt-4 border-t border-slate-200 dark:border-slate-700', className)}>
     {children}
   </div>
 )
@@ -79,7 +79,7 @@ const CardComponent: React.FC<CardProps> = ({
         'rounded-lg',
         'border border-slate-200 dark:border-slate-700',
         elevationClasses[elevation],
-        'p-4',
+        'p-3 sm:p-4',
         isInteractive && 'card-interactive',
         isInteractive && 'hover:shadow-lg hover:-translate-y-1 active:shadow-md active:translate-y-0',
         className,

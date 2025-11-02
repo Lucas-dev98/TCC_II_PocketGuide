@@ -51,33 +51,33 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
   });
 
   return (
-    <div className="space-y-6" aria-label="Timeline de atrações do dia">
+    <div className="space-y-6 w-full" aria-label="Timeline de atrações do dia">
       {sortedAttractions.map((attraction, index) => (
         <div
           key={attraction.id}
-          className="flex gap-4"
+          className="flex gap-3 sm:gap-4 w-full"
           role="article"
           aria-label={`Atração ${index + 1}: ${attraction.name}`}
         >
-          {/* Timeline linha */}
-          <div className="flex flex-col items-center">
+          {/* Timeline linha - responsivo */}
+          <div className="flex flex-col items-center flex-shrink-0">
             {/* Ponto */}
-            <div className="w-4 h-4 rounded-full bg-indigo-500 border-4 border-white dark:border-slate-800 shadow-lg" />
+            <div className="w-3 h-3 sm:w-4 sm:h-4 rounded-full bg-indigo-500 border-4 border-white dark:border-slate-800 shadow-lg" />
             {/* Linha para próxima atração */}
             {index < sortedAttractions.length - 1 && (
-              <div className="w-1 h-24 bg-gradient-to-b from-indigo-500 to-indigo-200 dark:from-indigo-600 dark:to-indigo-800 mt-2" />
+              <div className="w-1 h-20 sm:h-24 bg-gradient-to-b from-indigo-500 to-indigo-200 dark:from-indigo-600 dark:to-indigo-800 mt-2" />
             )}
           </div>
 
           {/* Conteúdo da atração */}
-          <div className="flex-1 pt-1">
+          <div className="flex-1 min-w-0 pt-1">
             <Card
-              className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border-slate-200 dark:border-slate-700"
+              className="hover:shadow-lg transition-shadow cursor-pointer overflow-hidden border-slate-200 dark:border-slate-700 w-full"
               onClick={() => onAttractionClick?.(attraction)}
             >
-              {/* Foto da atração */}
+              {/* Foto da atração - responsiva */}
               {attraction.photos && attraction.photos.length > 0 ? (
-                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/20 overflow-hidden relative group flex items-center justify-center">
+                <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/30 dark:to-indigo-800/20 overflow-hidden relative group flex items-center justify-center">
                   <img
                     src={attraction.photos[0].url}
                     alt={attraction.photos[0].alt}
@@ -100,47 +100,49 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                   />
                 </div>
               ) : (
-                <div className="w-full h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/40 dark:to-indigo-800/30 flex items-center justify-center">
-                  <div className="text-center">
-                    <MapPin className="w-8 h-8 text-indigo-300 dark:text-indigo-600 mx-auto mb-2" />
-                    <p className="text-sm text-indigo-600 dark:text-indigo-400">{attraction.name}</p>
+                <div className="w-full h-32 sm:h-40 md:h-48 bg-gradient-to-br from-indigo-100 to-indigo-50 dark:from-indigo-900/40 dark:to-indigo-800/30 flex items-center justify-center">
+                  <div className="text-center px-2">
+                    <MapPin className="w-6 h-6 sm:w-8 sm:h-8 text-indigo-300 dark:text-indigo-600 mx-auto mb-2" />
+                    <p className="text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 truncate">
+                      {attraction.name}
+                    </p>
                   </div>
                 </div>
               )}
 
-              <div className="space-y-3 p-4">
+              <div className="space-y-2 sm:space-y-3 p-3 sm:p-4">
                 {/* Header: Hora e Nome */}
                 <div>
                   <div className="flex items-start justify-between gap-2 mb-1">
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-1 sm:gap-2 min-w-0">
                       <Clock className="w-4 h-4 text-indigo-500 dark:text-indigo-400 flex-shrink-0" />
-                      <span className="font-semibold text-sm text-indigo-600 dark:text-indigo-400">
+                      <span className="font-semibold text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 truncate">
                         {attraction.time || t('time.notDefined')}
                       </span>
                     </div>
                     {attraction.category && (
-                      <Badge variant="secondary" className="text-xs">
+                      <Badge variant="secondary" className="text-xs flex-shrink-0">
                         {attraction.category}
                       </Badge>
                     )}
                   </div>
-                  <h3 className="text-lg font-bold text-gray-900 dark:text-white">
+                  <h3 className="text-base sm:text-lg font-bold text-gray-900 dark:text-white line-clamp-2 sm:line-clamp-none">
                     {attraction.name}
                   </h3>
                 </div>
 
                 {/* Descrição */}
                 {attraction.reason && (
-                  <p className="text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
+                  <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-300 line-clamp-2">
                     {attraction.reason}
                   </p>
                 )}
 
                 {/* Localização */}
                 {attraction.location && (
-                  <div className="flex items-start gap-2 text-sm">
-                    <MapPin className="w-4 h-4 text-gray-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
-                    <span className="text-gray-600 dark:text-gray-400 line-clamp-1">
+                  <div className="flex items-start gap-1 sm:gap-2 text-xs sm:text-sm min-w-0">
+                    <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gray-400 dark:text-slate-500 flex-shrink-0 mt-0.5" />
+                    <span className="text-gray-600 dark:text-gray-400 line-clamp-1 truncate text-xs sm:text-sm">
                       {attraction.location.address ||
                         `${attraction.location.lat}, ${attraction.location.lng}`}
                     </span>
@@ -148,7 +150,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                 )}
 
                 {/* Info com badges */}
-                <div className="flex flex-wrap gap-2 pt-2">
+                <div className="flex flex-wrap gap-1 sm:gap-2 pt-2">
                   {attraction.duration && (
                     <Badge variant="secondary" className="text-xs">
                       ⏱️ {Math.round(attraction.duration / 60)}h
@@ -172,7 +174,7 @@ export const DayTimeline: React.FC<DayTimelineProps> = ({
                 {/* Tips */}
                 {attraction.tip && (
                   <div className="pt-2 border-t border-gray-100 dark:border-slate-700">
-                    <p className="text-xs text-gray-600 dark:text-gray-400 italic">
+                    <p className="text-xs text-gray-600 dark:text-gray-400 italic line-clamp-2">
                       💭 {attraction.tip}
                     </p>
                   </div>
