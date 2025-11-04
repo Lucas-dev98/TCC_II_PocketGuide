@@ -302,3 +302,38 @@ export interface DayNavigationState {
   hasNext: boolean;
 }
 
+// ============================================
+// 🌍 GEOCODING & SEARCH TYPES
+// ============================================
+
+/**
+ * City suggestion from Mapbox Geocoding API
+ * Used for destination autocomplete
+ */
+export interface CitySuggestion {
+  city: string;
+  country: string;
+  coordinates?: [number, number];
+  
+  // Classification
+  type: 'country' | 'city' | 'region' | 'landmark';
+  
+  // Additional metadata
+  population?: number;
+  description?: string;
+  relevance?: number; // 0-100 score
+  isCapital?: boolean;
+  isMajorCity?: boolean;
+}
+
+/**
+ * Grouped city suggestions organized by type
+ * Used for rendering organized dropdown
+ */
+export interface GroupedCitySuggestions {
+  countries: CitySuggestion[];
+  cities: CitySuggestion[];
+  regions: CitySuggestion[];
+  landmarks: CitySuggestion[];
+}
+
