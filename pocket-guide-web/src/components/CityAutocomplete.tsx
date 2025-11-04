@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
-import { searchCities, CitySuggestion } from '../services/mapboxGeocoding';
+import { searchCities, groupSuggestions } from '../services/mapboxGeocoding';
+import { CitySuggestion } from '../types';
 import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -12,8 +13,89 @@ interface CityAutocompleteProps {
 }
 
 /**
- * Componente de Autocomplete de Cidades usando Mapbox Geocoding API
- * Mostra sugestões enquanto o usuário digita
+ * Obter ícone baseado no tipo de local
+ */
+function getTypeIcon(type: string): string {
+  switch (type) {
+    case 'country':
+      return '🌍';
+    case 'city':
+      return '🏙️';
+    case 'region':
+      return '🏖️';
+    case 'landmark':
+      return '🏛️';
+    default:
+      return '📍';
+  }
+}
+
+/**
+ * Obter label do tipo
+ */
+function getTypeLabel(type: string): string {
+  switch (type) {
+    case 'country':
+      return 'PAÍS';
+    case 'city':
+      return 'CIDADES';
+    case 'region':
+      return 'REGIÕES';
+    case 'landmark':
+      return 'DESTINOS POPULARES';
+    default:
+      return 'LOCAL';
+  }
+}
+
+/**
+ * Componente individual de sugestão com ícone e informações adicionais
+ */
+interface SuggestionItemProps {
+  suggestion: CitySuggestion;
+  onSelect: (suggestion: CitySuggestion) => void;
+}
+
+function SuggestionItem({ suggestion, onSelect }: SuggestionItemProps) {
+  return (
+    <button
+      type="button"
+      onClick={(e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        onSelect(suggestion);
+      }}
+      className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700
+                 transition-colors duration-150 border-b border-slate-100 dark:border-slate-700 last:border-b-0
+                 focus:outline-none focus:bg-blue-100 dark:focus:bg-slate-700 cursor-pointer
+                 group/item"
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex-1">
+          <div className="font-medium text-slate-900 dark:text-slate-100">
+            {getTypeIcon(suggestion.type)} {suggestion.city}
+          </div>
+          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
+            <span>{suggestion.country}</span>
+            {suggestion.isCapital && (
+              <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-medium">
+                Capital
+              </span>
+            )}
+          </div>
+        </div>
+        <div className="ml-2 text-slate-300 dark:text-slate-600 group-hover/item:text-blue-400 transition-colors">
+          →
+        </div>
+      </div>
+    </button>
+  );
+}
+
+/**
+ * Componente de Autocomplete de Cidades com Agrupamento
+ * Mostra sugestões agrupadas por tipo (país, cidade, região, destino)
+ * Com ordenação inteligente por relevância
  */
 export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   value,
@@ -31,22 +113,18 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   const debounceRef = useRef<NodeJS.Timeout | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
-  // Sincronizar inputValue quando value prop muda (de fora do componente)
+  // Sincronizar inputValue quando value prop muda
   useEffect(() => {
     setInputValue(value);
   }, [value]);
 
-  // Debounce para buscar cidades enquanto o usuário digita
-  // MAS o dropdown SÓ abre se o usuário clicar na seta ou focar o input
+  // Debounce para buscar cidades
   useEffect(() => {
-    console.log('🔄 Debounce acionado:', { inputValue });
-    
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
     }
 
     if (!inputValue.trim()) {
-      console.log('⏭️ Input vazio');
       setSuggestions([]);
       setIsOpen(false);
       return;
@@ -55,14 +133,9 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     setIsLoading(true);
 
     debounceRef.current = setTimeout(async () => {
-      console.log('⏱️ Buscando cidades:', inputValue);
       try {
         const results = await searchCities(inputValue, language);
-        console.log('✅ Resultados carregados:', results.length);
         setSuggestions(results);
-        
-        // NÃO abre o dropdown automaticamente
-        // Apenas carrega as sugestões para exibir quando o usuário abrir
       } catch (error) {
         console.error('❌ Erro ao buscar:', error);
         setSuggestions([]);
@@ -90,19 +163,19 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  const handleSelectCity = useCallback((suggestion: CitySuggestion) => {
-    console.log('✅ Selecionando cidade:', { city: suggestion.city, country: suggestion.country });
-    
-    // Atualizar input com o nome completo
-    setInputValue(`${suggestion.city}, ${suggestion.country}`);
-    
-    // Chamar callback para atualizar o formulário pai
-    onCitySelect(suggestion.city, suggestion.country, suggestion.coordinates);
-    
-    // Fechar dropdown IMEDIATAMENTE após seleção
-    setIsOpen(false);
-    setSuggestions([]);
-  }, [onCitySelect]);
+  const handleSelectCity = useCallback(
+    (suggestion: CitySuggestion) => {
+      setInputValue(`${suggestion.city}, ${suggestion.country}`);
+      onCitySelect(suggestion.city, suggestion.country, suggestion.coordinates);
+      setIsOpen(false);
+      setSuggestions([]);
+    },
+    [onCitySelect]
+  );
+
+  // Agrupar sugestões
+  const grouped = groupSuggestions(suggestions);
+  const hasResults = suggestions.length > 0;
 
   return (
     <div ref={containerRef} className={`relative w-full ${className}`}>
@@ -113,14 +186,11 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
           value={inputValue}
           onChange={(e) => {
             setInputValue(e.target.value);
-            // Ocultar hint quando começar a digitar
             if (e.target.value.trim()) {
               setShowDropdownHint(false);
             }
           }}
           onFocus={() => {
-            console.log('📍 Campo focado');
-            // Se tem sugestões carregadas, abrir o dropdown
             if (suggestions.length > 0) {
               setIsOpen(true);
             }
@@ -129,7 +199,6 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
             if (e.key === 'Escape') {
               setIsOpen(false);
             }
-            // Enter não submete o form
             if (e.key === 'Enter') {
               e.preventDefault();
             }
@@ -148,14 +217,13 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
           </div>
         )}
 
-        {/* Botão da seta para abrir/fechar - APENAS se tem texto */}
+        {/* Botão da seta */}
         {!isLoading && inputValue.trim() && (
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
-              console.log('🔽 Seta clicada');
               setIsOpen(!isOpen);
             }}
             className={clsx(
@@ -173,7 +241,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
           </button>
         )}
 
-        {/* Hint sutil quando vazio */}
+        {/* Hint sutil */}
         {showDropdownHint && !inputValue.trim() && !isLoading && (
           <div className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs pointer-events-none opacity-70">
             Digite...
@@ -181,45 +249,62 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         )}
       </div>
 
-      {/* Dropdown com sugestões */}
-      {isOpen && suggestions.length > 0 && (
+      {/* ✅ DROPDOWN COM AGRUPAMENTO */}
+      {isOpen && hasResults && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600
-                        rounded-lg shadow-xl max-h-72 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
-          {suggestions.map((suggestion, index) => (
-            <button
-              key={`${suggestion.city}-${suggestion.country}-${index}`}
-              type="button"
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                console.log('✅ Selecionado:', suggestion);
-                handleSelectCity(suggestion);
-              }}
-              className="w-full text-left px-4 py-3 hover:bg-blue-50 dark:hover:bg-slate-700
-                         transition-colors duration-150 border-b border-slate-100 dark:border-slate-700 last:border-b-0
-                         focus:outline-none focus:bg-blue-100 dark:focus:bg-slate-700 cursor-pointer
-                         group/item"
-            >
-              <div className="flex items-center justify-between">
-                <div className="flex-1">
-                  <div className="font-medium text-slate-900 dark:text-slate-100">
-                    {suggestion.city}
-                  </div>
-                  <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                    {suggestion.country}
-                  </div>
-                </div>
-                <div className="ml-2 text-slate-300 dark:text-slate-600 group-hover/item:text-blue-400 transition-colors">
-                  →
-                </div>
+                        rounded-lg shadow-xl max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+          {/* Grupo: Países */}
+          {grouped.countries.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 sticky top-0">
+                🌍 {getTypeLabel('country')}
               </div>
-            </button>
-          ))}
+              {grouped.countries.map((suggestion, index) => (
+                <SuggestionItem key={`country-${index}`} suggestion={suggestion} onSelect={handleSelectCity} />
+              ))}
+            </div>
+          )}
+
+          {/* Grupo: Cidades */}
+          {grouped.cities.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 sticky top-0">
+                🏙️ {getTypeLabel('city')}
+              </div>
+              {grouped.cities.map((suggestion, index) => (
+                <SuggestionItem key={`city-${index}`} suggestion={suggestion} onSelect={handleSelectCity} />
+              ))}
+            </div>
+          )}
+
+          {/* Grupo: Regiões */}
+          {grouped.regions.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 sticky top-0">
+                🏖️ {getTypeLabel('region')}
+              </div>
+              {grouped.regions.map((suggestion, index) => (
+                <SuggestionItem key={`region-${index}`} suggestion={suggestion} onSelect={handleSelectCity} />
+              ))}
+            </div>
+          )}
+
+          {/* Grupo: Destinos Populares */}
+          {grouped.landmarks.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-slate-50 dark:bg-slate-900 sticky top-0">
+                🏛️ {getTypeLabel('landmark')}
+              </div>
+              {grouped.landmarks.map((suggestion, index) => (
+                <SuggestionItem key={`landmark-${index}`} suggestion={suggestion} onSelect={handleSelectCity} />
+              ))}
+            </div>
+          )}
         </div>
       )}
 
-      {/* Estado vazio com sugestões carregadas mas dropdown fechado */}
-      {isOpen && suggestions.length === 0 && inputValue.trim() && !isLoading && (
+      {/* Estado vazio */}
+      {isOpen && !hasResults && inputValue.trim() && !isLoading && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600
                         rounded-lg shadow-lg p-4 text-center text-slate-500 dark:text-slate-400">
           <div className="text-sm">Nenhuma cidade encontrada</div>
