@@ -82,6 +82,8 @@
   "trips": {
     "title": "Minhas Viagens",
     "createNewTrip": "Criar Nova Viagem",
+    "readyToExplore": "Pronto para Explorar?",
+    "createYourNextAdventure": "Crie seu próximo itinerário com IA e comece sua aventura",
     "noTrips": "Você ainda não tem viagens",
     "startPlanning": "Comece a planejar agora",
     "emptyStateAriaLabel": "Nenhuma viagem encontrada",

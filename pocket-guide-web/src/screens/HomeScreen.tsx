@@ -7,10 +7,11 @@ import { Button } from '../components/Button'
 import { Card } from '../components/Card'
 import { EmptyState } from '../components/EmptyState'
 import { FavoriteButton } from '../components/FavoriteButton'
+import { CreateTripCTA } from '../components/CreateTripCTA'
 import { MainLayout } from '../components/Layout'
 import { SkeletonCard } from '../components/Skeleton'
 import useI18n from '../hooks/useI18n'
-import { Plus, MapPin, Calendar, Trash2 } from 'lucide-react'
+import { MapPin, Calendar, Trash2 } from 'lucide-react'
 import { formatDate } from '../utils/formatDate'
 import { debug } from '../utils/debug'
 
@@ -44,10 +45,6 @@ export default function HomeScreen() {
 
   debug.log('🏠 HomeScreen: Current trips:', trips)
   debug.log('🏠 HomeScreen: isLoading:', isLoading)
-
-  const handleCreateTrip = () => {
-    navigate('/create-trip')
-  }
 
   const handleViewTrip = (tripId: string) => {
     navigate(`/trip/${tripId}`)
@@ -97,16 +94,8 @@ export default function HomeScreen() {
 
         {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 py-8 lg:px-6">
-          {/* Botão criar nova viagem */}
-          <div className="mb-8">
-            <Button
-              onClick={handleCreateTrip}
-              className="gap-2"
-            >
-            <Plus className="w-5 h-5" />
-            {t('trips.createNewTrip')}
-          </Button>
-        </div>
+          {/* Botão criar nova viagem - CTA destacado */}
+          <CreateTripCTA />
 
         {/* Loading state - Skeleton cards */}
         {isLoading && (
@@ -128,10 +117,6 @@ export default function HomeScreen() {
               }
               title={t('trips.noTrips')}
               description={t('trips.startPlanning')}
-              action={{
-                label: t('trips.createNewTrip'),
-                onClick: handleCreateTrip,
-              }}
             />
           </div>
         )}

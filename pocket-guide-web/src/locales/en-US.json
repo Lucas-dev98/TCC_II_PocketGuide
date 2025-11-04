@@ -82,6 +82,8 @@
   "trips": {
     "title": "My Trips",
     "createNewTrip": "Create New Trip",
+    "readyToExplore": "Ready to Explore?",
+    "createYourNextAdventure": "Create your next itinerary with AI and start your adventure",
     "noTrips": "You don't have any trips yet",
     "startPlanning": "Start planning now",
     "emptyStateAriaLabel": "No trips found",

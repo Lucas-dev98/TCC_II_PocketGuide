@@ -112,6 +112,7 @@ export const ExportButton = ({
         <button
           onClick={handleExportSingle}
           disabled={loading || !trip}
+          aria-label={loading ? 'Exportando...' : t('components.exportButton.exportPDF')}
           title={loading ? 'Exportando...' : t('components.exportButton.exportPDF')}
           className={`
             ${sizeClasses[size]}
