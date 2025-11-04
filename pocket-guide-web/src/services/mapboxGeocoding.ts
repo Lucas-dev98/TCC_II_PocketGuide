@@ -5,6 +5,7 @@
  */
 
 import { searchCitiesLocal, getCountryFromCityLocal } from '../utils/citiesDatabase';
+import { CitySuggestion, GroupedCitySuggestions } from '../types';
 
 interface GeocodeResult {
   id: string;
@@ -25,12 +26,6 @@ interface GeocodeResult {
   }>;
 }
 
-interface CitySuggestion {
-  city: string;
-  country: string;
-  coordinates: [number, number];
-}
-
 export type { CitySuggestion };
 
 /**
@@ -39,10 +34,80 @@ export type { CitySuggestion };
 const geocodeCache = new Map<string, CitySuggestion[]>();
 
 /**
+ * Classificar tipo de resultado (country, city, region, landmark)
+ */
+function classifyPlace(feature: GeocodeResult): 'country' | 'city' | 'region' | 'landmark' {
+  // Verificar se é país
+  if (feature.place_type?.includes('country')) {
+    return 'country';
+  }
+
+  // Verificar se é região/estado
+  if (feature.place_type?.includes('region')) {
+    return 'region';
+  }
+
+  // Praias e pontos de interesse
+  if (feature.place_type?.includes('poi') || feature.text?.toLowerCase().includes('praia')) {
+    return 'landmark';
+  }
+
+  // Caso contrário é cidade
+  return 'city';
+}
+
+/**
+ * Calcular score de relevância (0-100)
+ */
+function calculateRelevance(feature: GeocodeResult, query: string): number {
+  const queryLower = query.toLowerCase();
+  const cityName = (feature.place_name || '').split(',')[0]?.toLowerCase() || '';
+
+  let score = 50; // Base
+
+  // Bônus se começa com a query
+  if (cityName.startsWith(queryLower)) {
+    score += 30;
+  }
+
+  // Bônus se é match exato
+  if (cityName === queryLower) {
+    score += 20;
+  }
+
+  // Bônus para capitais
+  if (feature.context?.some((ctx) => ctx.id?.includes('capital'))) {
+    score += 15;
+  }
+
+  return Math.min(score, 100);
+}
+
+/**
+ * Extrair descrição do local
+ */
+function getDescription(feature: GeocodeResult): string {
+  // Verificar tipo
+  if (feature.place_type?.includes('country')) {
+    return 'País';
+  }
+  if (feature.place_type?.includes('region')) {
+    return 'Região';
+  }
+
+  // Verificar se é capital
+  if (feature.context?.some((ctx) => ctx.id?.includes('capital'))) {
+    return 'Capital';
+  }
+
+  return 'Cidade';
+}
+
+/**
  * Busca por cidades usando Mapbox Geocoding API
  * @param query - Cidade a buscar
  * @param language - Idioma (pt, en, es)
- * @returns Promise com sugestões de cidades
+ * @returns Promise com sugestões de cidades enriquecidas com tipo, relevância, etc.
  */
 export async function searchCities(
   query: string,
@@ -63,10 +128,16 @@ export async function searchCities(
   console.log('🔍 Buscando no banco local...');
   const localResults = searchCitiesLocal(query);
   if (localResults && localResults.length > 0) {
-    const localSuggestions = localResults.map(city => ({
+    const localSuggestions: CitySuggestion[] = localResults.map(city => ({
       city: city.name,
       country: city.country,
       coordinates: [0, 0] as [number, number],
+      type: 'city',
+      population: 0,
+      description: 'Cidade',
+      relevance: 80,
+      isCapital: false,
+      isMajorCity: false,
     }));
     console.log('✅ Encontrado no banco local:', localSuggestions.length, 'resultados');
     geocodeCache.set(cacheKey, localSuggestions);
@@ -84,10 +155,16 @@ export async function searchCities(
       console.warn('⚠️ VITE_MAPBOX_API_KEY não configurada, usando apenas banco local');
       // Retornar banco local como fallback
       const fallbackResults = searchCitiesLocal(query);
-      const fallbackSuggestions = fallbackResults.map(city => ({
+      const fallbackSuggestions: CitySuggestion[] = fallbackResults.map(city => ({
         city: city.name,
         country: city.country,
         coordinates: [0, 0] as [number, number],
+        type: 'city',
+        population: 0,
+        description: 'Cidade',
+        relevance: 80,
+        isCapital: false,
+        isMajorCity: false,
       }));
       geocodeCache.set(cacheKey, fallbackSuggestions);
       return fallbackSuggestions;
@@ -116,16 +193,14 @@ export async function searchCities(
       throw new Error('Invalid Mapbox response');
     }
 
-    // Processar resultados
-    const suggestions: CitySuggestion[] = data.features
+    // ✅ Processar resultados com dados enriquecidos
+    const suggestionsWithType: CitySuggestion[] = data.features
       .map((feature: GeocodeResult) => {
         // Extrair país do context
-        // Mapbox retorna o contexto com 'text' ou 'text_pt' (não 'name')
         const countryContext = feature.context?.find(ctx => ctx.id?.startsWith('country.'));
         let country = countryContext?.name || countryContext?.text_pt || countryContext?.text || '';
         
-        // Nome da cidade (sem país) - com fallback seguro
-        // feature.place_name está no formato "Cidade, Região, País"
+        // Nome da cidade (sem país)
         const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.text || feature.name || '';
         
         console.log('🏙️ Processando:', { cityName, country, hasContext: !!countryContext });
@@ -139,6 +214,14 @@ export async function searchCities(
           city: cityName,
           country: country,
           coordinates: feature.geometry?.coordinates as [number, number] || [0, 0],
+          
+          // ✅ Novos campos
+          type: classifyPlace(feature),
+          population: 0, // Mapbox não retorna população
+          description: getDescription(feature),
+          relevance: calculateRelevance(feature, query),
+          isCapital: feature.context?.some(ctx => ctx.id?.includes('capital')) || false,
+          isMajorCity: false, // Será atualizado após obter população
         };
       })
       .filter((s: CitySuggestion) => {
@@ -150,14 +233,20 @@ export async function searchCities(
       }); // Remover entradas inválidas
 
     // Se não teve resultados válidos na API, tenta o banco local como fallback final
-    if (suggestions.length === 0) {
+    if (suggestionsWithType.length === 0) {
       console.log('⚠️ API retornou resultados mas sem país, tentando banco local...');
       const localFallback = searchCitiesLocal(query);
       if (localFallback.length > 0) {
-        const localSuggestions = localFallback.map(city => ({
+        const localSuggestions: CitySuggestion[] = localFallback.map(city => ({
           city: city.name,
           country: city.country,
           coordinates: [0, 0] as [number, number],
+          type: 'city',
+          population: 0,
+          description: 'Cidade',
+          relevance: 80,
+          isCapital: false,
+          isMajorCity: false,
         }));
         geocodeCache.set(cacheKey, localSuggestions);
         console.log('✅ Usando banco local como fallback:', localSuggestions.length, 'resultados');
@@ -165,10 +254,29 @@ export async function searchCities(
       }
     }
 
-    // Remover duplicatas
+    // ✅ Remover duplicatas mantendo o com maior relevância
     const uniqueSuggestions = Array.from(
-      new Map(suggestions.map(s => [`${s.city}-${s.country}`, s])).values()
+      new Map(suggestionsWithType.map(s => [
+        `${s.city.toLowerCase()}-${s.country.toLowerCase()}`,
+        s
+      ])).values()
     );
+
+    // ✅ Ordenar por relevância
+    uniqueSuggestions.sort((a, b) => {
+      // 1. Por relevância score
+      if ((b.relevance || 0) !== (a.relevance || 0)) {
+        return (b.relevance || 0) - (a.relevance || 0);
+      }
+      
+      // 2. Por população
+      if ((b.population || 0) !== (a.population || 0)) {
+        return (b.population || 0) - (a.population || 0);
+      }
+      
+      // 3. Alfabético
+      return a.city.localeCompare(b.city);
+    });
 
     // Cachear resultado
     geocodeCache.set(cacheKey, uniqueSuggestions);
@@ -181,15 +289,33 @@ export async function searchCities(
     // Fallback: Usar banco de dados local
     console.log('🔄 Fallback para banco local');
     const localResults = searchCitiesLocal(query);
-    const localSuggestions = localResults.map(city => ({
+    const localSuggestions: CitySuggestion[] = localResults.map(city => ({
       city: city.name,
       country: city.country,
       coordinates: [0, 0] as [number, number],
+      type: 'city',
+      population: 0,
+      description: 'Cidade',
+      relevance: 80,
+      isCapital: false,
+      isMajorCity: false,
     }));
     
     geocodeCache.set(cacheKey, localSuggestions);
     return localSuggestions;
   }
+}
+
+/**
+ * Agrupar sugestões por tipo
+ */
+export function groupSuggestions(suggestions: CitySuggestion[]): GroupedCitySuggestions {
+  return {
+    countries: suggestions.filter(s => s.type === 'country'),
+    cities: suggestions.filter(s => s.type === 'city'),
+    regions: suggestions.filter(s => s.type === 'region'),
+    landmarks: suggestions.filter(s => s.type === 'landmark'),
+  };
 }
 
 /**
