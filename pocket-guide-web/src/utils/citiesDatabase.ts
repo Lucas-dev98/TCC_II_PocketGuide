@@ -297,3 +297,53 @@ export function getCountryFromCityLocal(cityName: string): string | null {
   
   return city?.country || null;
 }
+
+/**
+ * Retorna lista de países únicos no banco de dados
+ */
+export function getAllCountries(): string[] {
+  const countries = new Set(CITIES_DATABASE.map(c => c.country));
+  return Array.from(countries).sort();
+}
+
+/**
+ * Retorna lista de cidades para um país específico
+ */
+export function getCitiesByCountry(country: string): City[] {
+  return CITIES_DATABASE
+    .filter(c => c.country.toLowerCase() === country.toLowerCase())
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/**
+ * Retorna lista de cidades únicas para um país específico
+ */
+export function getUniqueCitiesByCountry(country: string): string[] {
+  const cities = new Map<string, boolean>();
+  
+  CITIES_DATABASE
+    .filter(c => c.country.toLowerCase() === country.toLowerCase())
+    .forEach(c => {
+      cities.set(c.name, true);
+    });
+  
+  return Array.from(cities.keys()).sort();
+}
+
+/**
+ * Valida se um país existe no banco de dados
+ */
+export function isValidCountry(country: string): boolean {
+  return getAllCountries().some(c => c.toLowerCase() === country.toLowerCase());
+}
+
+/**
+ * Valida se uma cidade existe para um país específico
+ */
+export function isValidCityInCountry(city: string, country: string): boolean {
+  return getCitiesByCountry(country).some(
+    c => c.name.toLowerCase() === city.toLowerCase() ||
+         c.aliases?.some(a => a.toLowerCase() === city.toLowerCase())
+  );
+}
+

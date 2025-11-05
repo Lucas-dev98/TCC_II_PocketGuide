@@ -11,6 +11,7 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { CityAutocomplete } from '../components/CityAutocomplete'
 import { generateItinerary } from '../services/itineraryGenerator'
+import { getAllCountries, getUniqueCitiesByCountry } from '../utils/citiesDatabase'
 import { Budget } from '../types'
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react'
 import i18n from 'i18next'
@@ -58,8 +59,11 @@ export default function CreateTripScreen() {
   const { addTrip } = useTripsStore()
   const { showError, showSuccess } = useToast()
   
-  const [step, setStep] = useState<1 | 2 | 3>(1)
+  const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedCountry, setSelectedCountry] = useState<string>('')
+  const [countries] = useState<string[]>(getAllCountries())
+  const [citiesForCountry, setCitiesForCountry] = useState<string[]>([])
   
   const [formData, setFormData] = useState<FormData>({
     destination: '',
@@ -85,8 +89,18 @@ export default function CreateTripScreen() {
     if (step === 1) {
       navigate('/home');
     } else {
-      setStep((step - 1) as 1 | 2 | 3);
+      setStep((step - 1) as 1 | 2 | 3 | 4);
     }
+  };
+
+  const handleCountrySelect = (country: string) => {
+    setSelectedCountry(country);
+    setCitiesForCountry(getUniqueCitiesByCountry(country));
+    setFormData((prev) => ({
+      ...prev,
+      country: country,
+      destination: '', // Limpar destino anterior
+    }));
   };
 
   const handleCitySelect = (city: string) => {
@@ -151,8 +165,8 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 3) {
-        setStep((step + 1) as 1 | 2 | 3);
+      if (step < 4) {
+        setStep((step + 1) as 1 | 2 | 3 | 4);
       }
     }
   };
@@ -225,7 +239,7 @@ export default function CreateTripScreen() {
 
   const handlePrevStep = () => {
     if (step > 1) {
-      setStep((step - 1) as 1 | 2 | 3);
+      setStep((step - 1) as 1 | 2 | 3 | 4);
     }
   };
 
@@ -259,8 +273,8 @@ export default function CreateTripScreen() {
         </div>
 
         {/* Progress bar */}
-        <div className="mb-8 flex gap-2" role="progressbar" aria-label={t('createTrip.stepLabel', { step })} aria-valuenow={step} aria-valuemin={1} aria-valuemax={3}>
-          {[1, 2, 3].map((s) => (
+        <div className="mb-8 flex gap-2" role="progressbar" aria-label={t('createTrip.stepLabel', { step })} aria-valuenow={step} aria-valuemin={1} aria-valuemax={4}>
+          {[1, 2, 3, 4].map((s) => (
             <div
               key={s}
               className={`flex-1 h-2 rounded-full transition ${
@@ -273,8 +287,63 @@ export default function CreateTripScreen() {
           ))}
         </div>
 
-        {/* Step 1: Location */}
+        {/* Step 1: Select Country */}
         {step === 1 && (
+          <Card elevation="lg" className="mb-6">
+            <Card.Header>
+              <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
+                <MapPin className="w-5 h-5 text-primary" />
+                {t('createTrip.selectCountryLabel', 'Selecione o País')}
+              </h2>
+            </Card.Header>
+
+            <Card.Body className="space-y-4">
+              <div>
+                <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
+                  {t('createTrip.countryLabel')}
+                </label>
+                <select
+                  value={formData.country}
+                  onChange={(e) => handleCountrySelect(e.target.value)}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">-- {t('createTrip.selectCountry', 'Selecione um país')} --</option>
+                  {countries.map((country) => (
+                    <option key={country} value={country}>
+                      {country}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              {formData.country && (
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3">
+                  <p className="text-sm text-green-700 dark:text-green-300">
+                    ✓ {t('createTrip.countrySelected', 'País selecionado')}: <strong>{formData.country}</strong>
+                  </p>
+                </div>
+              )}
+            </Card.Body>
+
+            <Card.Footer>
+              <Button
+                onClick={() => {
+                  if (!formData.country) {
+                    showError(t('createTrip.selectCountryError', 'Por favor, selecione um país'));
+                    return;
+                  }
+                  setStep(2);
+                }}
+                className="w-full"
+              >
+                {t('createTrip.nextButton')}
+              </Button>
+            </Card.Footer>
+          </Card>
+        )}
+
+        {/* Step 2: Select Destination */}
+        {step === 2 && (
           <Card elevation="lg" className="mb-6">
             <Card.Header>
               <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
@@ -286,21 +355,52 @@ export default function CreateTripScreen() {
             <Card.Body className="space-y-4">
               <div className="pb-2">
                 <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
-                  {t('createTrip.destinationLabel')}
+                  {t('createTrip.selectCityLabel', 'Selecione a Cidade')}
                 </label>
-                <CityAutocomplete
+                <select
                   value={formData.destination}
-                  onCitySelect={handleCitySelect}
-                  placeholder={t('createTrip.destinationPlaceholder')}
-                  language={i18n.language.split('-')[0]}
-                />
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      destination: e.target.value,
+                    }));
+                  }}
+                  className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
+                >
+                  <option value="">-- {t('createTrip.selectCity', 'Selecione uma cidade')} --</option>
+                  {citiesForCountry.map((city) => (
+                    <option key={city} value={city}>
+                      {city}
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div className="text-sm text-slate-600 dark:text-slate-400">
+                <p>{t('createTrip.selectedCountry', 'País')}: <strong>{formData.country}</strong></p>
+                {formData.destination && (
+                  <p className="mt-2 text-green-600 dark:text-green-400">✓ {t('createTrip.selectedDestination', 'Destino')}: <strong>{formData.destination}</strong></p>
+                )}
               </div>
             </Card.Body>
 
-            <Card.Footer>
+            <Card.Footer className="flex gap-3">
               <Button
-                onClick={handleNext}
-                className="w-full"
+                variant="outline"
+                onClick={() => setStep(1)}
+                className="flex-1"
+              >
+                {t('createTrip.backButton')}
+              </Button>
+              <Button
+                onClick={() => {
+                  if (!formData.destination) {
+                    showError(t('createTrip.selectCityError', 'Por favor, selecione uma cidade'));
+                    return;
+                  }
+                  setStep(3);
+                }}
+                className="flex-1"
               >
                 {t('createTrip.nextButton')}
               </Button>
@@ -308,8 +408,8 @@ export default function CreateTripScreen() {
           </Card>
         )}
 
-        {/* Step 2: Dates & Interests */}
-        {step === 2 && (
+        {/* Step 3: Dates & Interests */}
+        {step === 3 && (
           <>
             <Card elevation="lg" className="mb-6">
               <Card.Header>
@@ -390,8 +490,8 @@ export default function CreateTripScreen() {
           </>
         )}
 
-        {/* Step 3: Budget & Review */}
-        {step === 3 && (
+        {/* Step 4: Budget & Review */}
+        {step === 4 && (
           <Card elevation="lg" className="mb-6">
             <Card.Header>
               <h2 className="text-h3 font-semibold text-slate-900 dark:text-white flex items-center gap-2">
