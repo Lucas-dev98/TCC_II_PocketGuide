@@ -287,7 +287,7 @@ export default function CreateTripScreen() {
                 {formData.tripTypes.length > 0 && (
                   <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
                     <InterestsSelector
-                      tripType={formData.tripTypes[0]}
+                      tripTypes={formData.tripTypes}
                       selectedInterests={formData.interests}
                       onInterestsChange={(interests) =>
                         setFormData((prev) => ({ ...prev, interests }))

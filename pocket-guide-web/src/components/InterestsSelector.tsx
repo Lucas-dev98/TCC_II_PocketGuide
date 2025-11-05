@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { TripType } from '../types';
 import {
   getPrimaryRecommendedInterests,
+  getPrimaryRecommendedInterestsByTypes,
   getAllInterestCategories,
   getInterestsByIds,
   InterestCategory,
@@ -10,6 +11,7 @@ import {
 
 interface InterestsSelectorProps {
   tripType?: TripType;
+  tripTypes?: TripType[];
   selectedInterests: string[];
   onInterestsChange: (interests: string[]) => void;
   disabled?: boolean;
@@ -18,6 +20,7 @@ interface InterestsSelectorProps {
 
 export const InterestsSelector: React.FC<InterestsSelectorProps> = ({
   tripType,
+  tripTypes = [],
   selectedInterests,
   onInterestsChange,
   disabled = false,
@@ -29,8 +32,19 @@ export const InterestsSelector: React.FC<InterestsSelectorProps> = ({
     if (showAllCategories) {
       return getAllInterestCategories();
     }
-    return tripType ? getPrimaryRecommendedInterests(tripType) : getAllInterestCategories();
-  }, [tripType, showAllCategories]);
+    
+    // If multiple trip types provided, use those
+    if (tripTypes && tripTypes.length > 0) {
+      return getPrimaryRecommendedInterestsByTypes(tripTypes);
+    }
+    
+    // Otherwise use single tripType if provided
+    if (tripType) {
+      return getPrimaryRecommendedInterests(tripType);
+    }
+    
+    return getAllInterestCategories();
+  }, [tripType, tripTypes, showAllCategories]);
 
   const selectedInterestObjects = useMemo(
     () => getInterestsByIds(selectedInterests),

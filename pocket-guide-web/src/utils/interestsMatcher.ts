@@ -126,6 +126,29 @@ export function getPrimaryRecommendedInterests(tripType: TripType): InterestCate
 }
 
 /**
+ * Get PRIMARY recommended interests for multiple trip types
+ * If only 1 trip type: return its primary category
+ * If 2+ trip types: return primary categories of all, removing duplicates
+ */
+export function getPrimaryRecommendedInterestsByTypes(tripTypes: TripType[]): InterestCategory[] {
+  if (tripTypes.length === 0) return [];
+  
+  // Get primary category key for each trip type
+  const categoryKeys = tripTypes.map((tripType) => {
+    const categoryOrder = TRIP_TYPE_RECOMMENDATIONS[tripType];
+    return categoryOrder[0];
+  });
+  
+  // Remove duplicates while preserving order
+  const uniqueCategoryKeys = Array.from(new Set(categoryKeys));
+  
+  // Map to actual categories
+  return uniqueCategoryKeys
+    .map((key) => INTERESTS_BY_CATEGORY[key])
+    .filter((cat) => cat !== undefined);
+}
+
+/**
  * Get all interest categories
  */
 export function getAllInterestCategories(): InterestCategory[] {
