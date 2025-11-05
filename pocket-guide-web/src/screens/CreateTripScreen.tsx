@@ -25,7 +25,7 @@ import i18n from 'i18next'
  * 
  * Steps:
  * 1. TravelTypeSelector + InterestsSelector - Select trip type and interests together
- * 2. DurationAndBudgetSelector - Select duration and budget
+ * 2. DurationAndBudgetSelector - Select duration, budget, and travel dates
  * 3. GroupCompositionSelector - Select group type and composition
  * 4. SeasonalSelector - Select travel month and season
  * 5. DestinationSelector - Select destination with AI recommendations
@@ -41,6 +41,8 @@ interface TripFormData {
   numPeople?: number;
   numChildren?: number;
   travelMonth: string;
+  startDate: string;
+  endDate: string;
   destination: string;
   interests: string[];
 }
@@ -63,6 +65,8 @@ export default function CreateTripScreen() {
     budgetPerDay: 'medio',
     groupType: 'casal',
     travelMonth: '6',
+    startDate: '',
+    endDate: '',
     destination: '',
     interests: [],
   })
@@ -114,13 +118,28 @@ export default function CreateTripScreen() {
         return true
 
       case 5:
+        if (!formData.startDate) {
+          showError(t('createTrip.selectStartDate') || 'Please select a start date')
+          return false
+        }
+        if (!formData.endDate) {
+          showError(t('createTrip.selectEndDate') || 'Please select an end date')
+          return false
+        }
+        if (new Date(formData.endDate) <= new Date(formData.startDate)) {
+          showError(t('createTrip.invalidDateRange') || 'End date must be after start date')
+          return false
+        }
+        return true
+
+      case 6:
         if (!formData.destination.trim()) {
           showError(t('createTrip.selectDestination') || 'Please select a destination')
           return false
         }
         return true
 
-      case 6:
+      case 7:
         return true
 
       default:
@@ -130,7 +149,7 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 7) {
+      if (step < 8) {
         setStep((step + 1) as StepType)
       }
     }
@@ -303,11 +322,19 @@ export default function CreateTripScreen() {
               <DurationAndBudgetSelector
                 duration={formData.duration}
                 budgetPerDay={formData.budgetPerDay}
+                startDate={formData.startDate}
+                endDate={formData.endDate}
                 onDurationChange={(duration) =>
                   setFormData((prev) => ({ ...prev, duration }))
                 }
                 onBudgetChange={(budgetPerDay) =>
                   setFormData((prev) => ({ ...prev, budgetPerDay }))
+                }
+                onStartDateChange={(startDate) =>
+                  setFormData((prev) => ({ ...prev, startDate }))
+                }
+                onEndDateChange={(endDate) =>
+                  setFormData((prev) => ({ ...prev, endDate }))
                 }
               />
             )}
@@ -384,6 +411,8 @@ export default function CreateTripScreen() {
                     budgetPerDay: 'medio',
                     groupType: 'casal',
                     travelMonth: '6',
+                    startDate: '',
+                    endDate: '',
                     destination: '',
                     interests: [],
                   })
