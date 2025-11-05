@@ -550,6 +550,33 @@
       "subtitle": "Selecciona tus intereses para personalizar tu viaje",
       "selected": "Intereses Seleccionados",
       "helper": "¡Puedes seleccionar tantos intereses como desees! Cuanto más específico, mejor será la personalización de tu itinerario."
+    },
+    "step7": {
+      "title": "✅ Revisa tu Viaje",
+      "subtitle": "Aquí hay un resumen de todas tus preferencias",
+      "step": "Paso",
+      "notSelected": "No seleccionado",
+      "budgetRange": "Rango de Presupuesto",
+      "budgetSummary": "💰 Resumen de Presupuesto",
+      "perDay": "por día",
+      "estimatedTotal": "Total estimado",
+      "for7days": "para 7 días",
+      "completeInfo": "⚠️ Por favor, completa toda la información requerida para continuar.",
+      "confirm": "✅ Confirmar y Crear Viaje",
+      "confirming": "⏳ Creando tu viaje...",
+      "success": {
+        "title": "🎉 ¡Viaje Creado Exitosamente!",
+        "subtitle": "¡Tu increíble aventura está lista!",
+        "yourTrip": "Tu Viaje",
+        "tripId": "ID del Viaje",
+        "copyId": "Copiar ID",
+        "itineraryGenerated": "Itinerario generado con IA",
+        "budgetCalculated": "Presupuesto calculado",
+        "saved": "Guardado en tu cuenta",
+        "viewTrip": "👀 Ver Detalles",
+        "createNew": "➕ Crear Nuevo Viaje",
+        "shareMessage": "¡Comparte el ID de tu viaje con amigos para planificar juntos!"
+      }
     }
   },
   "days": "días",

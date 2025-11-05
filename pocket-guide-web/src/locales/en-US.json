@@ -604,6 +604,33 @@
       "subtitle": "Select your interests to personalize your trip",
       "selected": "Selected Interests",
       "helper": "You can select as many interests as you like! The more specific, the better your itinerary personalization."
+    },
+    "step7": {
+      "title": "✅ Review Your Trip",
+      "subtitle": "Here's a summary of all your preferences",
+      "step": "Step",
+      "notSelected": "Not selected",
+      "budgetRange": "Budget Range",
+      "budgetSummary": "💰 Budget Summary",
+      "perDay": "per day",
+      "estimatedTotal": "Estimated total",
+      "for7days": "for 7 days",
+      "completeInfo": "⚠️ Please fill in all required information to continue.",
+      "confirm": "✅ Confirm & Create Trip",
+      "confirming": "⏳ Creating your trip...",
+      "success": {
+        "title": "🎉 Trip Created Successfully!",
+        "subtitle": "Your amazing adventure is ready!",
+        "yourTrip": "Your Trip",
+        "tripId": "Trip ID",
+        "copyId": "Copy ID",
+        "itineraryGenerated": "AI-generated itinerary",
+        "budgetCalculated": "Budget calculated",
+        "saved": "Saved to your account",
+        "viewTrip": "👀 View Details",
+        "createNew": "➕ Create New Trip",
+        "shareMessage": "Share your trip ID with friends to plan together!"
+      }
     }
   },
   "days": "days",

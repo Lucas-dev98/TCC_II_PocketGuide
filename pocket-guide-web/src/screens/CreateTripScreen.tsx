@@ -48,7 +48,7 @@ interface FormData {
   budget: Budget
   interests: string[]
   description: string
-  groupType: 'solo' | 'casal' | 'amigos' | 'família' | 'group'
+  groupType: 'solo' | 'casal' | 'amigos' | 'familia' | 'group'
 }
 
 export default function CreateTripScreen() {
@@ -511,7 +511,7 @@ export default function CreateTripScreen() {
                   onChange={(e) =>
                     setFormData((prev) => ({
                       ...prev,
-                      groupType: e.target.value as 'solo' | 'casal' | 'amigos' | 'família' | 'group',
+                      groupType: e.target.value as 'solo' | 'casal' | 'amigos' | 'familia' | 'group',
                     }))
                   }
                   className="input-base"
