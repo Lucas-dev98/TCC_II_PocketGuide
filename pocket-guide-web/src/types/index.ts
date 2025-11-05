@@ -87,6 +87,13 @@ export interface Trip {
   imageUrl?: string;
   itinerary?: any;
   groupType?: "solo" | "casal" | "amigos" | "família" | "group";
+  // New flow fields
+  tripType?: TripType;
+  duration?: TripDuration;
+  budgetPerDay?: BudgetPerDay;
+  numChildrens?: number;
+  travelDate?: Date | string;
+  travelMonth?: string;
 }
 
 /**
@@ -106,17 +113,37 @@ export interface CreateTripParams {
 // ============================================
 
 /**
- * Travel Style Options
+ * Trip Type - Used in Step 1 of new flow
+ */
+export type TripType = "relaxamento" | "aventura" | "cultura" | "diversao" | "exploracao" | "romantica";
+
+/**
+ * Trip Duration - Used in Step 2 of new flow
+ */
+export type TripDuration = "fim-de-semana" | "uma-semana" | "duas-semanas" | "mes-plus";
+
+/**
+ * Budget Per Day - Used in Step 2 of new flow
+ */
+export type BudgetPerDay = "ultra-economico" | "economico" | "medio" | "premium" | "luxo";
+
+/**
+ * Group Composition - Used in Step 3 of new flow
+ */
+export type GroupType = "solo" | "casal" | "familia" | "amigos" | "group";
+
+/**
+ * Travel Style Options (Legacy)
  */
 export type TravelStyle = "aventura" | "relax" | "cultura" | "gastronomia";
 
 /**
- * Budget Level Options
+ * Budget Level Options (Legacy)
  */
 export type Budget = "econômico" | "médio" | "luxo";
 
 /**
- * Travel Companion Type
+ * Travel Companion Type (Legacy)
  */
 export type TravelCompanion = "sozinho" | "casal" | "família" | "amigos";
 

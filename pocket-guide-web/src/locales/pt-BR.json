@@ -511,5 +511,25 @@
       "addedToFavorites": "Adicionado aos favoritos",
       "removedFromFavorites": "Removido dos favoritos"
     }
+  },
+
+  "newFlow": {
+    "step1": {
+      "selectTravelType": "Qual tipo de viagem você busca?",
+      "selectMultiple": "Selecionados: {{selected}}",
+      "relaxamento": "Relaxamento",
+      "relaxamento_desc": "Praia, resort, SPA - descanse e recarregue",
+      "aventura": "Aventura",
+      "aventura_desc": "Trilhas, escaladas, esportes - ação e adrenalina",
+      "cultura": "Cultura",
+      "cultura_desc": "Museus, história, gastronomia - aprenda e explore",
+      "diversao": "Diversão",
+      "diversao_desc": "Vida noturna, shows, eventos - curtição máxima",
+      "exploracao": "Exploração",
+      "exploracao_desc": "Múltiplas cidades, road trip - descubra novos lugares",
+      "romantica": "Romântica",
+      "romantica_desc": "Casal, destinos românticos - moments especiais",
+      "travelTypeInfo": "Você pode selecionar múltiplos tipos. Isso nos ajudará a gerar um roteiro mais personalizado!"
+    }
   }
 }

@@ -9,9 +9,8 @@ import { Input } from '../components/Input'
 import { Card } from '../components/Card'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
-import { CityAutocomplete } from '../components/CityAutocomplete'
 import { generateItinerary } from '../services/itineraryGenerator'
-import { getAllCountries, getUniqueCitiesByCountry } from '../utils/citiesDatabase'
+import { getAllCountries } from '../utils/citiesDatabase'
 import { Budget } from '../types'
 import { ArrowLeft, Sparkles, MapPin, Calendar, Users, Heart } from 'lucide-react'
 import i18n from 'i18next'
@@ -61,9 +60,7 @@ export default function CreateTripScreen() {
   
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1)
   const [isLoading, setIsLoading] = useState(false)
-  const [selectedCountry, setSelectedCountry] = useState<string>('')
   const [countries] = useState<string[]>(getAllCountries())
-  const [citiesForCountry, setCitiesForCountry] = useState<string[]>([])
   
   const [formData, setFormData] = useState<FormData>({
     destination: '',
@@ -91,23 +88,6 @@ export default function CreateTripScreen() {
     } else {
       setStep((step - 1) as 1 | 2 | 3 | 4);
     }
-  };
-
-  const handleCountrySelect = (country: string) => {
-    setSelectedCountry(country);
-    setCitiesForCountry(getUniqueCitiesByCountry(country));
-    setFormData((prev) => ({
-      ...prev,
-      country: country,
-      destination: '', // Limpar destino anterior
-    }));
-  };
-
-  const handleCitySelect = (city: string) => {
-    setFormData((prev) => ({
-      ...prev,
-      destination: city,
-    }))
   };
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
@@ -304,7 +284,13 @@ export default function CreateTripScreen() {
                 </label>
                 <select
                   value={formData.country}
-                  onChange={(e) => handleCountrySelect(e.target.value)}
+                  onChange={(e) => {
+                    setFormData((prev) => ({
+                      ...prev,
+                      country: e.target.value,
+                      destination: '',
+                    }));
+                  }}
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
                 >
                   <option value="">-- {t('createTrip.selectCountry', 'Selecione um país')} --</option>
@@ -357,23 +343,14 @@ export default function CreateTripScreen() {
                 <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
                   {t('createTrip.selectCityLabel', 'Selecione a Cidade')}
                 </label>
-                <select
+                <input
+                  type="text"
+                  name="destination"
                   value={formData.destination}
-                  onChange={(e) => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      destination: e.target.value,
-                    }));
-                  }}
+                  onChange={handleInputChange}
+                  placeholder={t('createTrip.selectCity', 'Selecione uma cidade')}
                   className="w-full px-4 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-800 text-slate-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-primary"
-                >
-                  <option value="">-- {t('createTrip.selectCity', 'Selecione uma cidade')} --</option>
-                  {citiesForCountry.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
-                </select>
+                />
               </div>
 
               <div className="text-sm text-slate-600 dark:text-slate-400">
