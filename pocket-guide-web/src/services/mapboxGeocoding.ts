@@ -1,10 +1,11 @@
 /**
  * Mapbox Geocoding Service
- * Autocomplete de cidades usando Mapbox Geocoding API
+ * Busca de endereços/locais usando Mapbox Geocoding API
+ * Aceita qualquer tipo: cidades, ruas, atrações, etc
  * Com fallback para banco de dados local
  */
 
-import { searchCitiesLocal, getCountryFromCityLocal } from '../utils/citiesDatabase';
+import { searchCitiesLocal } from '../utils/citiesDatabase';
 import { CitySuggestion, GroupedCitySuggestions } from '../types';
 
 interface GeocodeResult {
@@ -34,9 +35,10 @@ export type { CitySuggestion };
 const geocodeCache = new Map<string, CitySuggestion[]>();
 
 /**
- * Classificar tipo de resultado (country, city, region, landmark)
+ * Classificar tipo de resultado
+ * Expandido para aceitar addresses, POIs, etc
  */
-function classifyPlace(feature: GeocodeResult): 'country' | 'city' | 'region' | 'landmark' {
+function classifyPlace(feature: GeocodeResult): 'country' | 'city' | 'region' | 'landmark' | 'place' | 'address' {
   // Verificar se é país
   if (feature.place_type?.includes('country')) {
     return 'country';
@@ -47,7 +49,13 @@ function classifyPlace(feature: GeocodeResult): 'country' | 'city' | 'region' | 
     return 'region';
   }
 
+  // Endereços
+  if (feature.place_type?.includes('address')) {
+    return 'address';
+  }
+
   // Praias e pontos de interesse
+
   if (feature.place_type?.includes('poi') || feature.text?.toLowerCase().includes('praia')) {
     return 'landmark';
   }
@@ -196,59 +204,35 @@ export async function searchCities(
     // ✅ Processar resultados com dados enriquecidos
     const suggestionsWithType: CitySuggestion[] = data.features
       .map((feature: GeocodeResult) => {
-        // Extrair país - TRY MULTIPLE SOURCES
-        // 1️⃣ Tenta encontrar no context (mais confiável)
-        const countryContext = feature.context?.find(ctx => ctx.id?.startsWith('country.'));
-        let country = countryContext?.name || countryContext?.text_pt || countryContext?.text || '';
+        // Usar o place_name completo como endereço
+        const fullAddress = feature.place_name || feature.text || feature.name || '';
         
-        // 2️⃣ Se não achou no context, tenta extrair do place_name (ex: "Barcelona, Spain")
-        if (!country && feature.place_name) {
-          const parts = feature.place_name.split(',').map(p => p.trim());
-          // O último elemento geralmente é o país
-          if (parts.length > 1) {
-            const potentialCountry = parts[parts.length - 1];
-            // Validar que é um país conhecido (contém capital letter e não é número)
-            if (potentialCountry && potentialCountry.length > 1 && /[A-Z]/.test(potentialCountry)) {
-              country = potentialCountry;
-            }
-          }
-        }
-        
-        // Nome da cidade (sem país)
-        const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.text || feature.name || '';
-        
-        console.log('🏙️ Processando:', { cityName, country, hasContext: !!countryContext, placeNameFull: feature.place_name });
-        
-        // 3️⃣ Se ainda não tem país, tenta buscar no banco local
-        if (!country && cityName) {
-          country = getCountryFromCityLocal(cityName) || '';
-        }
+        console.log('📍 Processando:', { fullAddress, type: feature.place_type, placeNameFull: feature.place_name });
         
         return {
-          city: cityName,
-          country: country,
+          city: fullAddress,
           coordinates: feature.geometry?.coordinates as [number, number] || [0, 0],
           
-          // ✅ Novos campos
+          // ✅ Classificação e metadados
           type: classifyPlace(feature),
           population: 0, // Mapbox não retorna população
           description: getDescription(feature),
           relevance: calculateRelevance(feature, query),
           isCapital: feature.context?.some(ctx => ctx.id?.includes('capital')) || false,
-          isMajorCity: false, // Será atualizado após obter população
+          isMajorCity: false,
         };
       })
       .filter((s: CitySuggestion) => {
-        const isValid = s.city && s.country;
+        const isValid = s.city && s.city.trim();
         if (!isValid) {
           console.log('❌ Filtrada sugestão inválida:', s);
         }
         return isValid;
-      }); // Remover entradas inválidas
+      }); // Remover entradas vazias
 
     // Se não teve resultados válidos na API, tenta o banco local como fallback final
     if (suggestionsWithType.length === 0) {
-      console.log('⚠️ API retornou resultados mas sem país, tentando banco local...');
+      console.log('⚠️ API retornou resultados mas vazio, tentando banco local...');
       const localFallback = searchCitiesLocal(query);
       if (localFallback.length > 0) {
         const localSuggestions: CitySuggestion[] = localFallback.map(city => ({
@@ -271,7 +255,7 @@ export async function searchCities(
     // ✅ Remover duplicatas mantendo o com maior relevância
     const uniqueSuggestions = Array.from(
       new Map(suggestionsWithType.map(s => [
-        `${s.city.toLowerCase()}-${s.country.toLowerCase()}`,
+        s.city.toLowerCase(),
         s
       ])).values()
     );
@@ -328,25 +312,24 @@ export function groupSuggestions(suggestions: CitySuggestion[]): GroupedCitySugg
     countries: suggestions.filter(s => s.type === 'country'),
     cities: suggestions.filter(s => s.type === 'city'),
     regions: suggestions.filter(s => s.type === 'region'),
-    landmarks: suggestions.filter(s => s.type === 'landmark'),
+    landmarks: suggestions.filter(s => s.type === 'landmark' || s.type === 'place' || s.type === 'address'),
+    places: suggestions.filter(s => s.type === 'place' || s.type === 'address'),
   };
 }
 
 /**
- * Busca o país de uma cidade específica
- * @param city - Nome da cidade
- * @param language - Idioma
- * @returns Promise com o país (string)
+ * Retornar o endereço da primeira sugestão (mais relevante)
+ * @param location - Sugestão de localização
+ * @returns Promise com o endereço (string)
  */
-export async function getCountryFromCityAPI(
+export async function getAddressFromLocation(
   city: string,
   language: string = 'en'
 ): Promise<string | null> {
   const suggestions = await searchCities(city, language);
   
   if (suggestions.length > 0) {
-    // Retornar o país da primeira sugestão (mais relevante)
-    return suggestions[0].country;
+    return suggestions[0].city;
   }
   
   return null;

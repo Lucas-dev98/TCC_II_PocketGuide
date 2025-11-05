@@ -89,11 +89,10 @@ export default function CreateTripScreen() {
     }
   };
 
-  const handleCitySelect = (city: string, country: string) => {
+  const handleCitySelect = (city: string) => {
     setFormData((prev) => ({
       ...prev,
       destination: city,
-      country: country,
     }))
   };
 
@@ -296,23 +295,6 @@ export default function CreateTripScreen() {
                   language={i18n.language.split('-')[0]}
                 />
               </div>
-
-              {/* Visual Feedback: País preenchido automaticamente */}
-              {formData.country && (
-                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-3 flex items-center gap-2">
-                  <span className="text-green-600 dark:text-green-400 font-medium">✓ País:</span>
-                  <span className="text-green-700 dark:text-green-300">{formData.country}</span>
-                </div>
-              )}
-
-              <Input
-                label={t('createTrip.countryLabel')}
-                name="country"
-                placeholder={t('createTrip.countryPlaceholder')}
-                value={formData.country}
-                onChange={handleInputChange}
-                disabled
-              />
             </Card.Body>
 
             <Card.Footer>

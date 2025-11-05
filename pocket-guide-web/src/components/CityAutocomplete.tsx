@@ -6,7 +6,7 @@ import clsx from 'clsx';
 
 interface CityAutocompleteProps {
   value: string;
-  onCitySelect: (city: string, country: string, coordinates?: [number, number]) => void;
+  onCitySelect: (city: string, coordinates?: [number, number]) => void;
   placeholder?: string;
   language?: string;
   className?: string;
@@ -165,7 +165,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   const handleSelectCity = useCallback(
     (suggestion: CitySuggestion) => {
       setInputValue(suggestion.city);
-      onCitySelect(suggestion.city, suggestion.country, suggestion.coordinates);
+      onCitySelect(suggestion.city, suggestion.coordinates);
       setIsOpen(false);
       setSuggestions([]);
     },

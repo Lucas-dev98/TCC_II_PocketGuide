@@ -307,16 +307,16 @@ export interface DayNavigationState {
 // ============================================
 
 /**
- * City suggestion from Mapbox Geocoding API
- * Used for destination autocomplete
+ * Location suggestion from Mapbox Geocoding API
+ * Used for destination autocomplete - accepts any address/location
+ * (cities, streets, attractions, landmarks, etc)
  */
 export interface CitySuggestion {
-  city: string;
-  country: string;
+  city: string; // Full address or location name
   coordinates?: [number, number];
   
   // Classification
-  type: 'country' | 'city' | 'region' | 'landmark';
+  type: 'country' | 'city' | 'region' | 'landmark' | 'place' | 'address';
   
   // Additional metadata
   population?: number;
@@ -327,7 +327,7 @@ export interface CitySuggestion {
 }
 
 /**
- * Grouped city suggestions organized by type
+ * Grouped location suggestions organized by type
  * Used for rendering organized dropdown
  */
 export interface GroupedCitySuggestions {
@@ -335,5 +335,6 @@ export interface GroupedCitySuggestions {
   cities: CitySuggestion[];
   regions: CitySuggestion[];
   landmarks: CitySuggestion[];
+  places: CitySuggestion[];
 }
 
