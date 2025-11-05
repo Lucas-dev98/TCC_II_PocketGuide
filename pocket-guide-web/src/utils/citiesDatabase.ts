@@ -240,26 +240,50 @@ export const CITIES_DATABASE: City[] = [
 ];
 
 /**
- * Busca cidades no banco de dados local
+ * Busca cidades no banco de dados local com priorização inteligente
+ * Prioriza: Exato > Começa com > Contém
  */
 export function searchCitiesLocal(query: string): City[] {
   if (!query.trim()) return [];
 
   const searchTerm = query.toLowerCase().trim();
 
-  return CITIES_DATABASE.filter(city => {
-    // Buscar no nome principal
-    if (city.name.toLowerCase().includes(searchTerm)) {
-      return true;
+  // Separar em 3 categorias: exato, começa com, contém
+  const exactMatches: City[] = [];
+  const startsWithMatches: City[] = [];
+  const containsMatches: City[] = [];
+
+  CITIES_DATABASE.forEach(city => {
+    const cityNameLower = city.name.toLowerCase();
+    const aliases = city.aliases?.map(a => a.toLowerCase()) || [];
+    
+    // 1️⃣ Verificar MATCH EXATO (nome ou alias)
+    if (cityNameLower === searchTerm || aliases.some(a => a === searchTerm)) {
+      exactMatches.push(city);
+      return;
     }
 
-    // Buscar nos aliases
-    if (city.aliases?.some(alias => alias.toLowerCase().includes(searchTerm))) {
-      return true;
+    // 2️⃣ Verificar COMEÇA COM (nome ou alias)
+    if (cityNameLower.startsWith(searchTerm) || aliases.some(a => a.startsWith(searchTerm))) {
+      startsWithMatches.push(city);
+      return;
     }
 
-    return false;
-  }).slice(0, 10); // Limitar a 10 resultados
+    // 3️⃣ Verificar CONTÉM (nome ou alias)
+    if (cityNameLower.includes(searchTerm) || aliases.some(a => a.includes(searchTerm))) {
+      containsMatches.push(city);
+      return;
+    }
+  });
+
+  // Combinar resultados: Exato > Começa com > Contém (limite total 10)
+  const results = [
+    ...exactMatches,
+    ...startsWithMatches,
+    ...containsMatches
+  ].slice(0, 10);
+
+  return results;
 }
 
 /**

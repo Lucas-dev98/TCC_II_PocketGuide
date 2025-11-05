@@ -196,16 +196,30 @@ export async function searchCities(
     // ✅ Processar resultados com dados enriquecidos
     const suggestionsWithType: CitySuggestion[] = data.features
       .map((feature: GeocodeResult) => {
-        // Extrair país do context
+        // Extrair país - TRY MULTIPLE SOURCES
+        // 1️⃣ Tenta encontrar no context (mais confiável)
         const countryContext = feature.context?.find(ctx => ctx.id?.startsWith('country.'));
         let country = countryContext?.name || countryContext?.text_pt || countryContext?.text || '';
+        
+        // 2️⃣ Se não achou no context, tenta extrair do place_name (ex: "Barcelona, Spain")
+        if (!country && feature.place_name) {
+          const parts = feature.place_name.split(',').map(p => p.trim());
+          // O último elemento geralmente é o país
+          if (parts.length > 1) {
+            const potentialCountry = parts[parts.length - 1];
+            // Validar que é um país conhecido (contém capital letter e não é número)
+            if (potentialCountry && potentialCountry.length > 1 && /[A-Z]/.test(potentialCountry)) {
+              country = potentialCountry;
+            }
+          }
+        }
         
         // Nome da cidade (sem país)
         const cityName = (feature.place_name || '').split(',')[0]?.trim() || feature.text || feature.name || '';
         
-        console.log('🏙️ Processando:', { cityName, country, hasContext: !!countryContext });
+        console.log('🏙️ Processando:', { cityName, country, hasContext: !!countryContext, placeNameFull: feature.place_name });
         
-        // Se não tem país, tenta buscar no banco local
+        // 3️⃣ Se ainda não tem país, tenta buscar no banco local
         if (!country && cityName) {
           country = getCountryFromCityLocal(cityName) || '';
         }
