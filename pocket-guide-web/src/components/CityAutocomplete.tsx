@@ -75,14 +75,13 @@ function SuggestionItem({ suggestion, onSelect }: SuggestionItemProps) {
           <div className="font-medium text-slate-900 dark:text-slate-100">
             {getTypeIcon(suggestion.type)} {suggestion.city}
           </div>
-          <div className="text-xs text-slate-500 dark:text-slate-400 mt-0.5 flex items-center gap-2">
-            <span>{suggestion.country}</span>
-            {suggestion.isCapital && (
+          {suggestion.isCapital && (
+            <div className="text-xs mt-0.5">
               <span className="bg-amber-100 dark:bg-amber-900 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded text-xs font-medium">
                 Capital
               </span>
-            )}
-          </div>
+            </div>
+          )}
         </div>
         <div className="ml-2 text-slate-300 dark:text-slate-600 group-hover/item:text-blue-400 transition-colors">
           →
@@ -165,7 +164,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
 
   const handleSelectCity = useCallback(
     (suggestion: CitySuggestion) => {
-      setInputValue(`${suggestion.city}, ${suggestion.country}`);
+      setInputValue(suggestion.city);
       onCitySelect(suggestion.city, suggestion.country, suggestion.coordinates);
       setIsOpen(false);
       setSuggestions([]);
