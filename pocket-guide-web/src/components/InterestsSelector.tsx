@@ -2,7 +2,7 @@ import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TripType } from '../types';
 import {
-  getRecommendedInterests,
+  getPrimaryRecommendedInterests,
   getAllInterestCategories,
   getInterestsByIds,
   InterestCategory,
@@ -29,7 +29,7 @@ export const InterestsSelector: React.FC<InterestsSelectorProps> = ({
     if (showAllCategories) {
       return getAllInterestCategories();
     }
-    return tripType ? getRecommendedInterests(tripType) : getAllInterestCategories();
+    return tripType ? getPrimaryRecommendedInterests(tripType) : getAllInterestCategories();
   }, [tripType, showAllCategories]);
 
   const selectedInterestObjects = useMemo(

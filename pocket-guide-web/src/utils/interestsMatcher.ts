@@ -112,6 +112,20 @@ export function getRecommendedInterests(tripType: TripType): InterestCategory[] 
 }
 
 /**
+ * Get PRIMARY recommended interests for a specific trip type
+ * Returns ONLY the main/primary category for that trip type
+ */
+export function getPrimaryRecommendedInterests(tripType: TripType): InterestCategory[] {
+  const categoryOrder = TRIP_TYPE_RECOMMENDATIONS[tripType];
+  if (categoryOrder.length === 0) return [];
+  
+  // Return only the primary category
+  const primaryCategoryKey = categoryOrder[0];
+  const primaryCategory = INTERESTS_BY_CATEGORY[primaryCategoryKey];
+  return primaryCategory ? [primaryCategory] : [];
+}
+
+/**
  * Get all interest categories
  */
 export function getAllInterestCategories(): InterestCategory[] {
