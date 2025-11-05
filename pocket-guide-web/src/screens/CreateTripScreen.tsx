@@ -16,7 +16,7 @@ import { DestinationSelector } from '../components/DestinationSelector'
 import { InterestsSelector } from '../components/InterestsSelector'
 import { TripPreview } from '../components/TripPreview'
 import { TripSuccess } from '../components/TripSuccess'
-import { TripType, TripDuration, BudgetPerDay, GroupType, Trip } from '../types'
+import { TripType, BudgetPerDay, GroupType, Trip } from '../types'
 import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
@@ -35,7 +35,6 @@ import i18n from 'i18next'
 
 interface TripFormData {
   tripTypes: TripType[];
-  duration: TripDuration;
   budgetPerDay: BudgetPerDay;
   groupType: GroupType;
   numPeople?: number;
@@ -61,7 +60,6 @@ export default function CreateTripScreen() {
 
   const [formData, setFormData] = useState<TripFormData>({
     tripTypes: [],
-    duration: 'uma-semana',
     budgetPerDay: 'medio',
     groupType: 'casal',
     travelMonth: '6',
@@ -93,8 +91,12 @@ export default function CreateTripScreen() {
         return true
 
       case 2:
-        if (!formData.duration) {
-          showError(t('createTrip.selectDuration') || 'Please select a duration')
+        if (!formData.startDate) {
+          showError(t('createTrip.selectStartDate') || 'Please select a start date')
+          return false
+        }
+        if (!formData.endDate) {
+          showError(t('createTrip.selectEndDate') || 'Please select an end date')
           return false
         }
         if (!formData.budgetPerDay) {
@@ -170,12 +172,10 @@ export default function CreateTripScreen() {
     try {
       setIsLoading(true)
 
-      // Calculate duration
-      const durationDays = formData.duration === 'uma-semana' ? 7 
-                          : formData.duration === 'duas-semanas' ? 14 
-                          : formData.duration === 'mes-plus' ? 30 
-                          : formData.duration === 'fim-de-semana' ? 3
-                          : 7
+      // Calculate duration from dates
+      const start = new Date(formData.startDate)
+      const end = new Date(formData.endDate)
+      const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 
       // Generate AI itinerary
       const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
@@ -189,16 +189,14 @@ export default function CreateTripScreen() {
       )
 
       // Create trip data
-      const today = new Date().toISOString().split('T')[0]
       const tripData: Trip = {
         id: crypto.randomUUID(),
         userId: user.uid,
         destination: formData.destination,
         country: formData.destination, // Could be enhanced to extract country
-        startDate: today,
-        endDate: new Date(Date.now() + durationDays * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+        startDate: formData.startDate,
+        endDate: formData.endDate,
         tripType: formData.tripTypes[0] || 'cultura',
-        duration: formData.duration,
         budgetPerDay: formData.budgetPerDay,
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
@@ -228,10 +226,9 @@ export default function CreateTripScreen() {
     userId: user?.uid || '',
     destination: formData.destination,
     country: formData.destination,
-    startDate: new Date().toISOString().split('T')[0],
-    endDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate: formData.startDate || new Date().toISOString().split('T')[0],
+    endDate: formData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     tripType: formData.tripTypes[0] || 'cultura',
-    duration: formData.duration,
     budgetPerDay: formData.budgetPerDay,
     groupType: formData.groupType,
     travelMonth: formData.travelMonth,
@@ -320,13 +317,9 @@ export default function CreateTripScreen() {
             {/* Step 2: Duration and Budget */}
             {step === 2 && (
               <DurationAndBudgetSelector
-                duration={formData.duration}
                 budgetPerDay={formData.budgetPerDay}
                 startDate={formData.startDate}
                 endDate={formData.endDate}
-                onDurationChange={(duration) =>
-                  setFormData((prev) => ({ ...prev, duration }))
-                }
                 onBudgetChange={(budgetPerDay) =>
                   setFormData((prev) => ({ ...prev, budgetPerDay }))
                 }
@@ -376,7 +369,6 @@ export default function CreateTripScreen() {
             {step === 5 && (
               <DestinationSelector
                 tripTypes={formData.tripTypes}
-                duration={formData.duration}
                 budget={formData.budgetPerDay}
                 selectedMonth={parseInt(formData.travelMonth)}
                 onDestinationChange={(destination: string) =>
@@ -407,7 +399,6 @@ export default function CreateTripScreen() {
                   setStep(1)
                   setFormData({
                     tripTypes: [],
-                    duration: 'uma-semana',
                     budgetPerDay: 'medio',
                     groupType: 'casal',
                     travelMonth: '6',

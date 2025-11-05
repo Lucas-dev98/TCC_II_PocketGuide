@@ -1,5 +1,5 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { render, screen, fireEvent } from '@testing-library/react';
+import { render, fireEvent } from '@testing-library/react';
 import { I18nextProvider } from 'react-i18next';
 import i18n from '../../i18n';
 import DurationAndBudgetSelector from '../../components/DurationAndBudgetSelector';
@@ -9,122 +9,83 @@ describe('DurationAndBudgetSelector', () => {
     vi.clearAllMocks();
   });
 
-  it('should render duration and budget sections', () => {
-    const mockOnDurationChange = vi.fn();
+  it('should render budget section and date inputs', () => {
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration=""
           budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
 
-    // Check that both sections exist by looking for their headings
+    // Check that both budget and date sections exist by looking for their headings
     const headings = container.querySelectorAll('h3');
     expect(headings.length).toBeGreaterThanOrEqual(2);
   });
 
-  it('should render all duration options', () => {
-    const mockOnDurationChange = vi.fn();
+  it('should render budget options', () => {
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration=""
           budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
 
-    const durationButtons = container.querySelectorAll('button');
-    // Should have at least 4 duration options
-    expect(durationButtons.length).toBeGreaterThanOrEqual(4);
-  });
-
-  it('should handle duration selection', () => {
-    const mockOnDurationChange = vi.fn();
-    const mockOnBudgetChange = vi.fn();
-
-    const { container } = render(
-      <I18nextProvider i18n={i18n}>
-        <DurationAndBudgetSelector
-          duration=""
-          budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
-          onBudgetChange={mockOnBudgetChange}
-        />
-      </I18nextProvider>
-    );
-
-    const buttons = Array.from(container.querySelectorAll('button'));
-    const firstDurationButton = buttons[0];
-
-    fireEvent.click(firstDurationButton);
-    expect(mockOnDurationChange).toHaveBeenCalled();
+    const budgetButtons = container.querySelectorAll('button');
+    // Should have at least 5 budget options
+    expect(budgetButtons.length).toBeGreaterThanOrEqual(5);
   });
 
   it('should handle budget selection', () => {
-    const mockOnDurationChange = vi.fn();
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration="uma-semana"
           budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
 
     const buttons = Array.from(container.querySelectorAll('button'));
-    // Duration buttons are first 4, budget buttons are next 5
-    const firstBudgetButton = buttons[4];
+    const firstBudgetButton = buttons[0];
 
     fireEvent.click(firstBudgetButton);
     expect(mockOnBudgetChange).toHaveBeenCalled();
   });
 
-  it('should show selected state for duration', () => {
-    const mockOnDurationChange = vi.fn();
-    const mockOnBudgetChange = vi.fn();
-
-    const { container } = render(
-      <I18nextProvider i18n={i18n}>
-        <DurationAndBudgetSelector
-          duration="uma-semana"
-          budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
-          onBudgetChange={mockOnBudgetChange}
-        />
-      </I18nextProvider>
-    );
-
-    const buttons = Array.from(container.querySelectorAll('button'));
-    // Second duration button (uma-semana)
-    expect(buttons[1].className).toContain('border-blue-500');
-  });
-
   it('should show selected state for budget', () => {
-    const mockOnDurationChange = vi.fn();
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration="uma-semana"
           budgetPerDay="medio"
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
@@ -135,16 +96,17 @@ describe('DurationAndBudgetSelector', () => {
   });
 
   it('should disable all buttons when disabled prop is true', () => {
-    const mockOnDurationChange = vi.fn();
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration=""
           budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
           disabled={true}
         />
       </I18nextProvider>
@@ -158,58 +120,69 @@ describe('DurationAndBudgetSelector', () => {
     });
 
     fireEvent.click(buttons[0]);
-    expect(mockOnDurationChange).not.toHaveBeenCalled();
+    expect(mockOnBudgetChange).not.toHaveBeenCalled();
   });
 
-  it('should show summary when both duration and budget are selected', () => {
-    const mockOnDurationChange = vi.fn();
+  it('should handle start date change', () => {
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration="uma-semana"
           budgetPerDay="medio"
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
 
-    // Check for the summary box by its styling
-    const summaryBox = container.querySelector('.bg-blue-50');
-    expect(summaryBox).toBeInTheDocument();
+    const dateInputs = container.querySelectorAll('input[type="date"]');
+    const startDateInput = dateInputs[0];
+
+    fireEvent.change(startDateInput, { target: { value: '2025-11-15' } });
+    expect(mockOnStartDateChange).toHaveBeenCalledWith('2025-11-15');
   });
 
-  it('should not show summary when duration is not selected', () => {
-    const mockOnDurationChange = vi.fn();
+  it('should handle end date change', () => {
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
-    render(
+    const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration=""
+          startDate="2025-11-15"
+          endDate=""
           budgetPerDay="medio"
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );
 
-    expect(screen.queryByText(/resumo/i)).not.toBeInTheDocument();
+    const dateInputs = container.querySelectorAll('input[type="date"]');
+    const endDateInput = dateInputs[1];
+
+    fireEvent.change(endDateInput, { target: { value: '2025-11-22' } });
+    expect(mockOnEndDateChange).toHaveBeenCalledWith('2025-11-22');
   });
 
   it('should display budget guide information', () => {
-    const mockOnDurationChange = vi.fn();
     const mockOnBudgetChange = vi.fn();
+    const mockOnStartDateChange = vi.fn();
+    const mockOnEndDateChange = vi.fn();
 
     const { container } = render(
       <I18nextProvider i18n={i18n}>
         <DurationAndBudgetSelector
-          duration=""
           budgetPerDay=""
-          onDurationChange={mockOnDurationChange}
           onBudgetChange={mockOnBudgetChange}
+          onStartDateChange={mockOnStartDateChange}
+          onEndDateChange={mockOnEndDateChange}
         />
       </I18nextProvider>
     );

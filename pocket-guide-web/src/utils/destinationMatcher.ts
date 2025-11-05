@@ -199,14 +199,6 @@ export const DESTINATIONS_DB: DestinationDatabase[] = [
 
 const BUDGET_ORDER = ['ultra-economico', 'economico', 'medio', 'premium', 'luxo'];
 
-function getDurationScore(
-  userDuration: TripDuration,
-  destDurations: TripDuration[]
-): number {
-  if (destDurations.includes(userDuration)) return 100;
-  return 50; // Partial match
-}
-
 function getBudgetScore(
   userBudget: BudgetPerDay,
   destBudgetMin: BudgetPerDay,
@@ -248,7 +240,6 @@ function getSeasonScore(
 
 export function matchDestinations(
   tripTypes: TripType[],
-  duration: TripDuration,
   budget: BudgetPerDay,
   month: number | '',
   destination?: string
@@ -280,29 +271,21 @@ export function matchDestinations(
       reasons.push(`✓ Atrai ${typeMatches.join(', ')}`);
     }
 
-    // Duration matching (25% weight)
-    const durationScore = getDurationScore(duration, dest.bestDuration);
-    score += durationScore * 0.25;
-
-    if (dest.bestDuration.includes(duration)) {
-      reasons.push(`✓ Ideal para ${duration}`);
-    }
-
-    // Budget matching (25% weight)
+    // Budget matching (35% weight - increased from 25%)
     const budgetScore = getBudgetScore(
       budget,
       dest.budgetRange.min,
       dest.budgetRange.max
     );
-    score += budgetScore * 0.25;
+    score += budgetScore * 0.35;
 
     if (budgetScore === 100) {
       reasons.push(`✓ Orçamento perfeito`);
     }
 
-    // Season matching (10% weight)
+    // Season matching (25% weight - increased from 10%)
     const seasonScore = getSeasonScore(month, dest.name);
-    score += seasonScore * 0.1;
+    score += seasonScore * 0.25;
 
     if (month && seasonScore === 100) {
       reasons.push(`✓ Melhor época neste mês`);

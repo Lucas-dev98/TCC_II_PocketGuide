@@ -117,10 +117,10 @@ describe('7-Step Trip Creation Flow - Accessibility & Mobile Responsive (WCAG AA
       const { container } = render(
         <I18nextProvider i18n={i18n}>
           <DurationAndBudgetSelector
-            duration=""
             budgetPerDay=""
-            onDurationChange={vi.fn()}
             onBudgetChange={vi.fn()}
+            onStartDateChange={vi.fn()}
+            onEndDateChange={vi.fn()}
           />
         </I18nextProvider>
       );
@@ -136,10 +136,10 @@ describe('7-Step Trip Creation Flow - Accessibility & Mobile Responsive (WCAG AA
       const { container } = render(
         <I18nextProvider i18n={i18n}>
           <DurationAndBudgetSelector
-            duration="uma-semana"
             budgetPerDay="medio"
-            onDurationChange={vi.fn()}
             onBudgetChange={vi.fn()}
+            onStartDateChange={vi.fn()}
+            onEndDateChange={vi.fn()}
           />
         </I18nextProvider>
       );
@@ -157,10 +157,10 @@ describe('7-Step Trip Creation Flow - Accessibility & Mobile Responsive (WCAG AA
         <I18nextProvider i18n={i18n}>
           <div style={{ maxWidth: '400px' }}>
             <DurationAndBudgetSelector
-              duration=""
               budgetPerDay=""
-              onDurationChange={vi.fn()}
               onBudgetChange={vi.fn()}
+              onStartDateChange={vi.fn()}
+              onEndDateChange={vi.fn()}
             />
           </div>
         </I18nextProvider>
@@ -556,10 +556,10 @@ describe('7-Step Trip Creation Flow - Accessibility & Mobile Responsive (WCAG AA
       const { container } = render(
         <I18nextProvider i18n={i18n}>
           <DurationAndBudgetSelector
-            duration=""
             budgetPerDay=""
-            onDurationChange={vi.fn()}
             onBudgetChange={vi.fn()}
+            onStartDateChange={vi.fn()}
+            onEndDateChange={vi.fn()}
           />
         </I18nextProvider>
       );

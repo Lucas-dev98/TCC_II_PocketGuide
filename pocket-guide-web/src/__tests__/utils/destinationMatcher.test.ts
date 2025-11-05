@@ -5,16 +5,15 @@ import {
   getAllDestinations,
   DESTINATIONS_DB,
 } from '../../utils/destinationMatcher';
-import { TripType, TripDuration, BudgetPerDay } from '../../types';
+import { TripType, BudgetPerDay } from '../../types';
 
 describe('destinationMatcher', () => {
   describe('matchDestinations', () => {
     it('should return top 5 destinations sorted by score', () => {
       const types: TripType[] = ['relaxamento'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'medio';
 
-      const results = matchDestinations(types, duration, budget, '');
+      const results = matchDestinations(types, budget, '');
 
       expect(results.length).toBeLessThanOrEqual(5);
       expect(results).toHaveLength(5);
@@ -27,10 +26,9 @@ describe('destinationMatcher', () => {
 
     it('should have reasons for matches', () => {
       const types: TripType[] = ['relaxamento'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'economico';
 
-      const results = matchDestinations(types, duration, budget, '');
+      const results = matchDestinations(types, budget, '');
 
       results.forEach((result) => {
         expect(result.reasons).toBeInstanceOf(Array);
@@ -41,10 +39,9 @@ describe('destinationMatcher', () => {
 
     it('should score 100-0 range', () => {
       const types: TripType[] = ['cultura'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'premium';
 
-      const results = matchDestinations(types, duration, budget, '');
+      const results = matchDestinations(types, budget, '');
 
       results.forEach((result) => {
         expect(result.score).toBeGreaterThanOrEqual(0);
@@ -55,18 +52,15 @@ describe('destinationMatcher', () => {
     it('should consider trip type in scoring', () => {
       const typesRelaxamento: TripType[] = ['relaxamento'];
       const typesCultura: TripType[] = ['cultura'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'medio';
 
       const resultsRelaxamento = matchDestinations(
         typesRelaxamento,
-        duration,
         budget,
         ''
       );
       const resultsCultura = matchDestinations(
         typesCultura,
-        duration,
         budget,
         ''
       );
@@ -77,15 +71,13 @@ describe('destinationMatcher', () => {
 
     it('should consider budget in scoring', () => {
       const types: TripType[] = ['relaxamento'];
-      const duration: TripDuration = 'uma-semana';
 
       const budgetEconomico = matchDestinations(
         types,
-        duration,
         'economico',
         ''
       );
-      const budgetLuxo = matchDestinations(types, duration, 'luxo', '');
+      const budgetLuxo = matchDestinations(types, 'luxo', '');
 
       // Both should return results
       expect(budgetEconomico.length).toBeGreaterThan(0);
@@ -97,18 +89,15 @@ describe('destinationMatcher', () => {
 
     it('should consider season/month in scoring', () => {
       const types: TripType[] = ['relaxamento'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'medio';
 
       const resultsWithMonth = matchDestinations(
         types,
-        duration,
         budget,
         7
       );
       const resultsWithoutMonth = matchDestinations(
         types,
-        duration,
         budget,
         ''
       );
@@ -128,12 +117,10 @@ describe('destinationMatcher', () => {
 
     it('should return user selected destination with 100% match', () => {
       const types: TripType[] = ['relaxamento'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'medio';
 
       const results = matchDestinations(
         types,
-        duration,
         budget,
         '',
         'Lisboa'
@@ -147,10 +134,9 @@ describe('destinationMatcher', () => {
 
     it('should handle multiple trip types', () => {
       const types: TripType[] = ['relaxamento', 'aventura'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'medio';
 
-      const results = matchDestinations(types, duration, budget, '');
+      const results = matchDestinations(types, budget, '');
 
       expect(results.length).toBeGreaterThan(0);
 
@@ -162,10 +148,9 @@ describe('destinationMatcher', () => {
 
     it('should have all required properties in results', () => {
       const types: TripType[] = ['cultura'];
-      const duration: TripDuration = 'uma-semana';
       const budget: BudgetPerDay = 'premium';
 
-      const results = matchDestinations(types, duration, budget, '');
+      const results = matchDestinations(types, budget, '');
 
       results.forEach((result) => {
         expect(result.name).toBeTruthy();

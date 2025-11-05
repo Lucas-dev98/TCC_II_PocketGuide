@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TripType, TripDuration, BudgetPerDay } from '../types';
+import { TripType, BudgetPerDay } from '../types';
 import {
   matchDestinations,
   getDestinationInfo,
@@ -10,7 +10,6 @@ import {
 
 interface DestinationSelectorProps {
   tripTypes: TripType[];
-  duration: TripDuration;
   budget: BudgetPerDay;
   selectedMonth?: number;
   selectedDestination?: string;
@@ -20,7 +19,6 @@ interface DestinationSelectorProps {
 
 export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   tripTypes,
-  duration,
   budget,
   selectedMonth,
   selectedDestination,
@@ -35,12 +33,11 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     () =>
       matchDestinations(
         tripTypes,
-        duration,
         budget,
         selectedMonth || '',
         selectedDestination
       ),
-    [tripTypes, duration, budget, selectedMonth, selectedDestination]
+    [tripTypes, budget, selectedMonth, selectedDestination]
   );
 
   const allDestinations = useMemo(() => getAllDestinations(), []);
