@@ -554,7 +554,31 @@
       "luxo_desc": "$800+/day - 5-stars",
       "budgetGuide": "Budget guide per day",
       "summary": "Summary"
+    },
+    "step3": {
+      "selectGroup": "👥 Who are you traveling with?",
+      "solo": "Solo",
+      "solo_desc": "Traveling alone - total freedom",
+      "solo_full": "Traveling alone",
+      "casal": "Couple",
+      "casal_desc": "Traveling as a couple - romantic or adventure",
+      "casal_full": "Traveling as a couple",
+      "familia": "Family",
+      "familia_desc": "With kids - activities for all ages",
+      "amigos": "Friends",
+      "amigos_desc": "Group of friends - group fun",
+      "group": "Group",
+      "group_desc": "Organized group - corporate/school trip",
+      "numPeople": "How many people?",
+      "numPeopleFamily": "How many people (including children)?",
+      "numChildren": "How many children (0-12 years)?",
+      "composition": "Composition",
+      "groupInfo": "The group composition will help us personalize activities and accommodation suitable for your trip."
     }
   },
-  "days": "days"
+  "days": "days",
+  "person": "person",
+  "people": "people",
+  "child": "child",
+  "children": "children"
 }

@@ -500,7 +500,31 @@
       "luxo_desc": "€800+/día - 5 estrellas",
       "budgetGuide": "Guía de presupuesto por día",
       "summary": "Resumen"
+    },
+    "step3": {
+      "selectGroup": "👥 ¿Con quién viajas?",
+      "solo": "Solo",
+      "solo_desc": "Viajando solo - libertad total",
+      "solo_full": "Viajando solo",
+      "casal": "Pareja",
+      "casal_desc": "Viajando en pareja - romántica o aventura",
+      "casal_full": "Viajando en pareja",
+      "familia": "Familia",
+      "familia_desc": "Con hijos - actividades para todas las edades",
+      "amigos": "Amigos",
+      "amigos_desc": "Grupo de amigos - diversión en grupo",
+      "group": "Grupo",
+      "group_desc": "Grupo organizado - viaje corporativo/escolar",
+      "numPeople": "¿Cuántas personas?",
+      "numPeopleFamily": "¿Cuántas personas (incluyendo niños)?",
+      "numChildren": "¿Cuántos niños (0-12 años)?",
+      "composition": "Composición",
+      "groupInfo": "La composición del grupo nos ayudará a personalizar actividades y alojamiento adecuados para tu viaje."
     }
   },
-  "days": "días"
+  "days": "días",
+  "person": "persona",
+  "people": "personas",
+  "child": "niño",
+  "children": "niños"
 }

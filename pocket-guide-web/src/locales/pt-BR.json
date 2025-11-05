@@ -554,7 +554,31 @@
       "luxo_desc": "R$ 800+/dia - 5-stars",
       "budgetGuide": "Guia de orçamento por dia",
       "summary": "Resumo"
+    },
+    "step3": {
+      "selectGroup": "👥 Com quem você viaja?",
+      "solo": "Solo",
+      "solo_desc": "Viajando sozinho - liberdade total",
+      "solo_full": "Viajando sozinho",
+      "casal": "Casal",
+      "casal_desc": "Viajando em casal - romântico ou aventura",
+      "casal_full": "Viajando em casal",
+      "familia": "Família",
+      "familia_desc": "Com filhos - atividades para todas as idades",
+      "amigos": "Amigos",
+      "amigos_desc": "Grupo de amigos - curtição em grupo",
+      "group": "Group",
+      "group_desc": "Grupo organizado - viagem corporativa/escolar",
+      "numPeople": "Quantas pessoas?",
+      "numPeopleFamily": "Quantas pessoas (incluindo crianças)?",
+      "numChildren": "Quantas crianças (0-12 anos)?",
+      "composition": "Composição",
+      "groupInfo": "A composição do grupo nos ajudará a personalizar atividades e hospedagem adequadas para sua viagem."
     }
   },
-  "days": "dias"
+  "days": "dias",
+  "person": "pessoa",
+  "people": "pessoas",
+  "child": "criança",
+  "children": "crianças"
 }
