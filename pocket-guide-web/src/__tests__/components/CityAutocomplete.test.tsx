@@ -64,8 +64,7 @@ describe('CityAutocomplete Component', () => {
     it('should search cities when typing', async () => {
       const mockSuggestions: CitySuggestion[] = [
         {
-          city: 'Lisboa',
-          country: 'Portugal',
+          city: 'Lisboa, Portugal',
           type: 'city' as const,
           coordinates: [-9.1393, 38.7223],
           relevance: 95,
@@ -82,6 +81,7 @@ describe('CityAutocomplete Component', () => {
         cities: mockSuggestions,
         regions: [],
         landmarks: [],
+        places: [],
       });
 
       render(
@@ -143,7 +143,6 @@ describe('CityAutocomplete Component', () => {
         countries: [
           {
             city: 'Portugal',
-            country: 'Portugal',
             type: 'country' as const,
             coordinates: [-8, 39.5] as [number, number],
             relevance: 100,
@@ -152,8 +151,7 @@ describe('CityAutocomplete Component', () => {
         ] as CitySuggestion[],
         cities: [
           {
-            city: 'Lisboa',
-            country: 'Portugal',
+            city: 'Lisboa, Portugal',
             type: 'city' as const,
             coordinates: [-9.1393, 38.7223] as [number, number],
             relevance: 95,
@@ -163,6 +161,7 @@ describe('CityAutocomplete Component', () => {
         ] as CitySuggestion[],
         regions: [],
         landmarks: [],
+        places: [],
       };
 
       vi.mocked(mapboxGeocoding.searchCities).mockResolvedValue([]);
@@ -185,6 +184,7 @@ describe('CityAutocomplete Component', () => {
         cities: [],
         regions: [],
         landmarks: [],
+        places: [],
       });
 
       render(
@@ -207,8 +207,7 @@ describe('CityAutocomplete Component', () => {
     it('should handle city selection', async () => {
       const mockSuggestions: CitySuggestion[] = [
         {
-          city: 'Lisboa',
-          country: 'Portugal',
+          city: 'Lisboa, Portugal',
           type: 'city' as const,
           coordinates: [-9.1393, 38.7223],
           relevance: 95,
@@ -225,6 +224,7 @@ describe('CityAutocomplete Component', () => {
         cities: mockSuggestions,
         regions: [],
         landmarks: [],
+        places: [],
       });
 
       render(
