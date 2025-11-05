@@ -530,6 +530,31 @@
       "romantica": "Romântica",
       "romantica_desc": "Casal, destinos românticos - moments especiais",
       "travelTypeInfo": "Você pode selecionar múltiplos tipos. Isso nos ajudará a gerar um roteiro mais personalizado!"
+    },
+    "step2": {
+      "selectDuration": "⏱️ Quanto tempo você tem?",
+      "selectBudget": "💰 Orçamento por dia",
+      "fimDeSemana": "Fim de semana",
+      "fimDeSemana_desc": "2-3 dias - Perfeito para escapar perto",
+      "umaSemana": "1 Semana",
+      "umaSemana_desc": "4-7 dias - Viagem clássica",
+      "duasSemanas": "2 Semanas",
+      "duasSemanas_desc": "8-14 dias - Tempo para explorar",
+      "mesMais": "1 Mês+",
+      "mesMais_desc": "15+ dias - Experiência profunda",
+      "ultraEconomico": "Ultra Econômico",
+      "ultraEconomico_desc": "R$ 0-50/dia - Hostels e comida de rua",
+      "economico": "Econômico",
+      "economico_desc": "R$ 50-150/dia - Hotéis simples",
+      "medio": "Médio",
+      "medio_desc": "R$ 150-350/dia - 3-4 stars",
+      "premium": "Premium",
+      "premium_desc": "R$ 350-800/dia - Resorts",
+      "luxo": "Luxo",
+      "luxo_desc": "R$ 800+/dia - 5-stars",
+      "budgetGuide": "Guia de orçamento por dia",
+      "summary": "Resumo"
     }
-  }
+  },
+  "days": "dias"
 }

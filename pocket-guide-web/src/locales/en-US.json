@@ -530,6 +530,31 @@
       "romantica": "Romantic",
       "romantica_desc": "Couple, romantic destinations - special moments",
       "travelTypeInfo": "You can select multiple types. This will help us generate a more personalized itinerary!"
+    },
+    "step2": {
+      "selectDuration": "⏱️ How much time do you have?",
+      "selectBudget": "💰 Budget per day",
+      "fimDeSemana": "Weekend",
+      "fimDeSemana_desc": "2-3 days - Perfect for a quick escape",
+      "umaSemana": "1 Week",
+      "umaSemana_desc": "4-7 days - Classic trip",
+      "duasSemanas": "2 Weeks",
+      "duasSemanas_desc": "8-14 days - Time to explore",
+      "mesMais": "1 Month+",
+      "mesMais_desc": "15+ days - Deep experience",
+      "ultraEconomico": "Ultra Budget",
+      "ultraEconomico_desc": "$0-50/day - Hostels and street food",
+      "economico": "Budget",
+      "economico_desc": "$50-150/day - Simple hotels",
+      "medio": "Mid-range",
+      "medio_desc": "$150-350/day - 3-4 stars",
+      "premium": "Premium",
+      "premium_desc": "$350-800/day - Resorts",
+      "luxo": "Luxury",
+      "luxo_desc": "$800+/day - 5-stars",
+      "budgetGuide": "Budget guide per day",
+      "summary": "Summary"
     }
-  }
+  },
+  "days": "days"
 }

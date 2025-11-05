@@ -476,6 +476,31 @@
       "romantica": "Romántica",
       "romantica_desc": "Pareja, destinos románticos - momentos especiales",
       "travelTypeInfo": "¡Puedes seleccionar múltiples tipos! Esto nos ayudará a generar un itinerario más personalizado."
+    },
+    "step2": {
+      "selectDuration": "⏱️ ¿Cuánto tiempo tienes?",
+      "selectBudget": "💰 Presupuesto por día",
+      "fimDeSemana": "Fin de semana",
+      "fimDeSemana_desc": "2-3 días - Perfecto para escapar",
+      "umaSemana": "1 Semana",
+      "umaSemana_desc": "4-7 días - Viaje clásico",
+      "duasSemanas": "2 Semanas",
+      "duasSemanas_desc": "8-14 días - Tiempo para explorar",
+      "mesMais": "1 Mes+",
+      "mesMais_desc": "15+ días - Experiencia profunda",
+      "ultraEconomico": "Ultra Presupuesto",
+      "ultraEconomico_desc": "€0-50/día - Hostales y comida callejera",
+      "economico": "Presupuesto",
+      "economico_desc": "€50-150/día - Hoteles simples",
+      "medio": "Intermedio",
+      "medio_desc": "€150-350/día - 3-4 estrellas",
+      "premium": "Premium",
+      "premium_desc": "€350-800/día - Resorts",
+      "luxo": "Lujo",
+      "luxo_desc": "€800+/día - 5 estrellas",
+      "budgetGuide": "Guía de presupuesto por día",
+      "summary": "Resumen"
     }
-  }
+  },
+  "days": "días"
 }
