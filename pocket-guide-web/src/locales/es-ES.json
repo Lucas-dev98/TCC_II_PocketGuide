@@ -544,6 +544,12 @@
       "destinationInfo": "Información del Destino",
       "matchPercentage": "Compatibilidad",
       "selectDestination": "Seleccionar Destino"
+    },
+    "step6": {
+      "title": "⭐ ¿Qué actividades te interesan?",
+      "subtitle": "Selecciona tus intereses para personalizar tu viaje",
+      "selected": "Intereses Seleccionados",
+      "helper": "¡Puedes seleccionar tantos intereses como desees! Cuanto más específico, mejor será la personalización de tu itinerario."
     }
   },
   "days": "días",

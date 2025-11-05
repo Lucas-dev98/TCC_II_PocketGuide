@@ -598,6 +598,12 @@
       "destinationInfo": "Destination Information",
       "matchPercentage": "Compatibility",
       "selectDestination": "Select Destination"
+    },
+    "step6": {
+      "title": "⭐ What activities interest you?",
+      "subtitle": "Select your interests to personalize your trip",
+      "selected": "Selected Interests",
+      "helper": "You can select as many interests as you like! The more specific, the better your itinerary personalization."
     }
   },
   "days": "days",
