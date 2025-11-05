@@ -53,7 +53,7 @@ const CardHeaderComponent: React.FC<CardHeaderProps> = ({ title, subtitle, actio
 )
 
 const CardBodyComponent: React.FC<CardBodyProps> = ({ children, className = '' }) => (
-  <div className={clsx('overflow-x-hidden', className)}>
+  <div className={clsx('overflow-visible', className)}>
     {children}
   </div>
 )
@@ -80,6 +80,7 @@ const CardComponent: React.FC<CardProps> = ({
         'border border-slate-200 dark:border-slate-700',
         elevationClasses[elevation],
         'p-3 sm:p-4',
+        'overflow-visible',
         isInteractive && 'card-interactive',
         isInteractive && 'hover:shadow-lg hover:-translate-y-1 active:shadow-md active:translate-y-0',
         className,

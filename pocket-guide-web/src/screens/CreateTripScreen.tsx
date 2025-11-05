@@ -285,7 +285,7 @@ export default function CreateTripScreen() {
             </Card.Header>
 
             <Card.Body className="space-y-4">
-              <div>
+              <div className="pb-2">
                 <label className="block text-sm font-medium text-slate-900 dark:text-white mb-2">
                   {t('createTrip.destinationLabel')}
                 </label>

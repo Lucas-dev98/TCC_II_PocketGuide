@@ -252,7 +252,8 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
       {/* ✅ DROPDOWN COM AGRUPAMENTO */}
       {isOpen && hasResults && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600
-                        rounded-lg shadow-xl max-h-96 overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200">
+                        rounded-lg shadow-2xl max-h-[70vh] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
+             style={{ maxHeight: 'calc(70vh)' }}>
           {/* Grupo: Países */}
           {grouped.countries.length > 0 && (
             <div>
