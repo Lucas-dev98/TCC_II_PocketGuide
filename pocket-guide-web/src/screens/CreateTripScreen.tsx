@@ -21,17 +21,16 @@ import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
 /**
- * CreateTripScreen - 7-Step Trip Creation Flow
+ * CreateTripScreen - 6-Step Trip Creation Flow
  * 
  * Steps:
- * 1. TravelTypeSelector - Select trip type
+ * 1. TravelTypeSelector + InterestsSelector - Select trip type and interests together
  * 2. DurationAndBudgetSelector - Select duration and budget
  * 3. GroupCompositionSelector - Select group type and composition
  * 4. SeasonalSelector - Select travel month and season
  * 5. DestinationSelector - Select destination with AI recommendations
- * 6. InterestsSelector - Select interests based on trip type
- * 7. TripPreview - Review and confirm all details
- * 8. TripSuccess - Confirmation and next steps
+ * 6. TripPreview - Review and confirm all details
+ * 7. TripSuccess - Confirmation and next steps
  */
 
 interface TripFormData {
@@ -46,7 +45,7 @@ interface TripFormData {
   interests: string[];
 }
 
-type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8;
+type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -81,6 +80,10 @@ export default function CreateTripScreen() {
       case 1:
         if (formData.tripTypes.length === 0) {
           showError(t('createTrip.selectTravelType') || 'Please select at least one travel type')
+          return false
+        }
+        if (formData.interests.length === 0) {
+          showError(t('createTrip.selectInterests') || 'Please select at least one interest')
           return false
         }
         return true
@@ -118,13 +121,6 @@ export default function CreateTripScreen() {
         return true
 
       case 6:
-        if (formData.interests.length === 0) {
-          showError(t('createTrip.selectInterests') || 'Please select at least one interest')
-          return false
-        }
-        return true
-
-      case 7:
         return true
 
       default:
@@ -195,7 +191,7 @@ export default function CreateTripScreen() {
       await addTrip(tripData)
 
       showSuccess(t('createTrip.tripCreatedSuccess') || 'Trip created successfully!')
-      setStep(8)
+      setStep(7)
     } catch (err) {
       console.error('Error creating trip:', err)
       showError(
@@ -258,12 +254,12 @@ export default function CreateTripScreen() {
           <div
             className="mb-8 flex gap-2"
             role="progressbar"
-            aria-label={`Step ${step} of 7`}
+            aria-label={`Step ${step} of 6`}
             aria-valuenow={step}
             aria-valuemin={1}
-            aria-valuemax={7}
+            aria-valuemax={6}
           >
-            {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
                 className={`flex-1 h-2 rounded-full transition ${
@@ -278,14 +274,28 @@ export default function CreateTripScreen() {
 
           {/* Steps */}
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-8">
-            {/* Step 1: Travel Type */}
+            {/* Step 1: Travel Type + Interests */}
             {step === 1 && (
-              <TravelTypeSelector
-                selected={formData.tripTypes}
-                onChange={(types) =>
-                  setFormData((prev) => ({ ...prev, tripTypes: types }))
-                }
-              />
+              <div className="space-y-8">
+                <TravelTypeSelector
+                  selected={formData.tripTypes}
+                  onChange={(types) =>
+                    setFormData((prev) => ({ ...prev, tripTypes: types }))
+                  }
+                />
+                
+                {formData.tripTypes.length > 0 && (
+                  <div className="border-t border-slate-200 dark:border-slate-700 pt-8">
+                    <InterestsSelector
+                      tripType={formData.tripTypes[0]}
+                      selectedInterests={formData.interests}
+                      onInterestsChange={(interests) =>
+                        setFormData((prev) => ({ ...prev, interests }))
+                      }
+                    />
+                  </div>
+                )}
+              </div>
             )}
 
             {/* Step 2: Duration and Budget */}
@@ -348,19 +358,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 6: Interests */}
-            {step === 6 && (
-              <InterestsSelector
-                tripType={formData.tripTypes[0] || 'cultura'}
-                selectedInterests={formData.interests}
-                onInterestsChange={(interests) =>
-                  setFormData((prev) => ({ ...prev, interests }))
-                }
-              />
-            )}
-
-            {/* Step 7: Preview */}
-            {step === 7 && tripForPreview && (
+            {/* Step 6: Preview */}
+            {step === 6 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
                 onConfirm={handleSubmit}
@@ -370,8 +369,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 8: Success */}
-            {step === 8 && (
+            {/* Step 7: Success */}
+            {step === 7 && (
               <TripSuccess
                 tripId="new-trip"
                 tripName={formData.destination}
@@ -394,7 +393,7 @@ export default function CreateTripScreen() {
           </div>
 
           {/* Navigation Buttons */}
-          {step < 8 && (
+          {step < 7 && (
             <div className="flex gap-3">
               <Button
                 variant="secondary"
@@ -405,7 +404,7 @@ export default function CreateTripScreen() {
                 {t('common.previous') || 'Previous'}
               </Button>
 
-              {step < 7 ? (
+              {step < 6 ? (
                 <Button
                   variant="primary"
                   onClick={handleNext}
