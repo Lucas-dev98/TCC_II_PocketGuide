@@ -585,11 +585,25 @@
       "best": "Best time",
       "warning": "Caution",
       "avoid": "Avoid"
+    },
+    "step5": {
+      "title": "🌍 Which destination would you like?",
+      "subtitle": "Based on your preferences, we recommend these amazing destinations",
+      "aiRecommendations": "🤖 AI Recommendations",
+      "manualSearch": "🔍 Manual Search",
+      "searchDestinations": "Search Destinations",
+      "searchPlaceholder": "Type a destination name...",
+      "noRecommendations": "Sorry, we couldn't find destinations matching your criteria. Try with different preferences.",
+      "noResults": "No destination found with that name.",
+      "destinationInfo": "Destination Information",
+      "matchPercentage": "Compatibility",
+      "selectDestination": "Select Destination"
     }
   },
   "days": "days",
   "person": "person",
   "people": "people",
   "child": "child",
-  "children": "children"
+  "children": "children",
+  "change": "Change"
 }

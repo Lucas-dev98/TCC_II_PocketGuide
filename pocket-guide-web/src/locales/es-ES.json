@@ -531,11 +531,25 @@
       "best": "Mejor época",
       "warning": "Cuidado",
       "avoid": "Evitar"
+    },
+    "step5": {
+      "title": "🌍 ¿Qué destino quieres?",
+      "subtitle": "Basándonos en tus preferencias, te recomendamos estos destinos increíbles",
+      "aiRecommendations": "🤖 Recomendaciones con IA",
+      "manualSearch": "🔍 Búsqueda Manual",
+      "searchDestinations": "Buscar Destinos",
+      "searchPlaceholder": "Escribe el nombre de un destino...",
+      "noRecommendations": "Lo sentimos, no encontramos destinos que coincidan con tus criterios. Intenta con diferentes preferencias.",
+      "noResults": "Ningún destino encontrado con ese nombre.",
+      "destinationInfo": "Información del Destino",
+      "matchPercentage": "Compatibilidad",
+      "selectDestination": "Seleccionar Destino"
     }
   },
   "days": "días",
   "person": "persona",
   "people": "personas",
   "child": "niño",
-  "children": "niños"
+  "children": "niños",
+  "change": "Cambiar"
 }
