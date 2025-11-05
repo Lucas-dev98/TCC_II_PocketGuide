@@ -520,6 +520,17 @@
       "numChildren": "¿Cuántos niños (0-12 años)?",
       "composition": "Composición",
       "groupInfo": "La composición del grupo nos ayudará a personalizar actividades y alojamiento adecuados para tu viaje."
+    },
+    "step4": {
+      "selectMonth": "📅 ¿Cuál es el mejor mes?",
+      "selectYear": "📆 Selecciona el año",
+      "selectingFor": "Seleccionando fechas para",
+      "selectedDate": "Fecha seleccionada",
+      "status": "Estado",
+      "reasons": "Razones",
+      "best": "Mejor época",
+      "warning": "Cuidado",
+      "avoid": "Evitar"
     }
   },
   "days": "días",

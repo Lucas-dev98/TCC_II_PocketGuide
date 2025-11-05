@@ -574,6 +574,17 @@
       "numChildren": "How many children (0-12 years)?",
       "composition": "Composition",
       "groupInfo": "The group composition will help us personalize activities and accommodation suitable for your trip."
+    },
+    "step4": {
+      "selectMonth": "📅 What's the best month?",
+      "selectYear": "📆 Select the year",
+      "selectingFor": "Selecting dates for",
+      "selectedDate": "Selected date",
+      "status": "Status",
+      "reasons": "Reasons",
+      "best": "Best time",
+      "warning": "Caution",
+      "avoid": "Avoid"
     }
   },
   "days": "days",
