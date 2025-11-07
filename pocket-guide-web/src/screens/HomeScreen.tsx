@@ -11,7 +11,7 @@ import { CreateTripCTA } from '../components/CreateTripCTA'
 import { MainLayout } from '../components/Layout'
 import { SkeletonCard } from '../components/Skeleton'
 import useI18n from '../hooks/useI18n'
-import { MapPin, Calendar, Trash2 } from 'lucide-react'
+import { MapPin, Calendar, Trash2, X, CheckCircle2 } from 'lucide-react'
 import { formatDate } from '../utils/formatDate'
 import { debug } from '../utils/debug'
 
@@ -34,6 +34,9 @@ export default function HomeScreen() {
   const { showError, showSuccess } = useToast()
   const { t } = useI18n()
   const [deleting, setDeleting] = useState<string | null>(null)
+  const [isSelectMode, setIsSelectMode] = useState(false)
+  const [selectedTrips, setSelectedTrips] = useState<Set<string>>(new Set())
+  const [isDeleting, setIsDeleting] = useState(false)
 
   // Carregar viagens ao montar
   useEffect(() => {
@@ -43,11 +46,52 @@ export default function HomeScreen() {
     }
   }, [user?.uid, loadTrips])
 
-  debug.log('🏠 HomeScreen: Current trips:', trips)
-  debug.log('🏠 HomeScreen: isLoading:', isLoading)
-
   const handleViewTrip = (tripId: string) => {
     navigate(`/trip/${tripId}`)
+  }
+
+  const handleSelectTrip = (tripId: string) => {
+    const newSelected = new Set(selectedTrips)
+    if (newSelected.has(tripId)) {
+      newSelected.delete(tripId)
+    } else {
+      newSelected.add(tripId)
+    }
+    setSelectedTrips(newSelected)
+    if (newSelected.size === 0) {
+      setIsSelectMode(false)
+    }
+  }
+
+  const handleSelectAll = () => {
+    if (selectedTrips.size === trips.length) {
+      setSelectedTrips(new Set())
+      setIsSelectMode(false)
+    } else {
+      setSelectedTrips(new Set(trips.map(t => t.id)))
+      setIsSelectMode(true)
+    }
+  }
+
+  const handleDeleteSelected = async () => {
+    if (!window.confirm(t('trips.deleteSelectedConfirm') || `Delete ${selectedTrips.size} trips?`)) {
+      return
+    }
+
+    try {
+      setIsDeleting(true)
+      for (const tripId of selectedTrips) {
+        await deleteTrip(tripId)
+      }
+      showSuccess(t('common.successDeleted'))
+      setSelectedTrips(new Set())
+      setIsSelectMode(false)
+    } catch (error) {
+      debug.error('Erro ao deletar viagens:', error)
+      showError(t('errors.generic'))
+    } finally {
+      setIsDeleting(false)
+    }
   }
 
   const handleDeleteTrip = async (tripId: string) => {
@@ -94,8 +138,59 @@ export default function HomeScreen() {
 
         {/* Main content */}
         <div className="max-w-7xl mx-auto px-4 py-8 lg:px-6">
+          {/* Selection mode header */}
+          {isSelectMode && (
+            <div className="mb-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <CheckCircle2 className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <span className="font-semibold text-blue-900 dark:text-blue-100">
+                  {selectedTrips.size} {t('trips.tripsSelected') || 'trips selected'}
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  onClick={() => {
+                    setSelectedTrips(new Set())
+                    setIsSelectMode(false)
+                  }}
+                  variant="outline"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <X className="w-4 h-4" />
+                  {t('common.cancel') || 'Cancel'}
+                </Button>
+                <Button
+                  onClick={handleDeleteSelected}
+                  disabled={isDeleting}
+                  variant="danger"
+                  size="sm"
+                  className="gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  {isDeleting ? t('trips.deleting') : t('trips.delete')}
+                </Button>
+              </div>
+            </div>
+          )}
+
           {/* Botão criar nova viagem - CTA destacado */}
           <CreateTripCTA />
+
+          {/* Botão Selecionar - Visible when not in select mode and trips exist */}
+          {!isSelectMode && trips.length > 0 && !isLoading && (
+            <div className="mb-6 flex justify-end">
+              <Button
+                onClick={handleSelectAll}
+                variant="outline"
+                size="sm"
+                className="gap-2"
+              >
+                <CheckCircle2 className="w-4 h-4" />
+                {t('trips.select') || 'Select'}
+              </Button>
+            </div>
+          )}
 
         {/* Loading state - Skeleton cards */}
         {isLoading && (
@@ -125,13 +220,44 @@ export default function HomeScreen() {
         {!isLoading && trips.length > 0 && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {trips.map((trip) => (
-              <Card
-                key={trip.id}
-                elevation="md"
-                isInteractive
-                onClick={() => handleViewTrip(trip.id)}
-                className="overflow-hidden group"
-              >
+              <div key={trip.id} className="relative">
+                {/* Selection checkbox */}
+                {isSelectMode && (
+                  <div className="absolute top-3 left-3 z-20">
+                    <input
+                      type="checkbox"
+                      checked={selectedTrips.has(trip.id)}
+                      onChange={() => handleSelectTrip(trip.id)}
+                      onClick={(e) => e.stopPropagation()}
+                      className="w-5 h-5 rounded border-2 border-blue-500 text-blue-600 cursor-pointer accent-blue-600"
+                      aria-label={`Select ${trip.destination}`}
+                    />
+                  </div>
+                )}
+
+                <Card
+                  elevation="md"
+                  isInteractive
+                  onClick={() => {
+                    if (isSelectMode) {
+                      handleSelectTrip(trip.id)
+                    } else {
+                      handleViewTrip(trip.id)
+                    }
+                  }}
+                  onContextMenu={(e) => {
+                    e.preventDefault()
+                    if (!isSelectMode) {
+                      setIsSelectMode(true)
+                      handleSelectTrip(trip.id)
+                    }
+                  }}
+                  className={`overflow-hidden group transition ${
+                    isSelectMode && selectedTrips.has(trip.id)
+                      ? 'ring-2 ring-blue-500 dark:ring-blue-400'
+                      : ''
+                  }`}
+                >
                 {/* Imagem de preview */}
                 {trip.imageUrl && (
                   <div className="h-40 bg-slate-200 dark:bg-slate-700 overflow-hidden">
@@ -192,22 +318,25 @@ export default function HomeScreen() {
                   {/* Delete button */}
                   <div className="flex gap-2">
                     <FavoriteButton tripId={trip.id} size="md" />
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        handleDeleteTrip(trip.id)
-                      }}
-                      disabled={deleting === trip.id}
-                      variant="outline"
-                      size="sm"
-                      className="flex-1 gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
-                    >
-                      <Trash2 className="w-4 h-4" />
-                      {deleting === trip.id ? t('trips.deleting') : t('trips.delete')}
-                    </Button>
+                    {!isSelectMode && (
+                      <Button
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          handleDeleteTrip(trip.id)
+                        }}
+                        disabled={deleting === trip.id}
+                        variant="outline"
+                        size="sm"
+                        className="flex-1 gap-2 text-danger border-danger hover:bg-red-50 dark:hover:bg-red-900/20"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                        {deleting === trip.id ? t('trips.deleting') : t('trips.delete')}
+                      </Button>
+                    )}
                   </div>
                 </Card.Body>
-              </Card>
+                </Card>
+              </div>
             ))}
           </div>
         )}
