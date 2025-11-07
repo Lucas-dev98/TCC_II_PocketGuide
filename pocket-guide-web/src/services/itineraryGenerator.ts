@@ -155,7 +155,8 @@ export const generateItinerary = async (
   tags: string[],
   budget: string = 'mid',
   groupType: string = 'couple',
-  language: LanguageCode = 'en-US'
+  language: LanguageCode = 'en-US',
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno'
 ): Promise<ItineraryItem[]> => {
   try {
     logger.info('Generating itinerary', {
@@ -164,6 +165,7 @@ export const generateItinerary = async (
       tags,
       budget,
       groupType,
+      season,
       language,
     });
 
@@ -176,7 +178,8 @@ export const generateItinerary = async (
           tags,
           budget,
           groupType,
-          language
+          language,
+          season
         ),
       {
         maxRetries: 3,

@@ -32,32 +32,34 @@ export const generateItineraryPrompt = (
   budget: string,
   groupType: string,
   tags: string[],
-  language: LanguageCode
+  language: LanguageCode,
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno'
 ): string => {
   const tagsString = tags.join(', ');
+  const seasonInfo = season ? ` (estação: ${season})` : '';
   
-  const prompts: Record<LanguageCode, (days: number, dest: string, budget: string, group: string, tags: string) => string> = {
-    'pt-BR': (days, dest, budget, group, tags) => 
-      `Gere um roteiro de ${days} dias para ${dest} (orçamento ${budget}, grupo ${group}, interesses: ${tags})
+  const prompts: Record<LanguageCode, (days: number, dest: string, budget: string, group: string, tags: string, season: string) => string> = {
+    'pt-BR': (days, dest, budget, group, tags, season) => 
+      `Gere um roteiro de ${days} dias para ${dest} (orçamento ${budget}, grupo ${group}, interesses: ${tags}${season})
 Retorne apenas JSON com ${days * 3} atividades no seguinte formato:
 {"itinerary":[{"day":1,"time":"09:00","name":"Local","duration":120,"reason":"Por que visitar","tip":"Dica útil","category":"Categoria","lat":0,"lng":0}]}
-As atividades devem estar em português e incluir nomes reais de locais, horários realistas e dicas práticas.`,
+As atividades devem estar em português, incluir nomes reais de locais, horários realistas e dicas práticas. Adapte as atividades à estação indicada.`,
     
-    'en-US': (days, dest, budget, group, tags) =>
-      `Generate a ${days}-day itinerary for ${dest} (${budget} budget, ${group} group, interests: ${tags})
+    'en-US': (days, dest, budget, group, tags, season) =>
+      `Generate a ${days}-day itinerary for ${dest} (${budget} budget, ${group} group, interests: ${tags}${season})
 Return only JSON with ${days * 3} activities in the following format:
 {"itinerary":[{"day":1,"time":"09:00","name":"Place","duration":120,"reason":"Why visit","tip":"Practical tip","category":"Category","lat":0,"lng":0}]}
-Activities should include real place names, realistic times, and practical tips.`,
+Activities should include real place names, realistic times, and practical tips. Adapt activities to the indicated season.`,
     
-    'es-ES': (days, dest, budget, group, tags) =>
-      `Genere un itinerario de ${days} días para ${dest} (presupuesto ${budget}, grupo ${group}, intereses: ${tags})
+    'es-ES': (days, dest, budget, group, tags, season) =>
+      `Genere un itinerario de ${days} días para ${dest} (presupuesto ${budget}, grupo ${group}, intereses: ${tags}${season})
 Devuelva solo JSON con ${days * 3} actividades en el siguiente formato:
 {"itinerary":[{"day":1,"time":"09:00","name":"Lugar","duration":120,"reason":"Por qué visitar","tip":"Consejo práctico","category":"Categoría","lat":0,"lng":0}]}
-Las actividades deben incluir nombres de lugares reales, horarios realistas y consejos prácticos.`,
+Las actividades deben incluir nombres de lugares reales, horarios realistas y consejos prácticos. Adapte las actividades a la estación indicada.`,
   };
   
   const promptGenerator = prompts[language] || prompts['en-US'];
-  return promptGenerator(days, destination, budget, groupType, tagsString);
+  return promptGenerator(days, destination, budget, groupType, tagsString, seasonInfo);
 };
 
 /**
