@@ -93,19 +93,20 @@ export default function CreateTripScreen() {
         return true
 
       case 2:
-        // Step 2: Group Composition - required
+        // Step 2: Group Composition + Budget Selection - required
         if (!formData.groupType) {
           showError(t('createTrip.selectGroupType') || 'Please select a group type')
+          return false
+        }
+        if (!formData.budgetPerDay) {
+          showError(t('createTrip.selectBudget') || 'Please select a budget')
           return false
         }
         return true
 
       case 3:
-        // Step 3: Budget Selection - required
-        if (!formData.budgetPerDay) {
-          showError(t('createTrip.selectBudget') || 'Please select a budget')
-          return false
-        }
+        // Step 3: Budget Selection - DEPRECATED (kept as placeholder for compatibility)
+        // Budget is now selected in Step 2, so always return true
         return true
 
       case 4:
@@ -121,7 +122,7 @@ export default function CreateTripScreen() {
         return true
 
       case 5:
-        // Step 5: Dates + Budget - required
+        // Step 5: Dates + Month - required
         if (!formData.startDate) {
           showError(t('createTrip.selectStartDate') || 'Please select a start date')
           return false
@@ -328,12 +329,13 @@ export default function CreateTripScreen() {
               </div>
             )}
 
-            {/* Step 2: Group Composition */}
+            {/* Step 2: Group Composition + Budget Selection */}
             {step === 2 && (
               <GroupCompositionSelector
                 selectedGroup={formData.groupType}
                 numPeople={formData.numPeople}
                 numChildren={formData.numChildren}
+                budgetPerDay={formData.budgetPerDay}
                 onGroupChange={(groupType) =>
                   setFormData((prev) => ({ ...prev, groupType }))
                 }
@@ -342,6 +344,9 @@ export default function CreateTripScreen() {
                 }
                 onNumChildrenChange={(numChildren) =>
                   setFormData((prev) => ({ ...prev, numChildren }))
+                }
+                onBudgetChange={(budgetPerDay) =>
+                  setFormData((prev) => ({ ...prev, budgetPerDay }))
                 }
               />
             )}
@@ -445,16 +450,12 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 5: Duration and Budget */}
+            {/* Step 5: Duration and Dates */}
             {step === 5 && (
               <DurationAndBudgetSelector
-                budgetPerDay={formData.budgetPerDay}
                 startDate={formData.startDate}
                 endDate={formData.endDate}
                 selectedMonth={parseInt(formData.travelMonth)}
-                onBudgetChange={(budgetPerDay) =>
-                  setFormData((prev) => ({ ...prev, budgetPerDay }))
-                }
                 onStartDateChange={(startDate) =>
                   setFormData((prev) => ({ ...prev, startDate }))
                 }
