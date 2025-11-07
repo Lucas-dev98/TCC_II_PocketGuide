@@ -47,6 +47,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
 
   // Generate recommendations using Gemini (with fallback to rule-based)
+  // Note: removed selectedDestination from dependencies to prevent re-generating
+  // recommendations when a destination is selected
   useEffect(() => {
     setIsLoading(true);
     const generateRecommendations = async () => {
@@ -71,7 +73,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
             startDate,
             endDate,
             selectedMonth || '',
-            selectedDestination
+            '' // Don't filter by selected destination during recommendations
           ),
           i18n?.language || 'en-US'
         );
@@ -89,7 +91,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           startDate,
           endDate,
           selectedMonth || '',
-          selectedDestination
+          '' // Don't filter by selected destination during recommendations
         );
         setRecommendations(fallbackRecs);
       } finally {
@@ -108,9 +110,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     startDate,
     endDate,
     selectedMonth,
-    selectedDestination,
     i18n?.language,
-  ]);
+  ]); // Removed selectedDestination from dependencies
 
   // Memoize selected destination info
   const selectedInfo = useMemo(
