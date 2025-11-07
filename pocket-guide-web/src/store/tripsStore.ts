@@ -164,10 +164,9 @@ export const useTripsStore = create<TripsStoreState>()(
     }),
     {
       name: 'trips-store', // Chave no localStorage
-      partialize: (state) => ({
-        // Persistir apenas os trips
-        // Não persistir: isLoading, error (estado temporário)
-        trips: state.trips,
+      partialize: () => ({
+        // DO NOT persist trips - they must always come from Firestore to stay in sync
+        // Only persist non-data state if needed in future
       }),
     }
   )

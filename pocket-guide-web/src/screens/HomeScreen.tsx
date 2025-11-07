@@ -44,7 +44,7 @@ export default function HomeScreen() {
       debug.log('🏠 HomeScreen: Loading trips for user:', user.uid)
       loadTrips(user.uid)
     }
-  }, [user?.uid, loadTrips])
+  }, [user?.uid])
 
   const handleViewTrip = (tripId: string) => {
     navigate(`/trip/${tripId}`)
