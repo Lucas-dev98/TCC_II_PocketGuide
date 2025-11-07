@@ -304,7 +304,7 @@ export default function TripDetailScreen() {
   const navigate = useNavigate();
   const { t } = useI18n();
   const { user } = useAuth();
-  const { trips, loadTrips } = useTripsStore();
+  const { trips, loadTrips, isLoading: isStoreLoading } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
   const [attractionImages, setAttractionImages] = useState<Map<string, string>>(new Map());
@@ -314,6 +314,7 @@ export default function TripDetailScreen() {
 
   debug.log('🔍 TripDetailScreen - Trip:', trip);
   debug.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
+  debug.log('🔍 TripDetailScreen - isStoreLoading:', isStoreLoading, 'hasTriedLoadingTrips:', hasTriedLoadingTrips);
 
   // Load trips from Firestore if trip not found locally (only once)
   useEffect(() => {
@@ -322,7 +323,7 @@ export default function TripDetailScreen() {
       setHasTriedLoadingTrips(true);
       loadTrips(user.uid);
     }
-  }, [id, user?.uid, hasTriedLoadingTrips, loadTrips]);
+  }, [id, user?.uid]);
 
   // Carregar imagens das atrações
   useEffect(() => {
@@ -404,6 +405,15 @@ export default function TripDetailScreen() {
   }, []);
 
   if (isLoadingScreen) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
+        <LoadingSpinner size="lg" />
+      </div>
+    );
+  }
+
+  // Show loading while trying to fetch trips from Firestore
+  if (!trip && hasTriedLoadingTrips && isStoreLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-blue-50 dark:bg-gradient-to-br dark:from-slate-900 dark:to-slate-800">
         <LoadingSpinner size="lg" />
