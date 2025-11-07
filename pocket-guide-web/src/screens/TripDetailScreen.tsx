@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import useI18n from '../hooks/useI18n';
+import { useAuth } from '../hooks/useAuth';
 import { useTripsStore } from '../store/tripsStore';
 import { Button } from '../components/Button';
 import { Card } from '../components/Card';
@@ -302,7 +303,8 @@ export default function TripDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { t } = useI18n();
-  const { trips } = useTripsStore();
+  const { user } = useAuth();
+  const { trips, loadTrips } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
   const [attractionImages, setAttractionImages] = useState<Map<string, string>>(new Map());
@@ -311,6 +313,14 @@ export default function TripDetailScreen() {
 
   debug.log('🔍 TripDetailScreen - Trip:', trip);
   debug.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
+
+  // Load trips from Firestore if trip not found locally
+  useEffect(() => {
+    if (!trip && id && user?.uid) {
+      debug.log('🔄 Trip not found locally, loading from Firestore...');
+      loadTrips(user.uid);
+    }
+  }, [id, trip, user?.uid, loadTrips]);
 
   // Carregar imagens das atrações
   useEffect(() => {
