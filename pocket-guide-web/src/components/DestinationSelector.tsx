@@ -141,8 +141,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
         </p>
       </div>
 
-      {/* Selected Destination Display */}
-      {selectedDestination && selectedInfo && (
+      {/* Selected Destination Display - only after navigation away and back */}
+      {selectedDestination && selectedInfo && !showSearch && recommendations.length === 0 && (
         <div className="p-4 bg-gradient-to-r from-indigo-50 to-purple-50 dark:from-indigo-900/20 dark:to-purple-900/20 rounded-lg border border-indigo-200 dark:border-indigo-700">
           <div className="flex items-center justify-between">
             <div className="space-y-1">
@@ -174,7 +174,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
       )}
 
       {/* Recommendations or Search */}
-      {!selectedDestination ? (
+      {!selectedDestination || recommendations.length > 0 ? (
         <div className="space-y-4">
           {/* AI Recommendations */}
           {!showSearch ? (
