@@ -308,19 +308,21 @@ export default function TripDetailScreen() {
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
   const [attractionImages, setAttractionImages] = useState<Map<string, string>>(new Map());
+  const [hasTriedLoadingTrips, setHasTriedLoadingTrips] = useState(false);
 
   const trip = id ? trips.find((t) => t.id === id) : null;
 
   debug.log('🔍 TripDetailScreen - Trip:', trip);
   debug.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
 
-  // Load trips from Firestore if trip not found locally
+  // Load trips from Firestore if trip not found locally (only once)
   useEffect(() => {
-    if (!trip && id && user?.uid) {
+    if (!trip && id && user?.uid && !hasTriedLoadingTrips) {
       debug.log('🔄 Trip not found locally, loading from Firestore...');
+      setHasTriedLoadingTrips(true);
       loadTrips(user.uid);
     }
-  }, [id, trip, user?.uid, loadTrips]);
+  }, [id, user?.uid, hasTriedLoadingTrips, loadTrips]);
 
   // Carregar imagens das atrações
   useEffect(() => {
