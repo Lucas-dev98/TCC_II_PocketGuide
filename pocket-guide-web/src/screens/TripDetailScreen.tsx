@@ -168,6 +168,64 @@ const transformItinerary = (itinerary: any) => {
     return itinerary;
   }
   
+  // If it's a direct array of ItineraryItem (returned from generateItinerary)
+  if (Array.isArray(itinerary) && itinerary.length > 0 && itinerary[0].day !== undefined) {
+    debug.log('✅ transformItinerary: Converting from array of ItineraryItem format');
+    const activities = itinerary;
+    debug.log(`📊 Found ${activities.length} activities`);
+    
+    const daysMap = new Map<number, any[]>();
+    
+    // Group activities by day
+    activities.forEach((activity: any) => {
+      const day = activity.day || 1;
+      if (!daysMap.has(day)) {
+        daysMap.set(day, []);
+      }
+      daysMap.get(day)!.push(activity);
+    });
+    
+    debug.log(`📊 Grouped into ${daysMap.size} days`);
+    
+    // Convert to days array
+    const days = Array.from({ length: daysMap.size }, (_, index) => {
+      const dayNum = index + 1;
+      const dayActivities = daysMap.get(dayNum) || [];
+      
+      return {
+        title: `Dia ${dayNum}`,
+        attractions: dayActivities.map((activity: any) => {
+          // Extract lat/lng from either direct properties or location object
+          const lat = activity.lat || activity.location?.lat;
+          const lng = activity.lng || activity.location?.lng;
+          
+          const transformed = {
+            name: activity.name,
+            description: activity.reason,
+            time: activity.time,
+            emoji: '📍',
+            duration: activity.duration,
+            category: activity.category,
+            location: activity.location,
+            lat: lat,
+            lng: lng,
+          };
+          
+          return transformed;
+        }),
+      };
+    });
+    
+    const result = {
+      days,
+      tips: [],
+      destination: undefined,
+    };
+    
+    debug.log('✅ transformItinerary result:', result);
+    return result;
+  }
+  
   // If it's the Gemini format: { itinerary: [...], tips: [...] }
   if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
     debug.log('✅ transformItinerary: Converting from Gemini format');
