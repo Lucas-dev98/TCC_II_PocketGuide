@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 import { searchCities, groupSuggestions } from '../services/mapboxGeocoding';
-import { CitySuggestion } from '../types';
+import { getAISuggestionsForSearchInput } from '../services/destinationSuggestionService';
+import { CitySuggestion, TripType, BudgetPerDay, GroupType } from '../types';
 import { ChevronDown } from 'lucide-react';
 import clsx from 'clsx';
 
@@ -10,6 +11,11 @@ interface CityAutocompleteProps {
   placeholder?: string;
   language?: string;
   className?: string;
+  // New props for personalized AI suggestions
+  tripTypes?: TripType[];
+  interests?: string[];
+  groupType?: GroupType;
+  budget?: BudgetPerDay;
 }
 
 /**
@@ -102,8 +108,13 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   placeholder = 'Buscar cidade...',
   language = 'en',
   className = '',
+  tripTypes = [],
+  interests,
+  groupType,
+  budget,
 }) => {
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
+  const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [inputValue, setInputValue] = useState(value);
@@ -117,7 +128,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
     setInputValue(value);
   }, [value]);
 
-  // Debounce para buscar cidades
+  // Debounce para buscar cidades E sugestões do Gemini
   useEffect(() => {
     if (debounceRef.current) {
       clearTimeout(debounceRef.current);
@@ -125,6 +136,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
 
     if (!inputValue.trim()) {
       setSuggestions([]);
+      setAiSuggestions([]);
       setIsOpen(false);
       return;
     }
@@ -133,8 +145,27 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
 
     debounceRef.current = setTimeout(async () => {
       try {
+        // Buscar cidades no Mapbox
         const results = await searchCities(inputValue, language);
         setSuggestions(results);
+
+        // Buscar sugestões personalizadas do Gemini
+        if (tripTypes && tripTypes.length > 0) {
+          try {
+            const aiResults = await getAISuggestionsForSearchInput(
+              inputValue,
+              tripTypes,
+              interests,
+              groupType,
+              budget,
+              language
+            );
+            setAiSuggestions(aiResults);
+          } catch (error) {
+            console.warn('⚠️ AI suggestions not available:', error);
+            setAiSuggestions([]);
+          }
+        }
       } catch (error) {
         console.error('❌ Erro ao buscar:', error);
         setSuggestions([]);
@@ -148,7 +179,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         clearTimeout(debounceRef.current);
       }
     };
-  }, [inputValue, language]);
+  }, [inputValue, language, tripTypes, interests, groupType, budget]);
 
   // Fechar dropdown ao clicar fora
   useEffect(() => {
@@ -248,11 +279,73 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         )}
       </div>
 
-      {/* ✅ DROPDOWN COM AGRUPAMENTO */}
-      {isOpen && hasResults && (
+      {/* ✅ DROPDOWN COM AGRUPAMENTO E SUGESTÕES DO GEMINI */}
+      {isOpen && (hasResults || aiSuggestions.length > 0) && (
         <div className="absolute z-50 w-full mt-1 bg-white dark:bg-slate-800 border-2 border-slate-300 dark:border-slate-600
                         rounded-lg shadow-2xl max-h-[70vh] overflow-y-auto animate-in fade-in slide-in-from-top-2 duration-200"
              style={{ maxHeight: 'calc(70vh)' }}>
+          {/* Seção: Sugestões Personalizadas do Gemini */}
+          {aiSuggestions.length > 0 && (
+            <div>
+              <div className="px-4 py-2 text-xs font-bold text-slate-500 dark:text-slate-400 bg-gradient-to-r from-purple-50 to-blue-50 dark:from-purple-900/30 dark:to-blue-900/30 sticky top-0">
+                🤖 {language === 'pt-BR' ? 'Sugestões Personalizadas' : 'AI Suggestions'}
+              </div>
+              {aiSuggestions.map((suggestion, index) => (
+                <button
+                  key={`ai-${index}`}
+                  type="button"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setInputValue(suggestion.name);
+                    onCitySelect(suggestion.name);
+                    setIsOpen(false);
+                    setSuggestions([]);
+                    setAiSuggestions([]);
+                  }}
+                  className="w-full text-left px-4 py-3 hover:bg-purple-50 dark:hover:bg-purple-900/30
+                             transition-colors duration-150 border-b border-slate-100 dark:border-slate-700 last:border-b-0
+                             focus:outline-none focus:bg-purple-100 dark:focus:bg-purple-900/30 cursor-pointer
+                             group/item"
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="font-medium text-slate-900 dark:text-slate-100">
+                        {suggestion.emoji} {suggestion.name}
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+                        {suggestion.country}
+                      </div>
+                      <div className="flex items-center gap-2 mt-1">
+                        <div className="flex-1 max-w-xs bg-gray-200 dark:bg-gray-700 rounded-full h-1.5">
+                          <div
+                            className={`h-1.5 rounded-full transition-all ${
+                              suggestion.matchScore >= 80
+                                ? 'bg-green-500'
+                                : suggestion.matchScore >= 60
+                                  ? 'bg-yellow-500'
+                                  : 'bg-orange-500'
+                            }`}
+                            style={{ width: `${suggestion.matchScore}%` }}
+                          />
+                        </div>
+                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 min-w-8">
+                          {suggestion.matchScore}%
+                        </span>
+                      </div>
+                      <div className="text-xs text-slate-600 dark:text-slate-400 mt-1">
+                        {suggestion.reason}
+                      </div>
+                    </div>
+                    <div className="ml-3 text-slate-400 group-hover/item:text-purple-500 transition-colors">
+                      →
+                    </div>
+                  </div>
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Grupo: Países */}
           {grouped.countries.length > 0 && (
             <div>

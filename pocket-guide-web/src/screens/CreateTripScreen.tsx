@@ -393,6 +393,7 @@ export default function CreateTripScreen() {
                 onDestinationChange={(destination: string) =>
                   setFormData((prev) => ({ ...prev, destination }))
                 }
+                onNext={() => handleNext()}
               />
             )}
 

@@ -24,6 +24,7 @@ interface DestinationSelectorProps {
   selectedMonth?: number;
   selectedDestination?: string;
   onDestinationChange: (destination: string) => void;
+  onNext?: () => void; // Called when destination is selected to auto-advance
   disabled?: boolean;
 }
 
@@ -39,6 +40,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   selectedMonth,
   selectedDestination,
   onDestinationChange,
+  onNext,
   disabled = false,
 }) => {
   const { t, i18n } = useTranslation();
@@ -123,11 +125,19 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   const handleSelectRecommendation = (destination: string) => {
     onDestinationChange(destination);
     setShowSearch(false);
+    // Auto-advance to next step after selection
+    setTimeout(() => {
+      onNext?.();
+    }, 300);
   };
 
   const handleSelectFromSearch = (destination: string) => {
     onDestinationChange(destination);
     setShowSearch(false);
+    // Auto-advance to next step after selection
+    setTimeout(() => {
+      onNext?.();
+    }, 300);
   };
 
   return (
@@ -253,6 +263,10 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 }}
                 placeholder={t('newFlow.step5.searchPlaceholder')}
                 language={i18n?.language || 'en'}
+                tripTypes={tripTypes}
+                interests={interests}
+                groupType={groupType}
+                budget={budget}
               />
             </div>
           ) : null}
