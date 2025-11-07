@@ -8,6 +8,7 @@
 /**
  * Limpa dados inválidos do localStorage
  * - Remove 'trips' que não deveria estar persistido
+ * - Remove 'trips-store' gerado pelo Zustand persist middleware anterior
  * - Mantém dados válidos como auth tokens, favorites, etc
  */
 export const cleanupInvalidStorage = (): void => {
@@ -16,6 +17,12 @@ export const cleanupInvalidStorage = (): void => {
     if (localStorage.getItem('trips')) {
       console.warn('⚠️ Removendo dados de trips do localStorage (devem vir do Firestore)')
       localStorage.removeItem('trips')
+    }
+
+    // Remove old trips-store data from previous Zustand persist middleware
+    if (localStorage.getItem('trips-store')) {
+      console.warn('⚠️ Removendo trips-store do localStorage (Zustand persist desativado)')
+      localStorage.removeItem('trips-store')
     }
 
     // Verifica se há dados corrompidos no trips-store
