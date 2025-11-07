@@ -21,16 +21,17 @@ import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
 /**
- * CreateTripScreen - 6-Step Trip Creation Flow with AI Date Suggestions
+ * CreateTripScreen - 7-Step Trip Creation Flow with AI Date Suggestions
  * 
  * Flow (Group First - More Logical):
  * Step 1: Travel Type + Interests - Select trip type and interests together
  * Step 2: Group Composition - Select group type and number of people
- * Step 3: Destination - Select destination for context-aware AI suggestions
- * Step 3.5: Smart Date Suggestion - AI recommends 3 best date options based on destination
- * Step 4: Duration + Budget + Month - Manual date selection and budget preference
- * Step 5: Trip Preview - Review all trip details
- * Step 6: Trip Success - Confirmation and next steps
+ * Step 3: Budget Selection - Select budget per day (how much to spend)
+ * Step 4: Destination - Select destination for context-aware AI suggestions
+ * Step 4.5: Smart Date Suggestion - AI recommends 3 best date options based on destination
+ * Step 5: Duration + Budget + Month - Manual date selection and budget preference
+ * Step 6: Trip Preview - Review all trip details
+ * Step 7: Trip Success - Confirmation and next steps
  */
 
 interface TripFormData {
@@ -46,7 +47,7 @@ interface TripFormData {
   interests: string[];
 }
 
-type StepType = 1 | 2 | 3 | 3.5 | 4 | 5 | 6;
+type StepType = 1 | 2 | 3 | 4 | 4.5 | 5 | 6 | 7;
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -100,19 +101,27 @@ export default function CreateTripScreen() {
         return true
 
       case 3:
-        // Step 3: Destination - required
+        // Step 3: Budget Selection - required
+        if (!formData.budgetPerDay) {
+          showError(t('createTrip.selectBudget') || 'Please select a budget')
+          return false
+        }
+        return true
+
+      case 4:
+        // Step 4: Destination - required
         if (!formData.destination.trim()) {
           showError(t('createTrip.selectDestination') || 'Please select a destination')
           return false
         }
         return true
 
-      case 3.5:
-        // Step 3.5: Smart Date Suggestion - always allowed (auto-fills with Gemini)
+      case 4.5:
+        // Step 4.5: Smart Date Suggestion - always allowed (auto-fills with Gemini)
         return true
 
-      case 4:
-        // Step 4: Dates + Budget - required
+      case 5:
+        // Step 5: Dates + Budget - required
         if (!formData.startDate) {
           showError(t('createTrip.selectStartDate') || 'Please select a start date')
           return false
@@ -121,18 +130,14 @@ export default function CreateTripScreen() {
           showError(t('createTrip.selectEndDate') || 'Please select an end date')
           return false
         }
-        if (!formData.budgetPerDay) {
-          showError(t('createTrip.selectBudget') || 'Please select a budget')
-          return false
-        }
-        return true
-
-      case 5:
-        // Step 5: Preview - always allowed
         return true
 
       case 6:
-        // Step 6: Success - always allowed
+        // Step 6: Preview - always allowed
+        return true
+
+      case 7:
+        // Step 7: Success - always allowed
         return true
 
       default:
@@ -142,13 +147,13 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step === 3) {
+      if (step === 4) {
         // After destination selected, go to Smart Date Suggestion
-        setStep(3.5)
-      } else if (step === 3.5) {
+        setStep(4.5)
+      } else if (step === 4.5) {
         // After AI suggestion (or rejected), go to manual dates
-        setStep(4)
-      } else if (step < 6) {
+        setStep(5)
+      } else if (step < 7) {
         setStep((step + 1) as StepType)
       }
     }
@@ -156,12 +161,12 @@ export default function CreateTripScreen() {
 
   const handlePrevious = () => {
     if (step > 1) {
-      if (step === 3.5) {
+      if (step === 4.5) {
         // Go back from AI suggestion to destination selection
-        setStep(3)
-      } else if (step === 4) {
+        setStep(4)
+      } else if (step === 5) {
         // Go back from dates to AI suggestion
-        setStep(3.5)
+        setStep(4.5)
       } else {
         setStep((step - 1) as StepType)
       }
@@ -275,14 +280,14 @@ export default function CreateTripScreen() {
           <div
             className="mb-8 flex gap-2"
             role="progressbar"
-            aria-label={`Step ${step === 3.5 ? 3 : step} of 6`}
-            aria-valuenow={step === 3.5 ? 3 : step}
+            aria-label={`Step ${step === 4.5 ? 4 : step} of 7`}
+            aria-valuenow={step === 4.5 ? 4 : step}
             aria-valuemin={1}
-            aria-valuemax={6}
+            aria-valuemax={7}
           >
-            {[1, 2, 3, 4, 5, 6].map((s) => {
-              // Map steps: 1→1, 2→2, 3→3, 3.5→3, 4→4, 5→5, 6→6
-              const displayStep = step === 3.5 ? 3 : step
+            {[1, 2, 3, 4, 5, 6, 7].map((s) => {
+              // Map steps: 1→1, 2→2, 3→3, 4→4, 4.5→4, 5→5, 6→6, 7→7
+              const displayStep = step === 4.5 ? 4 : step
               return (
                 <div
                   key={s}
@@ -341,8 +346,72 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 3: Destination */}
+            {/* Step 3: Budget Selection */}
             {step === 3 && (
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-h2 font-bold text-slate-900 dark:text-white mb-2">
+                    {t('createTrip.selectBudget') || 'What\'s your budget?'}
+                  </h2>
+                  <p className="text-body text-slate-600 dark:text-slate-300 mb-6">
+                    {t('createTrip.budgetDescription') || 'Select your daily budget to personalize recommendations'}
+                  </p>
+
+                  <div className="grid grid-cols-1 gap-3">
+                    {[
+                      {
+                        value: 'ultra-economico' as BudgetPerDay,
+                        label: '$ Ultra Econômico',
+                        description: 'Hostels, street food, free activities',
+                      },
+                      {
+                        value: 'economico' as BudgetPerDay,
+                        label: '$$ Econômico',
+                        description: 'Budget hotels, casual dining',
+                      },
+                      {
+                        value: 'medio' as BudgetPerDay,
+                        label: '$$$ Médio',
+                        description: '3-4 star hotels, restaurants',
+                      },
+                      {
+                        value: 'premium' as BudgetPerDay,
+                        label: '$$$$ Premium',
+                        description: 'Upscale hotels, fine dining',
+                      },
+                      {
+                        value: 'luxo' as BudgetPerDay,
+                        label: '$$$$$ Luxo',
+                        description: '5-star hotels, exclusive experiences',
+                      },
+                    ].map((option) => (
+                      <button
+                        key={option.value}
+                        onClick={() =>
+                          setFormData((prev) => ({ ...prev, budgetPerDay: option.value }))
+                        }
+                        type="button"
+                        className={`p-4 rounded-lg text-left transition border-2 ${
+                          formData.budgetPerDay === option.value
+                            ? 'border-primary bg-primary/10 dark:bg-primary/20'
+                            : 'border-slate-200 dark:border-slate-700 hover:border-primary'
+                        }`}
+                      >
+                        <div className="font-semibold text-slate-900 dark:text-white">
+                          {option.label}
+                        </div>
+                        <div className="text-sm text-slate-600 dark:text-slate-300 mt-1">
+                          {option.description}
+                        </div>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Step 4: Destination */}
+            {step === 4 && (
               <DestinationSelector
                 tripTypes={formData.tripTypes}
                 budget={formData.budgetPerDay}
@@ -353,8 +422,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 3.5: Smart Date Suggestion (IA) */}
-            {step === 3.5 && formData.destination && (
+            {/* Step 4.5: Smart Date Suggestion (IA) */}
+            {step === 4.5 && formData.destination && (
               <SmartDateSuggestion
                 destination={formData.destination}
                 tripType={formData.tripTypes[0] || 'casal'}
@@ -367,17 +436,17 @@ export default function CreateTripScreen() {
                     startDate: suggestion.startDate,
                     endDate: suggestion.endDate,
                   }));
-                  setStep(4); // Próximo step
+                  setStep(5); // Próximo step
                 }}
                 onReject={() => {
                   // Mostra seletor manual de datas
-                  setStep(4);
+                  setStep(5);
                 }}
               />
             )}
 
-            {/* Step 4: Duration and Budget */}
-            {step === 4 && (
+            {/* Step 5: Duration and Budget */}
+            {step === 5 && (
               <DurationAndBudgetSelector
                 budgetPerDay={formData.budgetPerDay}
                 startDate={formData.startDate}
@@ -398,8 +467,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 5: Preview */}
-            {step === 5 && tripForPreview && (
+            {/* Step 6: Preview */}
+            {step === 6 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
                 onConfirm={handleSubmit}
@@ -409,8 +478,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 6: Success */}
-            {step === 6 && (
+            {/* Step 7: Success */}
+            {step === 7 && (
               <TripSuccess
                 tripId="new-trip"
                 tripName={formData.destination}
@@ -434,7 +503,7 @@ export default function CreateTripScreen() {
           </div>
 
           {/* Navigation Buttons */}
-          {step < 6 && (
+          {step < 7 && (
             <div className="flex gap-3">
               <Button
                 variant="secondary"
@@ -445,7 +514,7 @@ export default function CreateTripScreen() {
                 {t('common.previous') || 'Previous'}
               </Button>
 
-              {step < 5 ? (
+              {step < 6 ? (
                 <Button
                   variant="primary"
                   onClick={handleNext}
