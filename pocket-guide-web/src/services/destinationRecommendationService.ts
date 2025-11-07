@@ -288,6 +288,7 @@ function buildRecommendationPrompt(
 
 Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND correct seasonal hemisphere.`;
 
+  logger.info('🎯 Final Destination Recommendation Prompt:', { season, language, prompt });
   return prompt;
 }
 
@@ -313,6 +314,16 @@ export async function getGeminiDestinationRecommendations(
   }
 
   try {
+    // DEBUG: Log parameters being sent to Gemini
+    logger.info('📊 Destination Recommendations Parameters:', {
+      season,
+      language,
+      startDate,
+      endDate,
+      tripTypes: tripTypes.join(','),
+      interests: interests?.join(','),
+    });
+
     const systemPrompt = SYSTEM_PROMPTS[language as keyof typeof SYSTEM_PROMPTS] || SYSTEM_PROMPTS['en-US'];
     const userPrompt = buildRecommendationPrompt(
       tripTypes,

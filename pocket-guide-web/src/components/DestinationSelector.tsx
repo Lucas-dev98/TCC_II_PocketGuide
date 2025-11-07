@@ -114,9 +114,10 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     budget,
     startDate,
     endDate,
+    season,
     selectedMonth,
     i18n?.language,
-  ]); // Removed selectedDestination from dependencies
+  ]); // Added season to regenerate recommendations when season changes
 
   // Memoize selected destination info
   const selectedInfo = useMemo(
