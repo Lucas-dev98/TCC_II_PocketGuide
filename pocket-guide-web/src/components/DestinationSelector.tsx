@@ -21,6 +21,7 @@ interface DestinationSelectorProps {
   budget: BudgetPerDay;
   startDate?: string;
   endDate?: string;
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno';
   selectedMonth?: number;
   selectedDestination?: string;
   onDestinationChange: (destination: string) => void;
@@ -37,6 +38,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   budget,
   startDate,
   endDate,
+  season,
   selectedMonth,
   selectedDestination,
   onDestinationChange,
@@ -64,6 +66,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           budget,
           startDate,
           endDate,
+          season,
           selectedMonth,
           () => matchDestinations(
             tripTypes,

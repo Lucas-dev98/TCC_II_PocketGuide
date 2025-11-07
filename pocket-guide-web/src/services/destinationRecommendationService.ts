@@ -116,6 +116,7 @@ function buildRecommendationPrompt(
   budget: BudgetPerDay | undefined,
   startDate: string | undefined,
   endDate: string | undefined,
+  season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined
 ): string {
   const budgetDescriptions: Record<BudgetPerDay, string> = {
@@ -143,6 +144,13 @@ function buildRecommendationPrompt(
     'group': 'Large group',
   };
 
+  const seasonDescriptions: Record<string, string> = {
+    'primavera': 'Spring (April-May)',
+    'verão': 'Summer (June-August)',
+    'outono': 'Fall/Autumn (September-October)',
+    'inverno': 'Winter (November-March)',
+  };
+
   let prompt = `Recommend destinations based on these preferences:\n\n`;
 
   // Trip types
@@ -167,6 +175,11 @@ function buildRecommendationPrompt(
     prompt += `💰 Budget: ${budgetDescriptions[budget]}\n`;
   }
 
+  // Season
+  if (season && seasonDescriptions[season]) {
+    prompt += `🌍 Season: ${seasonDescriptions[season]}\n`;
+  }
+
   // Dates
   if (startDate && endDate) {
     const start = new Date(startDate);
@@ -178,7 +191,7 @@ function buildRecommendationPrompt(
     prompt += `📅 Preferred Month: ${months[month - 1]}\n`;
   }
 
-  prompt += `\nProvide 4-5 best destination recommendations considering ALL these factors.`;
+  prompt += `\nProvide 4-5 best destination recommendations considering ALL these factors. Focus on destinations that match the indicated season for optimal experience.`;
 
   return prompt;
 }
@@ -195,6 +208,7 @@ export async function getGeminiDestinationRecommendations(
   budget: BudgetPerDay | undefined,
   startDate: string | undefined,
   endDate: string | undefined,
+  season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
@@ -214,6 +228,7 @@ export async function getGeminiDestinationRecommendations(
       budget,
       startDate,
       endDate,
+      season,
       month
     );
 
@@ -299,6 +314,7 @@ export async function getHybridDestinationRecommendations(
   budget: BudgetPerDay | undefined,
   startDate: string | undefined,
   endDate: string | undefined,
+  season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
   fallbackFunction: () => DestinationScore[],
   language: string = 'pt-BR'
@@ -314,6 +330,7 @@ export async function getHybridDestinationRecommendations(
       budget,
       startDate,
       endDate,
+      season,
       month,
       language
     );
