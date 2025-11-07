@@ -548,7 +548,9 @@
       "noResults": "Ningún destino encontrado con ese nombre.",
       "destinationInfo": "Información del Destino",
       "matchPercentage": "Compatibilidad",
-      "selectDestination": "Seleccionar Destino"
+      "selectDestination": "Seleccionar Destino",
+      "loadingRecommendations": "🤖 Analizando tus preferencias...",
+      "loadingSubtitle": "Nuestra IA está buscando los mejores destinos para ti"
     },
     "step6": {
       "title": "⭐ Intereses",
