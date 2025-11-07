@@ -9,7 +9,6 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
 import { TravelTypeSelector } from '../components/TravelTypeSelector'
-import { SmartDateSuggestion } from '../components/SmartDateSuggestion'
 import { DurationAndBudgetSelector } from '../components/DurationAndBudgetSelector'
 import { GroupCompositionSelector } from '../components/GroupCompositionSelector'
 import { DestinationSelector } from '../components/DestinationSelector'
@@ -21,16 +20,15 @@ import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
 /**
- * CreateTripScreen - Trip Creation Flow with Date Selection Before Destination
+ * CreateTripScreen - Simplified Trip Creation Flow
  * 
- * Flow (Optimized Order):
+ * Flow (Simplified Order):
  * Step 1: Travel Type + Interests - Select trip type and interests together
  * Step 2: Group Composition + Budget - Select group type, number of people, and daily budget
- * Step 3: Duration + Dates + Month - Select travel dates and month preference
- * Step 4: Destination - Select destination after knowing trip dates
- * Step 5: Smart Date Suggestion - AI recommends best dates based on destination (optional)
- * Step 6: Trip Preview - Review all trip details
- * Step 7: Trip Success - Confirmation and next steps
+ * Step 3: Duration + Dates - Select travel dates
+ * Step 4: Destination - Select destination
+ * Step 5: Trip Preview - Review all trip details
+ * Step 6: Trip Success - Confirmation and next steps
  */
 
 interface TripFormData {
@@ -46,7 +44,7 @@ interface TripFormData {
   interests: string[];
 }
 
-type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type StepType = 1 | 2 | 3 | 4 | 5 | 6;
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -124,15 +122,11 @@ export default function CreateTripScreen() {
         return true
 
       case 5:
-        // Step 5: Smart Date Suggestion - always allowed (optional)
+        // Step 5: Preview - always allowed
         return true
 
       case 6:
-        // Step 6: Preview - always allowed
-        return true
-
-      case 7:
-        // Step 7: Success - always allowed
+        // Step 6: Success - always allowed
         return true
 
       default:
@@ -142,7 +136,7 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 7) {
+      if (step < 6) {
         setStep((step + 1) as StepType)
       }
     }
@@ -261,12 +255,12 @@ export default function CreateTripScreen() {
           <div
             className="mb-8 flex gap-2"
             role="progressbar"
-            aria-label={`Step ${step} of 7`}
+            aria-label={`Step ${step} of 6`}
             aria-valuenow={step}
             aria-valuemin={1}
-            aria-valuemax={7}
+            aria-valuemax={6}
           >
-            {[1, 2, 3, 4, 5, 6, 7].map((s) => (
+            {[1, 2, 3, 4, 5, 6].map((s) => (
               <div
                 key={s}
                 className={`flex-1 h-2 rounded-full transition ${
@@ -353,31 +347,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 5: Smart Date Suggestion (IA) */}
-            {step === 5 && formData.destination && (
-              <SmartDateSuggestion
-                destination={formData.destination}
-                tripType={formData.tripTypes[0] || 'casal'}
-                interests={formData.interests}
-                budget={formData.budgetPerDay}
-                onAccept={(suggestion) => {
-                  // Preenche datas automaticamente
-                  setFormData(prev => ({
-                    ...prev,
-                    startDate: suggestion.startDate,
-                    endDate: suggestion.endDate,
-                  }));
-                  setStep(6); // Próximo step
-                }}
-                onReject={() => {
-                  // Mostra preview
-                  setStep(6);
-                }}
-              />
-            )}
-
-            {/* Step 6: Preview */}
-            {step === 6 && tripForPreview && (
+            {/* Step 5: Preview */}
+            {step === 5 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
                 onConfirm={handleSubmit}
@@ -387,8 +358,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 7: Success */}
-            {step === 7 && (
+            {/* Step 6: Success */}
+            {step === 6 && (
               <TripSuccess
                 tripId="new-trip"
                 tripName={formData.destination}
@@ -412,7 +383,7 @@ export default function CreateTripScreen() {
           </div>
 
           {/* Navigation Buttons */}
-          {step < 7 && (
+          {step < 6 && (
             <div className="flex gap-3">
               <Button
                 variant="secondary"
@@ -423,7 +394,7 @@ export default function CreateTripScreen() {
                 {t('common.previous') || 'Previous'}
               </Button>
 
-              {step < 6 ? (
+              {step < 5 ? (
                 <Button
                   variant="primary"
                   onClick={handleNext}
