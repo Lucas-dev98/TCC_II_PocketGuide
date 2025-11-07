@@ -335,7 +335,7 @@ export default function HomeScreen() {
                     )}
                   </div>
                 </Card.Body>
-                </Card>
+              </Card>
               </div>
             ))}
           </div>
