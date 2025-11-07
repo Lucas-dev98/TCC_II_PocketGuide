@@ -164,7 +164,7 @@ export default function CreateTripScreen() {
 
       // Generate AI itinerary
       const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
-      await generateItinerary(
+      const itinerary = await generateItinerary(
         formData.destination,
         durationDays,
         formData.interests,
@@ -173,7 +173,7 @@ export default function CreateTripScreen() {
         currentLanguage
       )
 
-      // Create trip data
+      // Create trip data with itinerary
       const tripData: Trip = {
         id: crypto.randomUUID(),
         userId: user.uid,
@@ -186,6 +186,7 @@ export default function CreateTripScreen() {
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
         interests: formData.interests,
+        itinerary: itinerary, // Save the generated itinerary
         createdAt: new Date().toISOString(),
       }
 
