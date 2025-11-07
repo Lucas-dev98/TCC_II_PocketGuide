@@ -4,10 +4,8 @@ import { useTranslation } from 'react-i18next';
 interface DurationAndBudgetProps {
   startDate?: string;
   endDate?: string;
-  selectedMonth?: number;
   onStartDateChange?: (date: string) => void;
   onEndDateChange?: (date: string) => void;
-  onMonthChange?: (month: number) => void;
   disabled?: boolean;
 }
 
@@ -15,10 +13,8 @@ interface DurationAndBudgetProps {
 export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
   startDate,
   endDate,
-  selectedMonth,
   onStartDateChange,
   onEndDateChange,
-  onMonthChange,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -102,82 +98,6 @@ export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
           </div>
         )}
       </div>
-
-      {/* Season/Month Selection */}
-      <div>
-        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-          {t('newFlow.step2.selectBestMonth', '❓ Qual é o melhor mês?')}
-        </h3>
-
-        <p className="text-sm text-gray-600 dark:text-gray-400 mb-4">
-          {t('newFlow.step2.bestMonthDesc', 'Saiba quais meses têm melhor clima e menos multidões')}
-        </p>
-
-        <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
-          {[
-            { num: 1, label: 'Jan', color: 'border-red-500 dark:border-red-500', icon: '❌' },
-            { num: 2, label: 'Fev', color: 'border-red-500 dark:border-red-500', icon: '❌' },
-            { num: 3, label: 'Mar', color: 'border-yellow-500 dark:border-yellow-500', icon: '⚠️' },
-            { num: 4, label: 'Abr', color: 'border-green-500 dark:border-green-500', icon: '✅' },
-            { num: 5, label: 'Mai', color: 'border-green-500 dark:border-green-500', icon: '✅' },
-            { num: 6, label: 'Jun', color: 'border-yellow-500 dark:border-yellow-500', icon: '⚠️' },
-            { num: 7, label: 'Jul', color: 'border-yellow-500 dark:border-yellow-500', icon: '⚠️' },
-            { num: 8, label: 'Ago', color: 'border-yellow-500 dark:border-yellow-500', icon: '⚠️' },
-            { num: 9, label: 'Set', color: 'border-green-500 dark:border-green-500', icon: '✅' },
-            { num: 10, label: 'Out', color: 'border-green-500 dark:border-green-500', icon: '✅' },
-            { num: 11, label: 'Nov', color: 'border-yellow-500 dark:border-yellow-500', icon: '⚠️' },
-            { num: 12, label: 'Dez', color: 'border-red-500 dark:border-red-500', icon: '❌' },
-          ].map((month) => (
-            <button
-              key={month.num}
-              onClick={() => !disabled && onMonthChange?.(month.num)}
-              disabled={disabled}
-              className={`p-3 rounded-lg border-2 transition-all duration-200 text-center relative ${
-                selectedMonth === month.num
-                  ? `${month.color} bg-opacity-20 dark:bg-opacity-20`
-                  : `border-gray-300 dark:border-gray-600 hover:border-gray-400 dark:hover:border-gray-500`
-              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              title={month.label}
-            >
-              {selectedMonth === month.num && (
-                <div className="absolute -top-2 -right-2 w-5 h-5 bg-blue-500 rounded-full flex items-center justify-center border-2 border-white dark:border-gray-800">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              )}
-              <span className="text-lg mb-1">{month.icon}</span>
-              <div className="text-xs font-medium text-gray-900 dark:text-white">{month.label}</div>
-            </button>
-          ))}
-        </div>
-
-        <div className="mt-4 space-y-2">
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <span className="px-2 py-1 rounded border border-green-500 bg-green-50 dark:bg-green-900/20">✅</span>
-            <span>{t('newFlow.step2.bestMonths', 'Melhor época')}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <span className="px-2 py-1 rounded border border-yellow-500 bg-yellow-50 dark:bg-yellow-900/20">⚠️</span>
-            <span>{t('newFlow.step2.acceptableMonths', 'Período aceitável')}</span>
-          </div>
-          <div className="flex items-center gap-2 text-xs text-gray-600 dark:text-gray-400">
-            <span className="px-2 py-1 rounded border border-red-500 bg-red-50 dark:bg-red-900/20">❌</span>
-            <span>{t('newFlow.step2.avoidMonths', 'Evitar')}</span>
-          </div>
-        </div>
-      </div>
-
 
     </div>
   );

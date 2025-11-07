@@ -332,15 +332,11 @@ export default function CreateTripScreen() {
               <DurationAndBudgetSelector
                 startDate={formData.startDate}
                 endDate={formData.endDate}
-                selectedMonth={parseInt(formData.travelMonth)}
                 onStartDateChange={(startDate) =>
                   setFormData((prev) => ({ ...prev, startDate }))
                 }
                 onEndDateChange={(endDate) =>
                   setFormData((prev) => ({ ...prev, endDate }))
-                }
-                onMonthChange={(month) =>
-                  setFormData((prev) => ({ ...prev, travelMonth: month.toString() }))
                 }
               />
             )}
