@@ -395,6 +395,7 @@ export default function CreateTripScreen() {
                 budget={formData.budgetPerDay}
                 startDate={formData.startDate}
                 endDate={formData.endDate}
+                season={formData.season}
                 selectedMonth={parseInt(formData.travelMonth)}
                 selectedDestination={formData.destination}
                 onDestinationChange={(destination: string) =>

@@ -288,7 +288,25 @@ function buildRecommendationPrompt(
 
 Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND correct seasonal hemisphere.`;
 
-  logger.info('🎯 Final Destination Recommendation Prompt:', { season, language, prompt });
+  // DEBUG: Log all parameters and final prompt
+  console.log('════════════════════════════════════════════════════════');
+  console.log('🎯 DESTINATION RECOMMENDATION PARAMETERS:');
+  console.log('════════════════════════════════════════════════════════');
+  console.log('📍 Trip Types:', tripTypes.join(', '));
+  console.log('⭐ Interests:', interests?.join(', ') || 'None');
+  console.log('👥 Group Type:', groupType, '| People:', numPeople, '| Children:', numChildren);
+  console.log('💰 Budget:', budget);
+  console.log('📅 Dates:', startDate, 'to', endDate);
+  console.log('🌍 Season:', season || 'Not selected');
+  console.log('🗓️ Month:', month);
+  console.log('🌐 Language:', language);
+  console.log('════════════════════════════════════════════════════════');
+  console.log('📝 FULL PROMPT TO GEMINI:');
+  console.log('════════════════════════════════════════════════════════');
+  console.log(prompt);
+  console.log('════════════════════════════════════════════════════════');
+  
+  logger.info('🎯 Final Destination Recommendation Prompt:', { season, language });
   return prompt;
 }
 

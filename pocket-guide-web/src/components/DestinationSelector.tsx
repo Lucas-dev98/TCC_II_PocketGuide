@@ -57,6 +57,21 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     setIsLoading(true);
     const generateRecommendations = async () => {
       try {
+        // DEBUG: Log all parameters being passed to AI
+        console.log('🎯 DestinationSelector - Parameters for AI:', {
+          tripTypes,
+          interests,
+          groupType,
+          numPeople,
+          numChildren,
+          budget,
+          startDate,
+          endDate,
+          season,
+          selectedMonth,
+          language: i18n?.language || 'en-US',
+        });
+
         const recs = await getHybridDestinationRecommendations(
           tripTypes,
           interests,
