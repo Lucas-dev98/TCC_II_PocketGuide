@@ -58,6 +58,61 @@ interface GeminiActivity {
 }
 
 /**
+ * Validate itinerary for repetitions and fix if needed
+ */
+const validateAndFixItinerary = (itinerary: ItineraryItem[]): { valid: boolean; issues: string[] } => {
+  const issues: string[] = [];
+  const categories_by_day: Record<number, string[]> = {};
+  const names_by_day: Record<number, string[]> = {};
+  const all_categories: string[] = [];
+  const all_names: string[] = [];
+
+  itinerary.forEach((item) => {
+    const day = item.day;
+    
+    // Check for repeated categories in same day
+    if (!categories_by_day[day]) {
+      categories_by_day[day] = [];
+    }
+    if (categories_by_day[day].includes(item.category)) {
+      issues.push(`Day ${day}: Repeated category "${item.category}"`);
+    }
+    categories_by_day[day].push(item.category);
+
+    // Check for repeated names in same day
+    if (!names_by_day[day]) {
+      names_by_day[day] = [];
+    }
+    if (names_by_day[day].includes(item.name)) {
+      issues.push(`Day ${day}: Repeated activity name "${item.name}"`);
+    }
+    names_by_day[day].push(item.name);
+
+    // Check for repeated categories across days
+    if (all_categories.includes(item.category)) {
+      issues.push(`Repeated category "${item.category}" across different days`);
+    }
+    all_categories.push(item.category);
+
+    // Check for repeated names across all days
+    if (all_names.includes(item.name)) {
+      issues.push(`Repeated activity "${item.name}" across different days`);
+    }
+    all_names.push(item.name);
+  });
+
+  const valid = issues.length === 0;
+  if (!valid) {
+    console.warn('⚠️ ITINERARY VALIDATION ISSUES:');
+    issues.forEach((issue) => console.warn(`   - ${issue}`));
+  } else {
+    console.log('✅ ITINERARY VALIDATION PASSED - All activities are unique!');
+  }
+
+  return { valid, issues };
+};
+
+/**
  * Extract coordinates from API response
  * Handles multiple coordinate naming conventions
  */
@@ -175,6 +230,221 @@ const parseGeminiResponse = (textContent: string): any => {
     }
   }
 };
+/**
+ * Generate a diversified fallback itinerary when Gemini fails
+ * This creates varied activities based on tags and destination
+ */
+const generateDiversifiedFallbackItinerary = (
+  destination: string,
+  days: number,
+  tags: string[],
+  budget: string
+): ItineraryItem[] => {
+  // Predefined activity templates with variations
+  interface ActivityTemplate {
+    name: string;
+    duration: number;
+    category: string;
+    time: string;
+  }
+
+  const activityTemplates: Record<string, ActivityTemplate[]> = {
+    cultural: [
+      { name: 'Visit Historic Museum', duration: 120, category: 'Museum/Art', time: '09:00' },
+      { name: 'Explore Ancient Landmarks', duration: 150, category: 'Monument/Historical', time: '10:00' },
+      { name: 'Local Cultural Center Tour', duration: 90, category: 'Cultural Site', time: '14:00' },
+      { name: 'Art Gallery Walk', duration: 100, category: 'Museum/Art', time: '15:00' },
+      { name: 'Historical District Walking Tour', duration: 180, category: 'Monument/Historical', time: '09:30' },
+      { name: 'Heritage Site Exploration', duration: 140, category: 'Cultural Site', time: '11:00' },
+    ],
+    nature: [
+      { name: 'Mountain Hiking Adventure', duration: 240, category: 'Hiking/Trail', time: '07:00' },
+      { name: 'Beach Day & Water Activities', duration: 300, category: 'Beach/Water', time: '08:00' },
+      { name: 'National Park Exploration', duration: 200, category: 'Park/Nature', time: '09:00' },
+      { name: 'Sunset Viewing at Natural Park', duration: 120, category: 'Park/Nature', time: '17:00' },
+      { name: 'Tropical Garden Visit', duration: 100, category: 'Park/Nature', time: '10:00' },
+      { name: 'Waterfall Trek', duration: 210, category: 'Hiking/Trail', time: '08:30' },
+    ],
+    foodie: [
+      { name: 'Street Food & Market Tour', duration: 120, category: 'Food Local/Market', time: '11:00' },
+      { name: 'Fine Dining Experience', duration: 150, category: 'Restaurant Fine', time: '19:30' },
+      { name: 'Cooking Class with Local Chef', duration: 180, category: 'Food Experience', time: '14:00' },
+      { name: 'Farmers Market & Food Stalls', duration: 90, category: 'Food Local/Market', time: '08:00' },
+      { name: 'Street Food Evening Tour', duration: 120, category: 'Food Casual/Street', time: '18:00' },
+      { name: 'Traditional Restaurant Dinner', duration: 140, category: 'Restaurant Fine', time: '20:00' },
+    ],
+    shopping: [
+      { name: 'Local Market & Souvenirs', duration: 120, category: 'Shopping/Market', time: '10:00' },
+      { name: 'Artisan Craft Shop Tour', duration: 90, category: 'Shopping/Market', time: '11:00' },
+      { name: 'Downtown Shopping District', duration: 150, category: 'Shopping/Market', time: '13:00' },
+      { name: 'Night Market Exploration', duration: 120, category: 'Shopping/Market', time: '18:00' },
+      { name: 'Boutique District Walk', duration: 100, category: 'Shopping/Market', time: '15:00' },
+    ],
+    adventure: [
+      { name: 'Zip Line Adventure Park', duration: 180, category: 'Adventure/Active', time: '09:00' },
+      { name: 'Rock Climbing Experience', duration: 150, category: 'Adventure/Active', time: '08:30' },
+      { name: 'Skydiving or Extreme Sport', duration: 120, category: 'Adventure/Active', time: '10:00' },
+      { name: 'ATV Desert Ride', duration: 180, category: 'Adventure/Active', time: '14:00' },
+      { name: 'Surfing Lesson at Beach', duration: 120, category: 'Beach/Water', time: '09:00' },
+    ],
+    wellness: [
+      { name: 'Spa & Wellness Retreat', duration: 180, category: 'Spa/Wellness', time: '10:00' },
+      { name: 'Yoga Class in Nature', duration: 90, category: 'Spa/Wellness', time: '07:00' },
+      { name: 'Meditation & Mindfulness Session', duration: 60, category: 'Spa/Wellness', time: '18:00' },
+      { name: 'Traditional Massage Treatment', duration: 120, category: 'Spa/Wellness', time: '14:00' },
+    ],
+    nightlife: [
+      { name: 'Local Bar & Drinks', duration: 90, category: 'Bar/Drinks', time: '20:00' },
+      { name: 'Nightclub Experience', duration: 120, category: 'Club Nightlife', time: '22:00' },
+      { name: 'Live Music Venue', duration: 150, category: 'Bar/Drinks', time: '21:00' },
+      { name: 'Rooftop Bar with City View', duration: 100, category: 'Bar/Drinks', time: '19:30' },
+      { name: 'Casino & Entertainment', duration: 180, category: 'Club Nightlife', time: '21:00' },
+    ],
+  };
+
+  const defaultCoords: { [key: string]: [number, number] } = {
+    'paris': [48.8566, 2.3522],
+    'london': [51.5074, -0.1278],
+    'new york': [40.7128, -74.0060],
+    'tokyo': [35.6762, 139.6503],
+    'rio de janeiro': [-22.9068, -43.1729],
+    'barcelona': [41.3851, 2.1734],
+    'rome': [41.9028, 12.4964],
+    'dubai': [25.2048, 55.2708],
+    'singapore': [1.3521, 103.8198],
+    'bangkok': [13.7563, 100.5018],
+  };
+
+  const destLower = destination.toLowerCase();
+  const baseCoords = defaultCoords[destLower] || [0, 0];
+
+  const itinerary: ItineraryItem[] = [];
+  const usedActivities = new Set<string>();
+
+  // For each day and time slot
+  for (let day = 1; day <= days; day++) {
+    const times = ['09:00', '13:00', '18:00'];
+
+    for (let timeSlotIndex = 0; timeSlotIndex < 3; timeSlotIndex++) {
+      const time = times[timeSlotIndex];
+
+      // Rotate through activity categories based on day
+      let categoryPool: ActivityTemplate[] = [];
+
+      // Mix activities based on tag preferences and day rotation
+      if (day % 4 === 1 || tags.some(t => t.toLowerCase().includes('cultura'))) {
+        categoryPool = [...categoryPool, ...activityTemplates.cultural];
+      }
+      if (day % 4 === 2 || tags.some(t => t.toLowerCase().includes('natureza') || t.toLowerCase().includes('aventura'))) {
+        categoryPool = [...categoryPool, ...activityTemplates.nature];
+      }
+      if (day % 4 === 3 || tags.some(t => t.toLowerCase().includes('gastronomia'))) {
+        categoryPool = [...categoryPool, ...activityTemplates.foodie];
+      }
+      if (day % 4 === 0 || tags.some(t => t.toLowerCase().includes('compras'))) {
+        categoryPool = [...categoryPool, ...activityTemplates.shopping, ...activityTemplates.nightlife];
+      }
+
+      // Always include wellness and adventure as options
+      categoryPool = [...categoryPool, ...activityTemplates.wellness, ...activityTemplates.adventure];
+
+      // Filter out already used activities
+      const availableActivities = categoryPool.filter(
+        (activity) => !usedActivities.has(activity.name)
+      );
+
+      if (availableActivities.length === 0) {
+        // If all activities exhausted, cycle through again (should rarely happen)
+        categoryPool = activityTemplates.cultural.concat(
+          activityTemplates.nature,
+          activityTemplates.foodie,
+          activityTemplates.shopping
+        );
+      }
+
+      // Pick random activity from available
+      const selectedActivity =
+        availableActivities[Math.floor(Math.random() * availableActivities.length)] ||
+        categoryPool[Math.floor(Math.random() * categoryPool.length)];
+
+      // Avoid duplicate times on same day
+      let finalTime = time;
+      if (timeSlotIndex === 1) {
+        finalTime = `${12 + Math.floor(Math.random() * 3)}:${Math.random() > 0.5 ? '30' : '00'}`;
+      } else if (timeSlotIndex === 2) {
+        finalTime = `${17 + Math.floor(Math.random() * 5)}:${Math.random() > 0.5 ? '30' : '00'}`;
+      }
+
+      usedActivities.add(selectedActivity.name);
+
+      // Add slight random offset for coordinates
+      const lat = baseCoords[0] + (Math.random() - 0.5) * 0.1;
+      const lng = baseCoords[1] + (Math.random() - 0.5) * 0.1;
+
+      itinerary.push({
+        day,
+        time: finalTime,
+        name: selectedActivity.name,
+        duration: selectedActivity.duration,
+        reason: `Experience this ${selectedActivity.category.toLowerCase()} in ${destination}`,
+        tip: getBudgetAppropriateTips(budget)[Math.floor(Math.random() * 3)],
+        category: selectedActivity.category,
+        location: {
+          lat,
+          lng,
+        },
+      });
+    }
+  }
+
+  return itinerary;
+};
+
+/**
+ * Get tips based on budget
+ */
+const getBudgetAppropriateTips = (budget: string): string[] => {
+  const tipsByBudget: Record<string, string[]> = {
+    'ultra-economico': [
+      'Look for free walking tours',
+      'Eat where locals eat',
+      'Use public transport passes',
+      'Book activities in advance for discounts',
+      'Visit museums on free days',
+    ],
+    'economico': [
+      'Check for student or group discounts',
+      'Eat at local neighborhood restaurants',
+      'Use metro or public transport',
+      'Visit attractions early or late',
+      'Book combo tickets when available',
+    ],
+    'medio': [
+      'Book skip-the-line tickets online',
+      'Try mid-range restaurants',
+      'Use app-based transportation',
+      'Join group tours for better prices',
+      'Explore different neighborhoods',
+    ],
+    'premium': [
+      'Consider private tours',
+      'Book reservations at top restaurants',
+      'Use rideshare for convenience',
+      'Purchase VIP access when available',
+      'Enjoy fine dining experiences',
+    ],
+    'luxo': [
+      'Book private guides',
+      'Dine at Michelin-starred restaurants',
+      'Use premium car services',
+      'Purchase exclusive experiences',
+      'Enjoy luxury accommodations',
+    ],
+  };
+
+  return tipsByBudget[budget] || tipsByBudget['medio'];
+};
+
 export const generateItineraryWithGemini = async (
   destination: string,
   days: number,
@@ -232,10 +502,10 @@ export const generateItineraryWithGemini = async (
           },
         ],
         generationConfig: {
-          temperature: 0.3,
+          temperature: 0.8,
           maxOutputTokens: 4096,
-          topP: 0.8,
-          topK: 40,
+          topP: 0.9,
+          topK: 50,
         },
       }),
     });
@@ -307,6 +577,14 @@ export const generateItineraryWithGemini = async (
       }
     );
 
+    // Validate itinerary for repetitions
+    console.log('🔍 VALIDATING ITINERARY FOR REPETITIONS...');
+    const validation = validateAndFixItinerary(itineraryItems);
+    
+    if (!validation.valid) {
+      console.warn('⚠️ Itinerary has repetitions. Consider retrying with different parameters.');
+    }
+
     return {
       destination,
       days,
@@ -315,57 +593,35 @@ export const generateItineraryWithGemini = async (
     };
   } catch (error) {
     console.error('❌ Error generating itinerary with Gemini:', error);
-    console.warn('⚠️ Using fallback itinerary instead...');
+    console.warn('⚠️ Using enhanced fallback itinerary instead...');
     
-    // Default coordinates for common destinations
-    const defaultCoords: { [key: string]: [number, number] } = {
-      'paris': [48.8566, 2.3522],
-      'london': [51.5074, -0.1278],
-      'new york': [40.7128, -74.0060],
-      'tokyo': [35.6762, 139.6503],
-      'rio de janeiro': [-22.9068, -43.1729],
-      'barcelona': [41.3851, 2.1734],
-      'rome': [41.9028, 12.4964],
-      'dubai': [25.2048, 55.2708],
-      'singapore': [1.3521, 103.8198],
-      'bangkok': [13.7563, 100.5018],
-    };
+    // Generate a well-structured, diversified fallback
+    const fallbackActivities = generateDiversifiedFallbackItinerary(
+      destination,
+      days,
+      tags,
+      budget
+    );
+
+    // Validate fallback itinerary
+    console.log('🔍 VALIDATING FALLBACK ITINERARY...');
+    const validation = validateAndFixItinerary(fallbackActivities);
     
-    const destLower = destination.toLowerCase();
-    const baseCoords = defaultCoords[destLower] || [0, 0];
-    
-    // Fallback itinerary when Gemini fails
+    if (!validation.valid) {
+      console.warn('⚠️ Fallback itinerary has repetitions:');
+      validation.issues.forEach((issue) => console.warn(`   - ${issue}`));
+    } else {
+      console.log('✅ FALLBACK ITINERARY VALIDATION PASSED!');
+    }
+
     const fallbackItinerary: GeneratedItinerary = {
       destination,
       days,
-      itinerary: Array.from({ length: days * 3 }, (_, i) => {
-        // Add slight random offset for nearby attractions
-        const lat = baseCoords[0] + (Math.random() - 0.5) * 0.05;
-        const lng = baseCoords[1] + (Math.random() - 0.5) * 0.05;
-        
-        return {
-          day: Math.floor(i / 3) + 1,
-          time: ['09:00', '13:00', '18:00'][i % 3],
-          name: `Activity ${i + 1}`,
-          duration: 120,
-          reason: `Explore ${destination}`,
-          tip: 'Check opening hours and book in advance',
-          category: 'General',
-          location: {
-            lat,
-            lng,
-          },
-        };
-      }),
-      tips: [
-        `Start exploring ${destination} early in the morning`,
-        'Try local restaurants and cuisine',
-        'Take public transportation to save money',
-        'Visit popular attractions during off-peak hours',
-      ],
+      itinerary: fallbackActivities,
+      tips: getBudgetAppropriateTips(budget),
     };
     
-    console.log('📋 Using fallback itinerary:', fallbackItinerary);
+    console.log('📋 Using enhanced fallback itinerary with', fallbackActivities.length, 'diversified activities');
     return fallbackItinerary;
   }
 };

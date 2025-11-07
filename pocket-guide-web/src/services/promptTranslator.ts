@@ -75,140 +75,290 @@ export const generateItineraryPrompt = (
   const activitiesCount = days * 3;
   
   const prompts: Record<LanguageCode, string> = {
-    'pt-BR': `GERAR ROTEIRO DETALHADO E VARIADO PARA ${destination}
+    'pt-BR': `GERAR ROTEIRO 100% DIVERSIFICADO E CRIATIVO PARA ${destination}
 
-PARÂMETROS OBRIGATÓRIOS:
+🚨 PARÂMETROS OBRIGATÓRIOS:
 - Duração: ${days} dias
 - Orçamento: ${budgetDescription}
 - Grupo: ${groupType}
 - Interesses: ${tagsString}
 - Estação: ${season || 'não especificada'}
 
-REQUISITOS CRÍTICOS - LEIA COM ATENÇÃO:
-1. GERAR EXATAMENTE ${activitiesCount} ATIVIDADES (${days} por dia × 3 atividades/dia)
-2. VARIAR COMPLETAMENTE as atividades para cada dia:
-   - NÃO REPETIR atividades similares
-   - NÃO USAR as mesmas categorias dia após dia
-   - INCLUIR: museus, restaurantes, parques, monumentos, experiências locais, compras, vida noturna
-2. RESPEITAR O ORÇAMENTO ${budgetDescription}:
-   - Mostrar preços reais em USD ou moeda local
-   - Sugerir alternativas ao orçamento
-   - Não recomendar atividades caras para orçamentos baixos
-   - Incluir transporte, comida e entrada em preços
-4. ADAPTAR À ESTAÇÃO ${season || 'atual'}:
-   - Considerar clima e atividades sazonais
-   - Incluir eventos ou festival se relevante
-5. CADA ATIVIDADE DEVE TER:
-   - Horário realista (09:00-22:00)
-   - Duração em minutos
-   - Nome EXATO do local/restaurante
-   - Razão específica (não genérica)
-   - Dica prática
-   - Coordenadas GPS (ou deixe em 0 para auto-detectar)
+🎯 REQUISITOS CRÍTICOS - DEVE CUMPRIR TODOS:
 
-FORMATO JSON OBRIGATÓRIO (sem markdown, sem código blocks):
+1. EXATAMENTE ${activitiesCount} ATIVIDADES (${days} atividades por dia):
+   ✅ Total de atividades: ${activitiesCount}
+   ✅ Distribuição: 3 atividades por dia
+   ✅ Variação: cada dia DIFERENTE do anterior
+
+2. ZERO REPETIÇÃO - REGRA ABSOLUTA:
+   ❌ NÃO pode repetir NENHUMA atividade entre dias
+   ❌ NÃO pode repetir NENHUMA categoria entre dias
+   ❌ NÃO pode repetir NENHUM tipo de comida entre dias
+   ❌ NÃO pode repetir horário similar entre dias
+
+3. DIVERSIDADE FORÇADA - ESTRUTURA OBRIGATÓRIA POR DIA:
+   
+   Dia 1 - TIPO A: [Cultura Histórica] [Comida Local] [Entretenimento Noturno]
+   Dia 2 - TIPO B: [Natureza/Outdoor] [Comida Sofisticada] [Arte/Museu]
+   Dia 3 - TIPO C: [Experiência Imersiva] [Comida Casual] [Vida Noturna/Bar]
+   Dia 4 - TIPO D: [Compras/Mercado] [Comida Moderna] [Atividade Ativa]
+   
+   Se tiver mais dias, alternar entre TIPOS A, B, C, D
+
+4. CATEGORIAS PERMITIDAS (use 1 diferente por atividade):
+   ✅ Monumento/Histórico
+   ✅ Museu/Arte
+   ✅ Parque/Natureza
+   ✅ Praia/Água
+   ✅ Trilha/Hiking
+   ✅ Restaurante Fino
+   ✅ Comida Local/Mercado
+   ✅ Comida Casual/Rua
+   ✅ Comida Moderna/Fusion
+   ✅ Bar/Drinks
+   ✅ Clube Noturno
+   ✅ Compras/Shopping
+   ✅ Mercado Local
+   ✅ Experiência Aventureira
+   ✅ Spa/Wellness
+   
+5. RESPEITAR ORÇAMENTO ${budgetDescription}:
+   - Mostrar preço REAL em USD (não deixe em branco)
+   - Sugerir alternativas se caro
+   - NÃO recomendar atividades cara para orçamentos baixos
+   - Incluir: transporte, comida, entrada
+
+6. ADAPTAR À ESTAÇÃO ${season || 'atual'}:
+   - Considerar clima e atividades sazonais
+   - Incluir eventos/festival se relevante
+   - NÃO recomendar praia em inverno (a menos que hemisfério sul)
+
+7. CADA ATIVIDADE EXIGE:
+   - Horário REALISTA: 09:00-22:00 (não repetir de atividade anterior)
+   - Duração REAL em minutos (não deixar tudo 120)
+   - Nome EXATO do local/restaurante (pesquisável no Google Maps)
+   - Razão ESPECÍFICA (não genérica como "visitar monumento")
+   - Dica PRÁTICA (não frase comum)
+   - Coordenadas GPS ou deixar 0 (obrigatório para 60% das atividades)
+
+EXEMPLO DE VARIAÇÃO CORRETA (2 dias em Rio, Yoga, Médio):
+Dia 1: 
+  - 09:00: Christ Redeemer (Histórico) - Considerar a vista panorâmica
+  - 13:00: Frontera Grill (Comida Local) - Ceviche e peixe fresco
+  - 19:00: Lapa (Vida Noturna) - Samba ao vivo e caipirinha
+
+Dia 2:
+  - 08:00: Pedra do Telégrafo (Natureza) - Trilha com vista única
+  - 12:30: Açaí Bowl e Smoothies (Comida Saudável) - Pós trilha energético
+  - 20:00: Botafogo Praia Club (Bar/Drinks) - DJ set ao entardecer
+
+FORMATO JSON (sem markdown, sem código blocks, válido):
 {
   "itinerary": [
-    {"day": 1, "time": "09:00", "name": "Local Real", "duration": 120, "reason": "Descrição específica", "tip": "Dica útil", "category": "Categoria", "lat": -22.9068, "lng": -43.1729},
-    {"day": 1, "time": "13:00", "name": "Restaurante", "duration": 90, "reason": "Comida específica", "tip": "Reservar com antecedência", "category": "Food & Beverage", "lat": 0, "lng": 0}
+    {"day": 1, "time": "09:00", "name": "Nome Exato do Local", "duration": 120, "reason": "Razão específica", "tip": "Dica", "category": "Categoria", "lat": -22.9068, "lng": -43.1729},
+    {"day": 1, "time": "13:00", "name": "Restaurante Real", "duration": 90, "reason": "Tipo comida", "tip": "Reservar", "category": "Food", "lat": 0, "lng": 0}
   ]
 }
 
-EXEMPLO DE VARIAÇÃO (para 2 dias em Rio de Janeiro, Yoga, Orçamento Médio):
-Dia 1: Manhã=Yoga Studio, Meio-dia=Restaurante Vegetariano, Noite=Praia ao pôr-do-sol
-Dia 2: Manhã=Trilha na Floresta, Meio-dia=Mercado Orgânico, Noite=Show de Samba
+⚠️ VALIDAÇÃO FINAL ANTES DE RESPONDER:
+✓ Contei ${activitiesCount} atividades?
+✓ Cada dia tem categorias DIFERENTES?
+✓ Nenhuma atividade se repete?
+✓ Todos os preços foram informados?
+✓ Horários são DIFERENTES em cada atividade?
 
-COMECE GERANDO AGORA SEM EXPLICAÇÕES ADICIONAIS:`,
+RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 
-    'en-US': `GENERATE DETAILED AND VARIED ITINERARY FOR ${destination}
+    'en-US': `GENERATE 100% DIVERSIFIED AND CREATIVE ITINERARY FOR ${destination}
 
-MANDATORY PARAMETERS:
+🚨 MANDATORY PARAMETERS:
 - Duration: ${days} days
 - Budget: ${budgetDescription}
 - Group: ${groupType}
 - Interests: ${tagsString}
 - Season: ${season || 'not specified'}
 
-CRITICAL REQUIREMENTS - READ CAREFULLY:
-1. GENERATE EXACTLY ${activitiesCount} ACTIVITIES (${days} per day × 3 activities/day)
-2. VARY COMPLETELY the activities for each day:
-   - DO NOT REPEAT similar activities
-   - DO NOT USE the same categories day after day
-   - INCLUDE: museums, restaurants, parks, monuments, local experiences, shopping, nightlife
-3. RESPECT THE ${budgetDescription} BUDGET in each recommendation:
-   - Show real prices in USD or local currency
-   - Suggest budget-friendly alternatives
-   - Don't recommend expensive activities for low budgets
-   - Include transport, food, and entrance fees in prices
-4. ADAPT TO ${season || 'current'} SEASON:
-   - Consider weather and seasonal activities
-   - Include events or festivals if relevant
-5. EACH ACTIVITY MUST HAVE:
-   - Realistic time (09:00-22:00)
-   - Duration in minutes
-   - EXACT place/restaurant name
-   - Specific reason (not generic)
-   - Practical tip
-   - GPS coordinates (or leave 0 for auto-detect)
+🎯 CRITICAL REQUIREMENTS - MUST COMPLY WITH ALL:
 
-MANDATORY JSON FORMAT (no markdown, no code blocks):
+1. EXACTLY ${activitiesCount} ACTIVITIES (${days} activities per day):
+   ✅ Total activities: ${activitiesCount}
+   ✅ Distribution: 3 activities per day
+   ✅ Variation: each day DIFFERENT from previous
+
+2. ZERO REPETITION - ABSOLUTE RULE:
+   ❌ CANNOT repeat ANY activity between days
+   ❌ CANNOT repeat ANY category between days
+   ❌ CANNOT repeat ANY food type between days
+   ❌ CANNOT repeat similar time between days
+
+3. FORCED DIVERSITY - MANDATORY STRUCTURE PER DAY:
+   
+   Day 1 - TYPE A: [Historical Culture] [Local Food] [Nighttime Entertainment]
+   Day 2 - TYPE B: [Nature/Outdoor] [Upscale Food] [Art/Museum]
+   Day 3 - TYPE C: [Immersive Experience] [Casual Food] [Nightlife/Bar]
+   Day 4 - TYPE D: [Shopping/Market] [Modern Food] [Active Activity]
+   
+   If more days, alternate between TYPES A, B, C, D
+
+4. ALLOWED CATEGORIES (use 1 different per activity):
+   ✅ Monument/Historical
+   ✅ Museum/Art
+   ✅ Park/Nature
+   ✅ Beach/Water
+   ✅ Trail/Hiking
+   ✅ Fine Dining
+   ✅ Local Food/Market
+   ✅ Casual Food/Street
+   ✅ Modern Food/Fusion
+   ✅ Bar/Drinks
+   ✅ Nightclub
+   ✅ Shopping/Mall
+   ✅ Local Market
+   ✅ Adventure Experience
+   ✅ Spa/Wellness
+
+5. RESPECT ${budgetDescription} BUDGET:
+   - Show REAL price in USD (don't leave blank)
+   - Suggest alternatives if expensive
+   - DON'T recommend expensive activities for low budgets
+   - Include: transport, food, entrance
+
+6. ADAPT TO ${season || 'current'} SEASON:
+   - Consider weather and seasonal activities
+   - Include events/festivals if relevant
+   - DON'T recommend beach in winter (unless southern hemisphere)
+
+7. EACH ACTIVITY REQUIRES:
+   - REALISTIC time: 09:00-22:00 (don't repeat from previous activity)
+   - REAL duration in minutes (don't leave everything 120)
+   - EXACT place/restaurant name (searchable in Google Maps)
+   - SPECIFIC reason (not generic like "visit monument")
+   - PRACTICAL tip (not common phrase)
+   - GPS coordinates or leave 0 (mandatory for 60% of activities)
+
+CORRECT VARIATION EXAMPLE (2 days in New York, Yoga, Medium):
+Day 1:
+  - 09:00: Central Park Yoga Class (Historical) - Wellness in nature
+  - 13:00: Gramercy Tavern (Local Food) - Farm-to-table menu
+  - 19:00: Rooftop 230 Fifth (Nightlife) - Cocktails with skyline view
+
+Day 2:
+  - 08:00: Breakneck Ridge Trail (Nature) - Hiking with river views
+  - 12:30: Juice Bar in SOHO (Casual Food) - Post-hike smoothie
+  - 20:00: Blue Note Jazz Club (Bar/Culture) - Live jazz performance
+
+JSON FORMAT (no markdown, no code blocks, valid):
 {
   "itinerary": [
-    {"day": 1, "time": "09:00", "name": "Real Place", "duration": 120, "reason": "Specific description", "tip": "Useful tip", "category": "Category", "lat": 40.7128, "lng": -74.0060},
-    {"day": 1, "time": "13:00", "name": "Restaurant", "duration": 90, "reason": "Specific food", "tip": "Book in advance", "category": "Food & Beverage", "lat": 0, "lng": 0}
+    {"day": 1, "time": "09:00", "name": "Exact Place Name", "duration": 120, "reason": "Specific reason", "tip": "Tip", "category": "Category", "lat": 40.7128, "lng": -74.0060},
+    {"day": 1, "time": "13:00", "name": "Real Restaurant", "duration": 90, "reason": "Food type", "tip": "Book ahead", "category": "Food", "lat": 0, "lng": 0}
   ]
 }
 
-VARIATION EXAMPLE (for 2 days in New York, Yoga, Medium Budget):
-Day 1: Morning=Yoga Studio, Afternoon=Healthy Restaurant, Evening=Park Meditation
-Day 2: Morning=Hiking Trail, Afternoon=Organic Market, Evening=Live Jazz
+⚠️ FINAL VALIDATION BEFORE RESPONDING:
+✓ Did I count ${activitiesCount} activities?
+✓ Does each day have DIFFERENT categories?
+✓ Does no activity repeat?
+✓ Were all prices informed?
+✓ Are times DIFFERENT in each activity?
 
-GENERATE NOW WITHOUT ADDITIONAL EXPLANATIONS:`,
+RESPOND NOW - ONLY JSON, NO EXPLANATIONS:`,
 
-    'es-ES': `GENERAR ITINERARIO DETALLADO Y VARIADO PARA ${destination}
+    'es-ES': `GENERAR ITINERARIO 100% DIVERSIFICADO Y CREATIVO PARA ${destination}
 
-PARÁMETROS OBLIGATORIOS:
+🚨 PARÁMETROS OBLIGATORIOS:
 - Duración: ${days} días
 - Presupuesto: ${budgetDescription}
 - Grupo: ${groupType}
 - Intereses: ${tagsString}
 - Estación: ${season || 'no especificada'}
 
-REQUISITOS CRÍTICOS - LEA CUIDADOSAMENTE:
-1. GENERAR EXACTAMENTE ${activitiesCount} ACTIVIDADES (${days} por día × 3 actividades/día)
-2. VARIAR COMPLETAMENTE las actividades para cada día:
-   - NO REPETIR actividades similares
-   - NO USAR las mismas categorías día tras día
-   - INCLUIR: museos, restaurantes, parques, monumentos, experiencias locales, compras, vida nocturna
-3. RESPETAR EL PRESUPUESTO DE ${budgetDescription} en cada recomendación:
-   - Mostrar precios reales en USD o moneda local
-   - Sugerir alternativas económicas
-   - No recomendar actividades caras para presupuestos bajos
-   - Incluir transporte, comida y entradas en precios
-4. ADAPTAR A LA ESTACIÓN ${season || 'actual'}:
-   - Considerar clima y actividades estacionales
-   - Incluir eventos o festivales si es relevante
-5. CADA ACTIVIDAD DEBE TENER:
-   - Hora realista (09:00-22:00)
-   - Duración en minutos
-   - Nombre EXACTO del lugar/restaurante
-   - Razón específica (no genérica)
-   - Consejo práctico
-   - Coordenadas GPS (o dejar en 0 para auto-detectar)
+🎯 REQUISITOS CRÍTICOS - DEBE CUMPLIR TODOS:
 
-FORMATO JSON OBLIGATORIO (sin markdown, sin bloques de código):
+1. EXACTAMENTE ${activitiesCount} ACTIVIDADES (${days} actividades por día):
+   ✅ Total actividades: ${activitiesCount}
+   ✅ Distribución: 3 actividades por día
+   ✅ Variación: cada día DIFERENTE del anterior
+
+2. CERO REPETICIÓN - REGLA ABSOLUTA:
+   ❌ NO puede repetir NINGUNA actividad entre días
+   ❌ NO puede repetir NINGUNA categoría entre días
+   ❌ NO puede repetir NINGÚN tipo de comida entre días
+   ❌ NO puede repetir horario similar entre días
+
+3. DIVERSIDAD FORZADA - ESTRUCTURA OBLIGATORIA POR DÍA:
+   
+   Día 1 - TIPO A: [Cultura Histórica] [Comida Local] [Entretenimiento Nocturno]
+   Día 2 - TIPO B: [Naturaleza/Outdoor] [Comida Sofisticada] [Arte/Museo]
+   Día 3 - TIPO C: [Experiencia Inmersiva] [Comida Casual] [Vida Nocturna/Bar]
+   Día 4 - TIPO D: [Compras/Mercado] [Comida Moderna] [Actividad Activa]
+   
+   Si hay más días, alternar entre TIPOS A, B, C, D
+
+4. CATEGORÍAS PERMITIDAS (use 1 diferente por actividad):
+   ✅ Monumento/Histórico
+   ✅ Museo/Arte
+   ✅ Parque/Naturaleza
+   ✅ Playa/Agua
+   ✅ Senderismo/Trail
+   ✅ Restaurante Fino
+   ✅ Comida Local/Mercado
+   ✅ Comida Casual/Calle
+   ✅ Comida Moderna/Fusión
+   ✅ Bar/Tragos
+   ✅ Discoteca
+   ✅ Compras/Centro Comercial
+   ✅ Mercado Local
+   ✅ Experiencia Aventurera
+   ✅ Spa/Bienestar
+
+5. RESPETAR PRESUPUESTO ${budgetDescription}:
+   - Mostrar PRECIO REAL en USD (no dejar en blanco)
+   - Sugerir alternativas si es caro
+   - NO recomendar actividades caras para presupuestos bajos
+   - Incluir: transporte, comida, entrada
+
+6. ADAPTAR A LA ESTACIÓN ${season || 'actual'}:
+   - Considerar clima y actividades estacionales
+   - Incluir eventos/festivales si relevante
+   - NO recomendar playa en invierno (a menos que hemisferio sur)
+
+7. CADA ACTIVIDAD REQUIERE:
+   - Hora REALISTA: 09:00-22:00 (no repetir de actividad anterior)
+   - Duración REAL en minutos (no dejar todo 120)
+   - Nombre EXACTO del lugar/restaurante (buscable en Google Maps)
+   - Razón ESPECÍFICA (no genérica como "visitar monumento")
+   - Consejo PRÁCTICO (no frase común)
+   - Coordenadas GPS o dejar 0 (obligatorio para 60% de actividades)
+
+EJEMPLO DE VARIACIÓN CORRECTA (2 días en Barcelona, Yoga, Medio):
+Día 1:
+  - 09:00: Park Güell (Histórico) - Arquitectura modernista única
+  - 13:00: El Xampanyet (Comida Local) - Tapas y vino local
+  - 19:00: Sala Apolo (Vida Nocturna) - Concierto indie en vivo
+
+Día 2:
+  - 08:00: Montserrat Mountain Trail (Naturaleza) - Senderismo con vistas
+  - 12:30: Cal Pep (Comida Sofisticada) - Seafood gourmet
+  - 20:00: Vermouth Hour en La Ribera (Bar/Socializar) - Aperitivo tradicional
+
+FORMATO JSON (sin markdown, sin bloques de código, válido):
 {
   "itinerary": [
-    {"day": 1, "time": "09:00", "name": "Lugar Real", "duration": 120, "reason": "Descripción específica", "tip": "Consejo útil", "category": "Categoría", "lat": 41.3851, "lng": 2.1734},
-    {"day": 1, "time": "13:00", "name": "Restaurante", "duration": 90, "reason": "Comida específica", "tip": "Reservar con anticipación", "category": "Food & Beverage", "lat": 0, "lng": 0}
+    {"day": 1, "time": "09:00", "name": "Nombre Exacto del Lugar", "duration": 120, "reason": "Razón específica", "tip": "Consejo", "category": "Categoría", "lat": 41.3851, "lng": 2.1734},
+    {"day": 1, "time": "13:00", "name": "Restaurante Real", "duration": 90, "reason": "Tipo comida", "tip": "Reservar", "category": "Comida", "lat": 0, "lng": 0}
   ]
 }
 
-EJEMPLO DE VARIACIÓN (para 2 días en Barcelona, Yoga, Presupuesto Medio):
-Día 1: Mañana=Estudio de Yoga, Mediodía=Restaurante Vegetariano, Noche=Paseo Marinero
-Día 2: Mañana=Senderismo, Mediodía=Mercado Orgánico, Noche=Show de Flamenco
+⚠️ VALIDACIÓN FINAL ANTES DE RESPONDER:
+✓ ¿Conté ${activitiesCount} actividades?
+✓ ¿Cada día tiene categorías DIFERENTES?
+✓ ¿Ninguna actividad se repite?
+✓ ¿Se informaron todos los precios?
+✓ ¿Los horarios son DIFERENTES en cada actividad?
 
-GENERE AHORA SIN EXPLICACIONES ADICIONALES:`,
+RESPONDA AHORA - SOLO JSON, SIN EXPLICACIONES:`,
   };
 
   return prompts[language] || prompts['en-US'];
