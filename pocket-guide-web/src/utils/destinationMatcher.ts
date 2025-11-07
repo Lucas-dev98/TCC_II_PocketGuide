@@ -1,9 +1,9 @@
 /**
  * Destination matching engine based on user preferences
- * Scores destinations based on trip type, duration, budget, and season
+ * Scores destinations based on trip type, duration, budget, season, group composition, and interests
  */
 
-import { TripType, TripDuration, BudgetPerDay } from '../types';
+import { TripType, TripDuration, BudgetPerDay, GroupType } from '../types';
 import { getMonthStatus } from './seasonalData';
 
 export interface DestinationScore {
@@ -240,8 +240,14 @@ function getSeasonScore(
 
 export function matchDestinations(
   tripTypes: TripType[],
-  budget: BudgetPerDay,
-  month: number | '',
+  interests?: string[],
+  groupType?: GroupType,
+  _numPeople?: number,
+  _numChildren?: number,
+  budget?: BudgetPerDay,
+  _startDate?: string,
+  _endDate?: string,
+  month?: number | '',
   destination?: string
 ): DestinationScore[] {
   // If user manually selected a destination, return it with high score
@@ -262,32 +268,95 @@ export function matchDestinations(
     let score = 0;
     const reasons: string[] = [];
 
-    // Type matching (40% weight)
+    // Type matching (25% weight)
     const typeMatches = dest.types.filter((t) => tripTypes.includes(t));
-    const typeScore = (typeMatches.length / tripTypes.length) * 100;
-    score += typeScore * 0.4;
+    const typeScore = typeMatches.length > 0 ? 100 : 0;
+    score += typeScore * 0.25;
 
     if (typeMatches.length > 0) {
-      reasons.push(`✓ Atrai ${typeMatches.join(', ')}`);
+      reasons.push(`✓ Tipo de viagem: ${typeMatches.join(', ')}`);
     }
 
-    // Budget matching (35% weight - increased from 25%)
-    const budgetScore = getBudgetScore(
-      budget,
-      dest.budgetRange.min,
-      dest.budgetRange.max
-    );
-    score += budgetScore * 0.35;
+    // Interest-based matching (20% weight) - NEW
+    let interestScore = 0;
+    if (interests && interests.length > 0) {
+      // Map interests to destination types for better matching
+      const interestMapping: { [key: string]: TripType[] } = {
+        praia: ['relaxamento'],
+        montanha: ['aventura'],
+        cultural: ['cultura'],
+        gastronomia: ['exploracao'],
+        vida_noturna: ['diversao'],
+        natureza: ['aventura', 'relaxamento'],
+        história: ['cultura', 'exploracao'],
+        romance: ['romantica'],
+        história_local: ['cultura'],
+        aventura_extrema: ['aventura'],
+        relaxamento_spa: ['relaxamento'],
+      };
 
-    if (budgetScore === 100) {
+      const matchedInterests = interests.filter((interest) => {
+        const relatedTypes = interestMapping[interest] || [];
+        return relatedTypes.some((type) => dest.types.includes(type));
+      });
+
+      interestScore = matchedInterests.length > 0 ? 100 : 50;
+      if (matchedInterests.length > 0) {
+        reasons.push(`✓ Interesses: ${matchedInterests.join(', ')}`);
+      }
+    } else {
+      interestScore = 70; // Default score if no interests selected
+    }
+    score += interestScore * 0.2;
+
+    // Budget matching (25% weight)
+    let budgetScore = 0;
+    if (budget) {
+      budgetScore = getBudgetScore(budget, dest.budgetRange.min, dest.budgetRange.max);
+    } else {
+      budgetScore = 70; // Default score if no budget selected
+    }
+    score += budgetScore * 0.25;
+
+    if (budget && budgetScore === 100) {
       reasons.push(`✓ Orçamento perfeito`);
     }
 
-    // Season matching (25% weight - increased from 10%)
-    const seasonScore = getSeasonScore(month, dest.name);
-    score += seasonScore * 0.25;
+    // Group type suitability (15% weight) - NEW
+    let groupScore = 0;
+    if (groupType) {
+      // Destinations with diverse types tend to suit all group types
+      const destTypeCount = dest.types.length;
+      const baseGroupScore = Math.min(100, 50 + destTypeCount * 15);
 
-    if (month && seasonScore === 100) {
+      // Special considerations
+      if (groupType === 'casal' && dest.types.includes('romantica')) {
+        groupScore = 100;
+        reasons.push(`✓ Perfeito para casal`);
+      } else if (groupType === 'familia' && destTypeCount >= 2) {
+        groupScore = 95;
+        reasons.push(`✓ Bom para família`);
+      } else if (groupType === 'amigos' && (dest.types.includes('diversao') || dest.types.includes('aventura'))) {
+        groupScore = 100;
+        reasons.push(`✓ Ideal para amigos`);
+      } else {
+        groupScore = baseGroupScore;
+      }
+    } else {
+      groupScore = 70; // Default score
+    }
+    score += groupScore * 0.15;
+
+    // Season matching (15% weight - reduced from 25%)
+    let seasonScore = 0;
+    if (month && typeof month === 'number') {
+      seasonScore = getSeasonScore(month, dest.name);
+    } else {
+      seasonScore = 70; // No penalty if season not selected
+    }
+    score += seasonScore * 0.15;
+
+    if (month && typeof month === 'number' && seasonScore === 100) {
       reasons.push(`✓ Melhor época neste mês`);
     }
 
@@ -296,7 +365,7 @@ export function matchDestinations(
       country: dest.country,
       emoji: dest.emoji,
       score: Math.round(score),
-      reasons,
+      reasons: reasons.length > 0 ? reasons : ['Recomendação personalizada'],
       matchPercentage: Math.round(score),
     };
   });

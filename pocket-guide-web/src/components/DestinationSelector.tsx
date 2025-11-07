@@ -1,6 +1,6 @@
 import React, { useState, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TripType, BudgetPerDay } from '../types';
+import { TripType, BudgetPerDay, GroupType } from '../types';
 import {
   matchDestinations,
   getDestinationInfo,
@@ -10,7 +10,13 @@ import { CityAutocomplete } from './CityAutocomplete';
 
 interface DestinationSelectorProps {
   tripTypes: TripType[];
+  interests?: string[];
+  groupType?: GroupType;
+  numPeople?: number;
+  numChildren?: number;
   budget: BudgetPerDay;
+  startDate?: string;
+  endDate?: string;
   selectedMonth?: number;
   selectedDestination?: string;
   onDestinationChange: (destination: string) => void;
@@ -19,7 +25,13 @@ interface DestinationSelectorProps {
 
 export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   tripTypes,
+  interests,
+  groupType,
+  numPeople,
+  numChildren,
   budget,
+  startDate,
+  endDate,
   selectedMonth,
   selectedDestination,
   onDestinationChange,
@@ -32,11 +44,28 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     () =>
       matchDestinations(
         tripTypes,
+        interests,
+        groupType,
+        numPeople,
+        numChildren,
         budget,
+        startDate,
+        endDate,
         selectedMonth || '',
         selectedDestination
       ),
-    [tripTypes, budget, selectedMonth, selectedDestination]
+    [
+      tripTypes,
+      interests,
+      groupType,
+      numPeople,
+      numChildren,
+      budget,
+      startDate,
+      endDate,
+      selectedMonth,
+      selectedDestination,
+    ]
   );
 
   const handleSelectRecommendation = (destination: string) => {
