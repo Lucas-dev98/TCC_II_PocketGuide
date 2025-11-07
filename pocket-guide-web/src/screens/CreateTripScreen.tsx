@@ -176,7 +176,6 @@ export default function CreateTripScreen() {
 
       // Create trip data with itinerary
       const tripData: Trip = {
-        id: crypto.randomUUID(),
         userId: user.uid,
         destination: formData.destination,
         country: formData.destination, // Could be enhanced to extract country
@@ -189,7 +188,7 @@ export default function CreateTripScreen() {
         interests: formData.interests,
         itinerary: itinerary, // Save the generated itinerary
         createdAt: new Date().toISOString(),
-      }
+      } as Trip
 
       // Save trip and get ID
       const tripId = await addTrip(tripData)
