@@ -319,11 +319,15 @@ export default function TripDetailScreen() {
   // Load trips from Firestore if trip not found locally (only once)
   useEffect(() => {
     if (!trip && id && user?.uid && !hasTriedLoadingTrips) {
-      debug.log('🔄 Trip not found locally, loading from Firestore...');
+      debug.log('🔄 Trip not found locally, loading from Firestore...', { id, userId: user.uid });
       setHasTriedLoadingTrips(true);
-      loadTrips(user.uid);
+      loadTrips(user.uid).then(() => {
+        debug.log('✅ Trips loaded from Firestore');
+      }).catch((error) => {
+        debug.error('❌ Error loading trips:', error);
+      });
     }
-  }, [id, user?.uid]);
+  }, [id, user?.uid, hasTriedLoadingTrips]);
 
   // Carregar imagens das atrações
   useEffect(() => {
