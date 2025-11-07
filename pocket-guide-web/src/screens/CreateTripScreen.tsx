@@ -358,7 +358,6 @@ export default function CreateTripScreen() {
             {step === 5 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
-                onConfirm={handleSubmit}
                 onEdit={(stepNum) => {
                   setStep(stepNum as StepType)
                 }}

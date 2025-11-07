@@ -6,17 +6,13 @@ import { getInterestsByIds } from '../utils/interestsMatcher';
 
 interface TripPreviewProps {
   trip: Trip;
-  onConfirm: () => void;
   onEdit: (step: number) => void;
-  isLoading?: boolean;
   disabled?: boolean;
 }
 
 export const TripPreview: React.FC<TripPreviewProps> = ({
   trip,
-  onConfirm,
   onEdit,
-  isLoading = false,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -219,27 +215,6 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
           </div>
         </div>
       )}
-
-      {/* Action Buttons */}
-      <div className="flex gap-3">
-        <button
-          onClick={onConfirm}
-          disabled={disabled || isLoading || !trip.destination}
-          className="flex-1 px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold rounded-lg transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-        >
-          {isLoading ? (
-            <>
-              <span className="animate-spin">⏳</span>
-              {t('newFlow.step7.confirming')}
-            </>
-          ) : (
-            <>
-              <span>✅</span>
-              {t('newFlow.step7.confirm')}
-            </>
-          )}
-        </button>
-      </div>
 
       {/* Required Fields Warning */}
       {(!trip.destination || !trip.tripType || !trip.duration || !trip.budget) && (
