@@ -105,6 +105,60 @@ interface GeminiResponse {
 }
 
 /**
+ * Determines which hemisphere the user is in based on language
+ * pt-BR (Brazil) = Southern Hemisphere
+ * en-US (USA) & es-ES (Spain) = Northern Hemisphere
+ */
+function getHemisphere(language: string): 'north' | 'south' {
+  if (language === 'pt-BR') {
+    return 'south';
+  }
+  return 'north'; // Default to Northern Hemisphere for other locales
+}
+
+/**
+ * Detects the season based on the provided date and hemisphere
+ * 
+ * Northern Hemisphere (en-US, es-ES):
+ * - Primavera (Spring): March-May (months 3-5)
+ * - Verão (Summer): June-August (months 6-8)
+ * - Outono (Autumn): September-November (months 9-11)
+ * - Inverno (Winter): December-February (months 12, 1-2)
+ * 
+ * Southern Hemisphere (pt-BR):
+ * - Primavera (Spring): September-November (months 9-11)
+ * - Verão (Summer): December-February (months 12, 1-2)
+ * - Outono (Autumn): March-May (months 3-5)
+ * - Inverno (Winter): June-August (months 6-8)
+ */
+function detectSeasonFromDate(dateString: string, language: string = 'en-US'): 'primavera' | 'verão' | 'outono' | 'inverno' | undefined {
+  if (!dateString) return undefined;
+  
+  try {
+    const date = new Date(dateString);
+    const month = date.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
+    const hemisphere = getHemisphere(language);
+    
+    if (hemisphere === 'north') {
+      // Northern Hemisphere
+      if (month >= 3 && month <= 5) return 'primavera';
+      if (month >= 6 && month <= 8) return 'verão';
+      if (month >= 9 && month <= 11) return 'outono';
+      return 'inverno'; // December-February
+    } else {
+      // Southern Hemisphere (inverted)
+      if (month >= 9 && month <= 11) return 'primavera';
+      if (month >= 12 || month <= 2) return 'verão';
+      if (month >= 3 && month <= 5) return 'outono';
+      return 'inverno'; // June-August
+    }
+  } catch (error) {
+    logger.warn(`Error detecting season from date: ${dateString}`);
+    return undefined;
+  }
+}
+
+/**
  * Builds a comprehensive prompt for Gemini based on user preferences
  */
 function buildRecommendationPrompt(
@@ -117,7 +171,8 @@ function buildRecommendationPrompt(
   startDate: string | undefined,
   endDate: string | undefined,
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
-  month: number | undefined
+  month: number | undefined,
+  language: string = 'pt-BR'
 ): string {
   const budgetDescriptions: Record<BudgetPerDay, string> = {
     'ultra-economico': 'Ultra-economical (under €30/day)',
@@ -145,10 +200,10 @@ function buildRecommendationPrompt(
   };
 
   const seasonDescriptions: Record<string, string> = {
-    'primavera': 'Spring (April-May)',
-    'verão': 'Summer (June-August)',
-    'outono': 'Fall/Autumn (September-October)',
-    'inverno': 'Winter (November-March)',
+    'primavera': 'Spring (March-May) - mild weather, flowers, pleasant temperatures',
+    'verão': 'Summer (June-August) - hot weather, beach activities, outdoor events',
+    'outono': 'Autumn/Fall (September-November) - cool weather, colorful foliage, harvest season',
+    'inverno': 'Winter (December-February) - cold weather, snow activities, holiday season',
   };
 
   let prompt = `Recommend destinations based on these preferences:\n\n`;
@@ -175,23 +230,54 @@ function buildRecommendationPrompt(
     prompt += `💰 Budget: ${budgetDescriptions[budget]}\n`;
   }
 
-  // Season
-  if (season && seasonDescriptions[season]) {
-    prompt += `🌍 Season: ${seasonDescriptions[season]}\n`;
-  }
-
-  // Dates
+  // Dates and Season
   if (startDate && endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
     prompt += `📅 Dates: ${start.toLocaleDateString()} to ${end.toLocaleDateString()} (~${duration} days)\n`;
+    
+    // Use explicitly selected season if provided, otherwise auto-detect
+    if (season && seasonDescriptions[season]) {
+      prompt += `🌍 Season (User Preference): ${season} - ${seasonDescriptions[season]}\n`;
+    } else {
+      const detectedSeason = detectSeasonFromDate(startDate, language);
+      if (detectedSeason && seasonDescriptions[detectedSeason]) {
+        prompt += `🌍 Season (Auto-detected): ${detectedSeason} - ${seasonDescriptions[detectedSeason]}\n`;
+      }
+    }
   } else if (month) {
     const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
     prompt += `📅 Preferred Month: ${months[month - 1]}\n`;
+    
+    // Auto-detect season from month if not explicitly provided
+    const hemisphere = getHemisphere(language);
+    let detectedSeason: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined;
+    
+    if (hemisphere === 'north') {
+      detectedSeason = season || (month >= 3 && month <= 5 ? 'primavera' : month >= 6 && month <= 8 ? 'verão' : month >= 9 && month <= 11 ? 'outono' : 'inverno');
+    } else {
+      // Southern Hemisphere
+      detectedSeason = season || (month >= 9 && month <= 11 ? 'primavera' : month >= 12 || month <= 2 ? 'verão' : month >= 3 && month <= 5 ? 'outono' : 'inverno');
+    }
+    
+    if (detectedSeason && seasonDescriptions[detectedSeason]) {
+      prompt += `🌍 Season: ${detectedSeason} - ${seasonDescriptions[detectedSeason]}\n`;
+    }
+  } else if (season && seasonDescriptions[season]) {
+    // If no dates/month but season is provided
+    prompt += `🌍 Season Preference: ${season} - ${seasonDescriptions[season]}\n`;
   }
 
-  prompt += `\nProvide 4-5 best destination recommendations considering ALL these factors. Focus on destinations that match the indicated season for optimal experience.`;
+  prompt += `\n⚠️ CRITICAL INSTRUCTIONS:
+1. The user wants to travel DURING THESE DATES: ${startDate && endDate ? new Date(startDate).toLocaleDateString() + ' to ' + new Date(endDate).toLocaleDateString() : 'Month: ' + (month || 'not specified')}
+2. The user prefers the "${season}" season for their activities and weather preferences
+3. Recommend destinations where "${season}" season occurs during the specified travel dates
+4. Consider seasonal weather, activities, and events typical of "${season}" season
+5. Verify each destination's weather and seasonal conditions during the travel period
+6. Reject any destination that would be in unfavorable season during travel dates
+
+Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND season preference.`;
 
   return prompt;
 }
@@ -229,7 +315,8 @@ export async function getGeminiDestinationRecommendations(
       startDate,
       endDate,
       season,
-      month
+      month,
+      language
     );
 
     const requestBody: GeminiRequest = {
