@@ -194,6 +194,23 @@ export const generateItineraryWithGemini = async (
     const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season);
     const systemInstruction = getSystemInstruction(language);
 
+    // DEBUG: Log all parameters
+    console.log('════════════════════════════════════════════════════════');
+    console.log('🎫 ITINERARY GENERATION PARAMETERS:');
+    console.log('════════════════════════════════════════════════════════');
+    console.log('📍 Destination:', destination);
+    console.log('📅 Days:', days);
+    console.log('⭐ Tags/Interests:', tags.join(', '));
+    console.log('💰 Budget:', budget);
+    console.log('👥 Group Type:', groupType);
+    console.log('🌍 Season:', season || 'Not selected');
+    console.log('🌐 Language:', language);
+    console.log('════════════════════════════════════════════════════════');
+    console.log('📝 FULL PROMPT TO GEMINI:');
+    console.log('════════════════════════════════════════════════════════');
+    console.log(prompt);
+    console.log('════════════════════════════════════════════════════════');
+
     const response = await fetch(`${GEMINI_API_URL}?key=${GEMINI_API_KEY}`, {
       method: 'POST',
       headers: {

@@ -159,6 +159,19 @@ export const generateItinerary = async (
   season?: 'primavera' | 'verão' | 'outono' | 'inverno'
 ): Promise<ItineraryItem[]> => {
   try {
+    // DEBUG: Log ALL parameters received
+    console.log('════════════════════════════════════════════════════════');
+    console.log('🎯 ITINERARY GENERATOR - PARAMETERS RECEIVED:');
+    console.log('════════════════════════════════════════════════════════');
+    console.log('📍 Destination:', destination);
+    console.log('📅 Days:', days);
+    console.log('⭐ Tags/Interests:', tags.join(', '));
+    console.log('💰 BUDGET:', budget, '← CRITICAL!');
+    console.log('👥 Group Type:', groupType);
+    console.log('🌐 Language:', language);
+    console.log('🌍 Season:', season);
+    console.log('════════════════════════════════════════════════════════');
+
     logger.info('Generating itinerary', {
       destination,
       days,

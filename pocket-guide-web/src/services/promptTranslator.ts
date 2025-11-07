@@ -24,6 +24,41 @@ export const getSystemInstruction = (language: LanguageCode): string => {
 };
 
 /**
+ * Map budget codes to detailed descriptions with price ranges
+ */
+const getBudgetDescription = (budget: string, language: LanguageCode): string => {
+  const budgetMappings: Record<string, Record<LanguageCode, string>> = {
+    'ultra-economico': {
+      'pt-BR': 'Ultra-econômico (menos de €30/dia) - Hospedagem compartilhada, refeições em lanchonetes, atrações gratuitas',
+      'en-US': 'Ultra-economical (under €30/day) - Shared accommodation, street food, free attractions',
+      'es-ES': 'Ultra-económico (menos de €30/día) - Alojamiento compartido, comida callejera, atracciones gratuitas',
+    },
+    'economico': {
+      'pt-BR': 'Econômico (€30-€60/dia) - Hospedagem simples, restaurantes locais, museus com desconto',
+      'en-US': 'Economical (€30-€60/day) - Budget accommodation, local restaurants, discounted museums',
+      'es-ES': 'Económico (€30-€60/día) - Alojamiento presupuestario, restaurantes locales, museos con descuento',
+    },
+    'medio': {
+      'pt-BR': 'Médio (€60-€150/dia) - Hotel 3 estrelas, restaurantes variados, atividades pagas',
+      'en-US': 'Mid-range (€60-€150/day) - 3-star hotel, variety of restaurants, paid activities',
+      'es-ES': 'Medio (€60-€150/día) - Hotel de 3 estrellas, restaurantes variados, actividades pagadas',
+    },
+    'premium': {
+      'pt-BR': 'Premium (€150-€300/dia) - Hotel 4 estrelas, restaurantes sofisticados, tours privados',
+      'en-US': 'Premium (€150-€300/day) - 4-star hotel, upscale restaurants, private tours',
+      'es-ES': 'Premium (€150-€300/día) - Hotel de 4 estrellas, restaurantes de lujo, tours privados',
+    },
+    'luxo': {
+      'pt-BR': 'Luxo (mais de €300/dia) - Hotel 5 estrelas, restaurantes Michelin, experiências exclusivas',
+      'en-US': 'Luxury (over €300/day) - 5-star hotel, Michelin restaurants, exclusive experiences',
+      'es-ES': 'Lujo (más de €300/día) - Hotel de 5 estrellas, restaurantes Michelin, experiencias exclusivas',
+    },
+  };
+
+  return budgetMappings[budget]?.[language] || budgetMappings['medio'][language];
+};
+
+/**
  * Generate itinerary prompt in the specified language
  */
 export const generateItineraryPrompt = (
@@ -36,30 +71,147 @@ export const generateItineraryPrompt = (
   season?: 'primavera' | 'verão' | 'outono' | 'inverno'
 ): string => {
   const tagsString = tags.join(', ');
-  const seasonInfo = season ? ` (estação: ${season})` : '';
+  const budgetDescription = getBudgetDescription(budget, language);
+  const activitiesCount = days * 3;
   
-  const prompts: Record<LanguageCode, (days: number, dest: string, budget: string, group: string, tags: string, season: string) => string> = {
-    'pt-BR': (days, dest, budget, group, tags, season) => 
-      `Gere um roteiro de ${days} dias para ${dest} (orçamento ${budget}, grupo ${group}, interesses: ${tags}${season})
-Retorne apenas JSON com ${days * 3} atividades no seguinte formato:
-{"itinerary":[{"day":1,"time":"09:00","name":"Local","duration":120,"reason":"Por que visitar","tip":"Dica útil","category":"Categoria","lat":0,"lng":0}]}
-As atividades devem estar em português, incluir nomes reais de locais, horários realistas e dicas práticas. Adapte as atividades à estação indicada.`,
-    
-    'en-US': (days, dest, budget, group, tags, season) =>
-      `Generate a ${days}-day itinerary for ${dest} (${budget} budget, ${group} group, interests: ${tags}${season})
-Return only JSON with ${days * 3} activities in the following format:
-{"itinerary":[{"day":1,"time":"09:00","name":"Place","duration":120,"reason":"Why visit","tip":"Practical tip","category":"Category","lat":0,"lng":0}]}
-Activities should include real place names, realistic times, and practical tips. Adapt activities to the indicated season.`,
-    
-    'es-ES': (days, dest, budget, group, tags, season) =>
-      `Genere un itinerario de ${days} días para ${dest} (presupuesto ${budget}, grupo ${group}, intereses: ${tags}${season})
-Devuelva solo JSON con ${days * 3} actividades en el siguiente formato:
-{"itinerary":[{"day":1,"time":"09:00","name":"Lugar","duration":120,"reason":"Por qué visitar","tip":"Consejo práctico","category":"Categoría","lat":0,"lng":0}]}
-Las actividades deben incluir nombres de lugares reales, horarios realistas y consejos prácticos. Adapte las actividades a la estación indicada.`,
+  const prompts: Record<LanguageCode, string> = {
+    'pt-BR': `GERAR ROTEIRO DETALHADO E VARIADO PARA ${destination}
+
+PARÂMETROS OBRIGATÓRIOS:
+- Duração: ${days} dias
+- Orçamento: ${budgetDescription}
+- Grupo: ${groupType}
+- Interesses: ${tagsString}
+- Estação: ${season || 'não especificada'}
+
+REQUISITOS CRÍTICOS - LEIA COM ATENÇÃO:
+1. GERAR EXATAMENTE ${activitiesCount} ATIVIDADES (${days} por dia × 3 atividades/dia)
+2. VARIAR COMPLETAMENTE as atividades para cada dia:
+   - NÃO REPETIR atividades similares
+   - NÃO USAR as mesmas categorias dia após dia
+   - INCLUIR: museus, restaurantes, parques, monumentos, experiências locais, compras, vida noturna
+2. RESPEITAR O ORÇAMENTO ${budgetDescription}:
+   - Mostrar preços reais em USD ou moeda local
+   - Sugerir alternativas ao orçamento
+   - Não recomendar atividades caras para orçamentos baixos
+   - Incluir transporte, comida e entrada em preços
+4. ADAPTAR À ESTAÇÃO ${season || 'atual'}:
+   - Considerar clima e atividades sazonais
+   - Incluir eventos ou festival se relevante
+5. CADA ATIVIDADE DEVE TER:
+   - Horário realista (09:00-22:00)
+   - Duração em minutos
+   - Nome EXATO do local/restaurante
+   - Razão específica (não genérica)
+   - Dica prática
+   - Coordenadas GPS (ou deixe em 0 para auto-detectar)
+
+FORMATO JSON OBRIGATÓRIO (sem markdown, sem código blocks):
+{
+  "itinerary": [
+    {"day": 1, "time": "09:00", "name": "Local Real", "duration": 120, "reason": "Descrição específica", "tip": "Dica útil", "category": "Categoria", "lat": -22.9068, "lng": -43.1729},
+    {"day": 1, "time": "13:00", "name": "Restaurante", "duration": 90, "reason": "Comida específica", "tip": "Reservar com antecedência", "category": "Food & Beverage", "lat": 0, "lng": 0}
+  ]
+}
+
+EXEMPLO DE VARIAÇÃO (para 2 dias em Rio de Janeiro, Yoga, Orçamento Médio):
+Dia 1: Manhã=Yoga Studio, Meio-dia=Restaurante Vegetariano, Noite=Praia ao pôr-do-sol
+Dia 2: Manhã=Trilha na Floresta, Meio-dia=Mercado Orgânico, Noite=Show de Samba
+
+COMECE GERANDO AGORA SEM EXPLICAÇÕES ADICIONAIS:`,
+
+    'en-US': `GENERATE DETAILED AND VARIED ITINERARY FOR ${destination}
+
+MANDATORY PARAMETERS:
+- Duration: ${days} days
+- Budget: ${budgetDescription}
+- Group: ${groupType}
+- Interests: ${tagsString}
+- Season: ${season || 'not specified'}
+
+CRITICAL REQUIREMENTS - READ CAREFULLY:
+1. GENERATE EXACTLY ${activitiesCount} ACTIVITIES (${days} per day × 3 activities/day)
+2. VARY COMPLETELY the activities for each day:
+   - DO NOT REPEAT similar activities
+   - DO NOT USE the same categories day after day
+   - INCLUDE: museums, restaurants, parks, monuments, local experiences, shopping, nightlife
+3. RESPECT THE ${budgetDescription} BUDGET in each recommendation:
+   - Show real prices in USD or local currency
+   - Suggest budget-friendly alternatives
+   - Don't recommend expensive activities for low budgets
+   - Include transport, food, and entrance fees in prices
+4. ADAPT TO ${season || 'current'} SEASON:
+   - Consider weather and seasonal activities
+   - Include events or festivals if relevant
+5. EACH ACTIVITY MUST HAVE:
+   - Realistic time (09:00-22:00)
+   - Duration in minutes
+   - EXACT place/restaurant name
+   - Specific reason (not generic)
+   - Practical tip
+   - GPS coordinates (or leave 0 for auto-detect)
+
+MANDATORY JSON FORMAT (no markdown, no code blocks):
+{
+  "itinerary": [
+    {"day": 1, "time": "09:00", "name": "Real Place", "duration": 120, "reason": "Specific description", "tip": "Useful tip", "category": "Category", "lat": 40.7128, "lng": -74.0060},
+    {"day": 1, "time": "13:00", "name": "Restaurant", "duration": 90, "reason": "Specific food", "tip": "Book in advance", "category": "Food & Beverage", "lat": 0, "lng": 0}
+  ]
+}
+
+VARIATION EXAMPLE (for 2 days in New York, Yoga, Medium Budget):
+Day 1: Morning=Yoga Studio, Afternoon=Healthy Restaurant, Evening=Park Meditation
+Day 2: Morning=Hiking Trail, Afternoon=Organic Market, Evening=Live Jazz
+
+GENERATE NOW WITHOUT ADDITIONAL EXPLANATIONS:`,
+
+    'es-ES': `GENERAR ITINERARIO DETALLADO Y VARIADO PARA ${destination}
+
+PARÁMETROS OBLIGATORIOS:
+- Duración: ${days} días
+- Presupuesto: ${budgetDescription}
+- Grupo: ${groupType}
+- Intereses: ${tagsString}
+- Estación: ${season || 'no especificada'}
+
+REQUISITOS CRÍTICOS - LEA CUIDADOSAMENTE:
+1. GENERAR EXACTAMENTE ${activitiesCount} ACTIVIDADES (${days} por día × 3 actividades/día)
+2. VARIAR COMPLETAMENTE las actividades para cada día:
+   - NO REPETIR actividades similares
+   - NO USAR las mismas categorías día tras día
+   - INCLUIR: museos, restaurantes, parques, monumentos, experiencias locales, compras, vida nocturna
+3. RESPETAR EL PRESUPUESTO DE ${budgetDescription} en cada recomendación:
+   - Mostrar precios reales en USD o moneda local
+   - Sugerir alternativas económicas
+   - No recomendar actividades caras para presupuestos bajos
+   - Incluir transporte, comida y entradas en precios
+4. ADAPTAR A LA ESTACIÓN ${season || 'actual'}:
+   - Considerar clima y actividades estacionales
+   - Incluir eventos o festivales si es relevante
+5. CADA ACTIVIDAD DEBE TENER:
+   - Hora realista (09:00-22:00)
+   - Duración en minutos
+   - Nombre EXACTO del lugar/restaurante
+   - Razón específica (no genérica)
+   - Consejo práctico
+   - Coordenadas GPS (o dejar en 0 para auto-detectar)
+
+FORMATO JSON OBLIGATORIO (sin markdown, sin bloques de código):
+{
+  "itinerary": [
+    {"day": 1, "time": "09:00", "name": "Lugar Real", "duration": 120, "reason": "Descripción específica", "tip": "Consejo útil", "category": "Categoría", "lat": 41.3851, "lng": 2.1734},
+    {"day": 1, "time": "13:00", "name": "Restaurante", "duration": 90, "reason": "Comida específica", "tip": "Reservar con anticipación", "category": "Food & Beverage", "lat": 0, "lng": 0}
+  ]
+}
+
+EJEMPLO DE VARIACIÓN (para 2 días en Barcelona, Yoga, Presupuesto Medio):
+Día 1: Mañana=Estudio de Yoga, Mediodía=Restaurante Vegetariano, Noche=Paseo Marinero
+Día 2: Mañana=Senderismo, Mediodía=Mercado Orgánico, Noche=Show de Flamenco
+
+GENERE AHORA SIN EXPLICACIONES ADICIONALES:`,
   };
-  
-  const promptGenerator = prompts[language] || prompts['en-US'];
-  return promptGenerator(days, destination, budget, groupType, tagsString, seasonInfo);
+
+  return prompts[language] || prompts['en-US'];
 };
 
 /**
