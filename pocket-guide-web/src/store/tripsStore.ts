@@ -135,11 +135,27 @@ export const useTripsStore = create<TripsStoreState>()(
         try {
           set({ isLoading: true, error: null });
 
+          // Delete from Firestore first
           await deleteDoc(doc(db, 'trips', tripId));
 
-          set((state) => ({
-            trips: state.trips.filter((t) => t.id !== tripId),
-          }));
+          // Then update the local state immediately
+          set((state) => {
+            const updatedTrips = state.trips.filter((t) => t.id !== tripId);
+            
+            // Force sync to localStorage immediately
+            const storageKey = 'trips-store';
+            localStorage.setItem(
+              storageKey,
+              JSON.stringify({
+                state: { trips: updatedTrips },
+                version: 0,
+              })
+            );
+            
+            console.log('✅ Trip deleted:', tripId, 'Remaining trips:', updatedTrips.length);
+            
+            return { trips: updatedTrips };
+          });
         } catch (error) {
           console.error('Erro ao deletar viagem:', error);
           set({
