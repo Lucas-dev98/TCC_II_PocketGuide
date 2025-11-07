@@ -17,6 +17,9 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
 }) => {
   const { t } = useTranslation();
 
+  // DEBUG: Log budget received
+  console.log('🎯 TripPreview received - trip.budgetPerDay:', trip.budgetPerDay);
+
   const destinationInfo = useMemo(
     () => (trip.destination ? getDestinationInfo(trip.destination) : undefined),
     [trip.destination]
@@ -61,7 +64,9 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
       premium: t('newFlow.step2.premium'),
       luxo: t('newFlow.step2.luxo'),
     };
-    return budget ? labels[budget] : t('newFlow.step7.notSelected');
+    const result = budget ? labels[budget] : t('newFlow.step7.notSelected');
+    console.log('🎯 getBudgetLabel - Input budget:', budget, '| Output label:', result);
+    return result;
   };
 
   const getGroupLabel = (group?: GroupType) => {
@@ -100,14 +105,28 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
         />
 
         {/* Step 2: Group & Budget */}
-        <PreviewCard
-          step={2}
-          title={t('newFlow.step2.title')}
-          emoji="👥"
-          value={`${getGroupLabel(trip.groupType)} • ${getBudgetLabel(trip.budgetPerDay)}`}
-          onEdit={() => onEdit(2)}
-          disabled={disabled}
-        />
+        {(() => {
+          const groupLabel = getGroupLabel(trip.groupType);
+          const budgetLabel = getBudgetLabel(trip.budgetPerDay);
+          const displayValue = `${groupLabel} • ${budgetLabel}`;
+          console.log('🎯 TripPreview Step 2 Display:', {
+            tripGroupType: trip.groupType,
+            tripBudgetPerDay: trip.budgetPerDay,
+            groupLabel,
+            budgetLabel,
+            displayValue,
+          });
+          return (
+            <PreviewCard
+              step={2}
+              title={t('newFlow.step2.title')}
+              emoji="👥"
+              value={displayValue}
+              onEdit={() => onEdit(2)}
+              disabled={disabled}
+            />
+          );
+        })()}
 
         {/* Step 3: Dates */}
         <PreviewCard

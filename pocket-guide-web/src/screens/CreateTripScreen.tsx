@@ -266,6 +266,10 @@ export default function CreateTripScreen() {
     createdAt: new Date().toISOString(),
   } : null
 
+  // DEBUG: Log budget value for TripPreview
+  console.log('🎯 CreateTripScreen - tripForPreview.budgetPerDay:', tripForPreview?.budgetPerDay);
+  console.log('🎯 CreateTripScreen - formData.budgetPerDay:', formData.budgetPerDay);
+
   return (
     <MainLayout>
       <LoadingOverlay
@@ -360,9 +364,10 @@ export default function CreateTripScreen() {
                 onNumChildrenChange={(numChildren) =>
                   setFormData((prev) => ({ ...prev, numChildren }))
                 }
-                onBudgetChange={(budgetPerDay) =>
-                  setFormData((prev) => ({ ...prev, budgetPerDay }))
-                }
+                onBudgetChange={(budgetPerDay) => {
+                  console.log('🎯 CreateTripScreen - Budget changed to:', budgetPerDay);
+                  setFormData((prev) => ({ ...prev, budgetPerDay }));
+                }}
               />
             )}
 

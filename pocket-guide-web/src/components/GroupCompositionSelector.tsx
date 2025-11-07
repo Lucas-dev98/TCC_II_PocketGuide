@@ -282,7 +282,10 @@ export const GroupCompositionSelector: React.FC<GroupCompositionSelectorProps> =
           {BUDGET_OPTIONS.map((opt) => (
             <button
               key={opt.id}
-              onClick={() => !disabled && onBudgetChange?.(opt.id)}
+              onClick={() => {
+                console.log('🎯 Budget Selected:', opt.id);
+                !disabled && onBudgetChange?.(opt.id);
+              }}
               disabled={disabled}
               className={`p-3 rounded-lg border-2 transition-all duration-200 text-center relative ${
                 budgetPerDay === opt.id
