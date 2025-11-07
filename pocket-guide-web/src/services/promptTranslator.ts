@@ -241,3 +241,187 @@ export const getErrorMessage = (errorType: string, language: LanguageCode): stri
   
   return errorMessages[errorType]?.[language] || 'An error occurred';
 };
+
+/**
+ * Get system instruction for date recommendations
+ */
+export const getSystemInstructionForDates = (language: LanguageCode = 'pt-BR'): string => {
+  const instructions: Record<LanguageCode, string> = {
+    'pt-BR': `Você é um especialista em planejamento de viagens com profundo conhecimento de:
+- Melhor época para cada destino (clima, preços, eventos, turismo)
+- Padrões sazonais e variações climáticas mundiais
+- Períodos de festas e eventos culturais
+- Flutuações de preço de viagens por temporada
+
+Quando um usuário descreve uma viagem, você fornecerá exatamente 3 recomendações de datas com:
+1. Período específico (data início e fim)
+2. Motivos em 4 categorias: clima, multidão, orçamento, eventos
+3. Score de confiança (1-100)
+4. Emoji representativo
+
+Responda SEMPRE em JSON válido, nunca em markdown.`,
+    
+    'en-US': `You are an expert travel planning specialist with deep knowledge of:
+- Best season for each destination (weather, prices, events, tourism)
+- Seasonal patterns and climate variations worldwide
+- Holiday and cultural event periods
+- Travel price fluctuations by season
+
+When a user describes a trip, provide exactly 3 date recommendations with:
+1. Specific period (start and end date)
+2. Reasons in 4 categories: climate, crowds, budget, events
+3. Confidence score (1-100)
+4. Representative emoji
+
+Always respond in valid JSON, never in markdown.`,
+    
+    'es-ES': `Eres un especialista en planificación de viajes con profundo conocimiento de:
+- Mejor época para cada destino (clima, precios, eventos, turismo)
+- Patrones estacionales y variaciones climáticas mundiales
+- Períodos de fiestas y eventos culturales
+- Fluctuaciones de precios de viajes por temporada
+
+Cuando un usuario describe un viaje, proporciona exactamente 3 recomendaciones de fechas con:
+1. Período específico (fecha inicio y fin)
+2. Razones en 4 categorías: clima, multitud, presupuesto, eventos
+3. Puntuación de confianza (1-100)
+4. Emoji representativo
+
+Responde SIEMPRE en JSON válido, nunca en markdown.`,
+  };
+
+  return instructions[language] || instructions['pt-BR'];
+};
+
+/**
+ * Generate date recommendation prompt in the specified language
+ */
+export const generateDateRecommendationPrompt = (
+  destination: string,
+  tripType: string,
+  interests: string[],
+  budget: string = 'medio',
+  minDuration: number = 7,
+  maxDuration: number = 10,
+  language: LanguageCode = 'pt-BR',
+): string => {
+  const budgetMap: Record<string, Record<LanguageCode, string>> = {
+    'econômico': { 'pt-BR': 'econômico', 'en-US': 'budget-friendly', 'es-ES': 'económico' },
+    'médio': { 'pt-BR': 'médio', 'en-US': 'moderate', 'es-ES': 'moderado' },
+    'luxo': { 'pt-BR': 'luxuoso', 'en-US': 'luxury', 'es-ES': 'lujoso' },
+  };
+
+  const tripTypeMap: Record<string, Record<LanguageCode, string>> = {
+    'solo': { 'pt-BR': 'viajante solo', 'en-US': 'solo traveler', 'es-ES': 'viajero solo' },
+    'casal': { 'pt-BR': 'casal', 'en-US': 'couple', 'es-ES': 'pareja' },
+    'família': { 'pt-BR': 'família', 'en-US': 'family', 'es-ES': 'familia' },
+    'amigos': { 'pt-BR': 'grupo de amigos', 'en-US': 'friends group', 'es-ES': 'grupo de amigos' },
+  };
+
+  const templates: Record<LanguageCode, string> = {
+    'pt-BR': `Analise as seguintes preferências de viagem e recomende as 3 melhores épocas:
+
+**Destino**: ${destination}
+**Tipo de Viagem**: ${tripTypeMap[tripType]?.[language] || tripType}
+**Interesses**: ${interests.join(', ')}
+**Orçamento**: ${budgetMap[budget]?.[language] || budget}
+**Duração Desejada**: ${minDuration}-${maxDuration} dias
+
+Para cada recomendação, forneça um JSON com exatamente esta estrutura:
+[
+  {
+    "label": "🌞 Descrição curta",
+    "dateRange": {
+      "start": "YYYY-MM-DD",
+      "end": "YYYY-MM-DD"
+    },
+    "reasons": {
+      "climate": "Descrição do clima nessa época",
+      "crowds": "Informação sobre turismo/multidão",
+      "budget": "Informação sobre preços e custos",
+      "events": "Eventos ou festividades relevantes"
+    },
+    "score": 95,
+    "emoji": "🌞"
+  },
+  ...
+]
+
+Importante:
+- Datas devem ser futuras (a partir de hoje)
+- Responda APENAS com JSON válido
+- Scores: 90-100 (excelente), 75-89 (bom), 60-74 (aceitável)
+- Emoji deve ser representativo da sugestão`,
+
+    'en-US': `Analyze the following travel preferences and recommend the 3 best times to travel:
+
+**Destination**: ${destination}
+**Trip Type**: ${tripTypeMap[tripType]?.[language] || tripType}
+**Interests**: ${interests.join(', ')}
+**Budget**: ${budgetMap[budget]?.[language] || budget}
+**Desired Duration**: ${minDuration}-${maxDuration} days
+
+For each recommendation, provide JSON with exactly this structure:
+[
+  {
+    "label": "🌞 Short description",
+    "dateRange": {
+      "start": "YYYY-MM-DD",
+      "end": "YYYY-MM-DD"
+    },
+    "reasons": {
+      "climate": "Weather description for this period",
+      "crowds": "Information about tourism/crowds",
+      "budget": "Information about prices and costs",
+      "events": "Relevant events or festivities"
+    },
+    "score": 95,
+    "emoji": "🌞"
+  },
+  ...
+]
+
+Important:
+- Dates must be future (from today onwards)
+- Respond ONLY with valid JSON
+- Scores: 90-100 (excellent), 75-89 (good), 60-74 (acceptable)
+- Emoji should be representative of the suggestion`,
+
+    'es-ES': `Analiza las siguientes preferencias de viaje y recomienda los 3 mejores momentos:
+
+**Destino**: ${destination}
+**Tipo de Viaje**: ${tripTypeMap[tripType]?.[language] || tripType}
+**Intereses**: ${interests.join(', ')}
+**Presupuesto**: ${budgetMap[budget]?.[language] || budget}
+**Duración Deseada**: ${minDuration}-${maxDuration} días
+
+Para cada recomendación, proporciona JSON con exactamente esta estructura:
+[
+  {
+    "label": "🌞 Descripción corta",
+    "dateRange": {
+      "start": "YYYY-MM-DD",
+      "end": "YYYY-MM-DD"
+    },
+    "reasons": {
+      "climate": "Descripción del clima en esta época",
+      "crowds": "Información sobre turismo/multitud",
+      "budget": "Información sobre precios y costos",
+      "events": "Eventos o festividades relevantes"
+    },
+    "score": 95,
+    "emoji": "🌞"
+  },
+  ...
+]
+
+Importante:
+- Las fechas deben ser futuras (a partir de hoy)
+- Responde SOLO con JSON válido
+- Puntuaciones: 90-100 (excelente), 75-89 (bueno), 60-74 (aceptable)
+- El emoji debe ser representativo de la sugestión`,
+  };
+
+  return templates[language] || templates['pt-BR'];
+};
+

@@ -9,9 +9,9 @@ import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
 import { TravelTypeSelector } from '../components/TravelTypeSelector'
+import { SmartDateSuggestion } from '../components/SmartDateSuggestion'
 import { DurationAndBudgetSelector } from '../components/DurationAndBudgetSelector'
 import { GroupCompositionSelector } from '../components/GroupCompositionSelector'
-import { SeasonalSelector } from '../components/SeasonalSelector'
 import { DestinationSelector } from '../components/DestinationSelector'
 import { InterestsSelector } from '../components/InterestsSelector'
 import { TripPreview } from '../components/TripPreview'
@@ -21,16 +21,16 @@ import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
 /**
- * CreateTripScreen - 6-Step Trip Creation Flow
+ * CreateTripScreen - 6-Step Trip Creation Flow with AI Date Suggestions
  * 
- * Steps:
- * 1. TravelTypeSelector + InterestsSelector - Select trip type and interests together
- * 2. DurationAndBudgetSelector - Select duration, budget, and travel dates
- * 3. GroupCompositionSelector - Select group type and composition
- * 4. SeasonalSelector - Select travel month and season
- * 5. DestinationSelector - Select destination with AI recommendations
- * 6. TripPreview - Review and confirm all details
- * 7. TripSuccess - Confirmation and next steps
+ * Flow (Opção A - Destination First):
+ * Step 1: Travel Type + Interests - Select trip type and interests together
+ * Step 2: Destination - Select destination for context-aware AI suggestions
+ * Step 2.5: Smart Date Suggestion - AI recommends 3 best date options based on destination
+ * Step 3: Duration + Budget + Month - Manual date selection and budget preference
+ * Step 4: Group Composition - Select group type and number of people
+ * Step 5: Trip Preview - Review all trip details
+ * Step 6: Trip Success - Confirmation and next steps
  */
 
 interface TripFormData {
@@ -46,7 +46,7 @@ interface TripFormData {
   interests: string[];
 }
 
-type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+type StepType = 1 | 2 | 2.5 | 3 | 4 | 5 | 6;
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -80,6 +80,7 @@ export default function CreateTripScreen() {
   const validateStep = (): boolean => {
     switch (step) {
       case 1:
+        // Step 1: Trip Type + Interests - required
         if (formData.tripTypes.length === 0) {
           showError(t('createTrip.selectTravelType') || 'Please select at least one travel type')
           return false
@@ -91,6 +92,19 @@ export default function CreateTripScreen() {
         return true
 
       case 2:
+        // Step 2: Destination - required
+        if (!formData.destination.trim()) {
+          showError(t('createTrip.selectDestination') || 'Please select a destination')
+          return false
+        }
+        return true
+
+      case 2.5:
+        // Step 2.5: Smart Date Suggestion - always allowed (auto-fills with Gemini)
+        return true
+
+      case 3:
+        // Step 3: Dates + Budget - required
         if (!formData.startDate) {
           showError(t('createTrip.selectStartDate') || 'Please select a start date')
           return false
@@ -105,43 +119,20 @@ export default function CreateTripScreen() {
         }
         return true
 
-      case 3:
+      case 4:
+        // Step 4: Group Composition - required
         if (!formData.groupType) {
           showError(t('createTrip.selectGroupType') || 'Please select a group type')
           return false
         }
         return true
 
-      case 4:
-        if (!formData.travelMonth) {
-          showError(t('createTrip.selectMonth') || 'Please select a month')
-          return false
-        }
-        return true
-
       case 5:
-        if (!formData.startDate) {
-          showError(t('createTrip.selectStartDate') || 'Please select a start date')
-          return false
-        }
-        if (!formData.endDate) {
-          showError(t('createTrip.selectEndDate') || 'Please select an end date')
-          return false
-        }
-        if (new Date(formData.endDate) <= new Date(formData.startDate)) {
-          showError(t('createTrip.invalidDateRange') || 'End date must be after start date')
-          return false
-        }
+        // Step 5: Preview - always allowed
         return true
 
       case 6:
-        if (!formData.destination.trim()) {
-          showError(t('createTrip.selectDestination') || 'Please select a destination')
-          return false
-        }
-        return true
-
-      case 7:
+        // Step 6: Success - always allowed
         return true
 
       default:
@@ -151,7 +142,13 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 8) {
+      if (step === 2) {
+        // After destination selected, go to Smart Date Suggestion
+        setStep(2.5)
+      } else if (step === 2.5) {
+        // After AI suggestion (or rejected), go to manual dates
+        setStep(3)
+      } else if (step < 6) {
         setStep((step + 1) as StepType)
       }
     }
@@ -159,7 +156,15 @@ export default function CreateTripScreen() {
 
   const handlePrevious = () => {
     if (step > 1) {
-      setStep((step - 1) as StepType)
+      if (step === 2.5) {
+        // Go back from AI suggestion to destination selection
+        setStep(2)
+      } else if (step === 3) {
+        // Go back from dates to AI suggestion
+        setStep(2.5)
+      } else {
+        setStep((step - 1) as StepType)
+      }
     }
   }
 
@@ -208,7 +213,7 @@ export default function CreateTripScreen() {
       await addTrip(tripData)
 
       showSuccess(t('createTrip.tripCreatedSuccess') || 'Trip created successfully!')
-      setStep(7)
+      setStep(6)
     } catch (err) {
       console.error('Error creating trip:', err)
       showError(
@@ -270,22 +275,26 @@ export default function CreateTripScreen() {
           <div
             className="mb-8 flex gap-2"
             role="progressbar"
-            aria-label={`Step ${step} of 6`}
-            aria-valuenow={step}
+            aria-label={`Step ${step === 2.5 ? 2 : step} of 6`}
+            aria-valuenow={step === 2.5 ? 2 : step}
             aria-valuemin={1}
             aria-valuemax={6}
           >
-            {[1, 2, 3, 4, 5, 6].map((s) => (
-              <div
-                key={s}
-                className={`flex-1 h-2 rounded-full transition ${
-                  s <= step
-                    ? 'bg-primary dark:bg-blue-400'
-                    : 'bg-slate-200 dark:bg-slate-700'
-                }`}
-                aria-hidden="true"
-              />
-            ))}
+            {[1, 2, 3, 4, 5, 6].map((s) => {
+              // Map steps: 1→1, 2→2, 2.5→2, 3→3, 4→4, 5→5, 6→6
+              const displayStep = step === 2.5 ? 2 : step
+              return (
+                <div
+                  key={s}
+                  className={`flex-1 h-2 rounded-full transition ${
+                    s <= displayStep
+                      ? 'bg-primary dark:bg-blue-400'
+                      : 'bg-slate-200 dark:bg-slate-700'
+                  }`}
+                  aria-hidden="true"
+                />
+              )
+            })}
           </div>
 
           {/* Steps */}
@@ -316,10 +325,46 @@ export default function CreateTripScreen() {
 
             {/* Step 2: Duration and Budget */}
             {step === 2 && (
+              <DestinationSelector
+                tripTypes={formData.tripTypes}
+                budget={formData.budgetPerDay}
+                selectedMonth={parseInt(formData.travelMonth)}
+                onDestinationChange={(destination: string) =>
+                  setFormData((prev) => ({ ...prev, destination }))
+                }
+              />
+            )}
+
+            {/* Step 2.5: Smart Date Suggestion (IA) */}
+            {step === 2.5 && formData.destination && (
+              <SmartDateSuggestion
+                destination={formData.destination}
+                tripType={formData.tripTypes[0] || 'casal'}
+                interests={formData.interests}
+                budget={formData.budgetPerDay}
+                onAccept={(suggestion) => {
+                  // Preenche datas automaticamente
+                  setFormData(prev => ({
+                    ...prev,
+                    startDate: suggestion.startDate,
+                    endDate: suggestion.endDate,
+                  }));
+                  setStep(3); // Próximo step
+                }}
+                onReject={() => {
+                  // Mostra seletor manual de datas
+                  setStep(3);
+                }}
+              />
+            )}
+
+            {/* Step 3: Duration and Budget */}
+            {step === 3 && (
               <DurationAndBudgetSelector
                 budgetPerDay={formData.budgetPerDay}
                 startDate={formData.startDate}
                 endDate={formData.endDate}
+                selectedMonth={parseInt(formData.travelMonth)}
                 onBudgetChange={(budgetPerDay) =>
                   setFormData((prev) => ({ ...prev, budgetPerDay }))
                 }
@@ -329,11 +374,14 @@ export default function CreateTripScreen() {
                 onEndDateChange={(endDate) =>
                   setFormData((prev) => ({ ...prev, endDate }))
                 }
+                onMonthChange={(month) =>
+                  setFormData((prev) => ({ ...prev, travelMonth: month.toString() }))
+                }
               />
             )}
 
-            {/* Step 3: Group Composition */}
-            {step === 3 && (
+            {/* Step 4: Group Composition */}
+            {step === 4 && (
               <GroupCompositionSelector
                 selectedGroup={formData.groupType}
                 numPeople={formData.numPeople}
@@ -350,35 +398,11 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 4: Seasonal Selection */}
-            {step === 4 && (
-              <SeasonalSelector
-                destination={formData.destination || 'Generic'}
-                selectedMonth={parseInt(formData.travelMonth)}
-                selectedYear={new Date().getFullYear()}
-                onMonthChange={(month) =>
-                  setFormData((prev) => ({ ...prev, travelMonth: month.toString() }))
-                }
-                onYearChange={() => {
-                  // Year selection not needed for this flow
-                }}
-              />
-            )}
-
-            {/* Step 5: Destination */}
-            {step === 5 && (
-              <DestinationSelector
-                tripTypes={formData.tripTypes}
-                budget={formData.budgetPerDay}
-                selectedMonth={parseInt(formData.travelMonth)}
-                onDestinationChange={(destination: string) =>
-                  setFormData((prev) => ({ ...prev, destination }))
-                }
-              />
-            )}
+            {/* Step 5: Destination - NOT USED (moved to step 2) */}
+            {/* Removed - DestinationSelector now at Step 2 */}
 
             {/* Step 6: Preview */}
-            {step === 6 && tripForPreview && (
+            {step === 5 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
                 onConfirm={handleSubmit}
@@ -388,8 +412,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 7: Success */}
-            {step === 7 && (
+            {/* Step 6: Success */}
+            {step === 6 && (
               <TripSuccess
                 tripId="new-trip"
                 tripName={formData.destination}
@@ -413,7 +437,7 @@ export default function CreateTripScreen() {
           </div>
 
           {/* Navigation Buttons */}
-          {step < 7 && (
+          {step < 6 && (
             <div className="flex gap-3">
               <Button
                 variant="secondary"
@@ -424,7 +448,7 @@ export default function CreateTripScreen() {
                 {t('common.previous') || 'Previous'}
               </Button>
 
-              {step < 6 ? (
+              {step < 5 ? (
                 <Button
                   variant="primary"
                   onClick={handleNext}

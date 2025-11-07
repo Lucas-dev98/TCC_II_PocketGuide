@@ -4,9 +4,9 @@ import { TripType, BudgetPerDay } from '../types';
 import {
   matchDestinations,
   getDestinationInfo,
-  getAllDestinations,
   DestinationScore,
 } from '../utils/destinationMatcher';
+import { CityAutocomplete } from './CityAutocomplete';
 
 interface DestinationSelectorProps {
   tripTypes: TripType[];
@@ -25,8 +25,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   onDestinationChange,
   disabled = false,
 }) => {
-  const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState('');
+  const { t, i18n } = useTranslation();
   const [showSearch, setShowSearch] = useState(false);
 
   const recommendations = useMemo(
@@ -40,28 +39,14 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     [tripTypes, budget, selectedMonth, selectedDestination]
   );
 
-  const allDestinations = useMemo(() => getAllDestinations(), []);
-
-  const filteredDestinations = useMemo(
-    () =>
-      searchQuery.length > 0
-        ? allDestinations.filter((d) =>
-            d.toLowerCase().includes(searchQuery.toLowerCase())
-          )
-        : [],
-    [searchQuery, allDestinations]
-  );
-
   const handleSelectRecommendation = (destination: string) => {
     onDestinationChange(destination);
     setShowSearch(false);
-    setSearchQuery('');
   };
 
   const handleSelectFromSearch = (destination: string) => {
     onDestinationChange(destination);
     setShowSearch(false);
-    setSearchQuery('');
   };
 
   const selectedInfo = useMemo(
@@ -161,7 +146,6 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 <button
                   onClick={() => {
                     setShowSearch(false);
-                    setSearchQuery('');
                   }}
                   className="text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition"
                   disabled={disabled}
@@ -173,34 +157,14 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 </h3>
               </div>
 
-              <input
-                type="text"
+              <CityAutocomplete
+                value=""
+                onCitySelect={(city) => {
+                  handleSelectFromSearch(city);
+                }}
                 placeholder={t('newFlow.step5.searchPlaceholder')}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                disabled={disabled}
-                autoFocus
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:focus:ring-indigo-400"
+                language={i18n?.language || 'en'}
               />
-
-              {filteredDestinations.length > 0 ? (
-                <div className="max-h-64 overflow-y-auto space-y-2 border border-gray-200 dark:border-gray-700 rounded-lg p-3">
-                  {filteredDestinations.map((dest) => (
-                    <button
-                      key={dest}
-                      onClick={() => handleSelectFromSearch(dest)}
-                      className="w-full text-left px-3 py-2 hover:bg-indigo-50 dark:hover:bg-indigo-900/30 rounded transition text-gray-900 dark:text-white font-medium"
-                      disabled={disabled}
-                    >
-                      {dest}
-                    </button>
-                  ))}
-                </div>
-              ) : searchQuery.length > 0 ? (
-                <div className="p-3 text-sm text-gray-600 dark:text-gray-400 text-center">
-                  {t('newFlow.step5.noResults')}
-                </div>
-              ) : null}
             </div>
           ) : null}
         </div>

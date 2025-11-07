@@ -75,11 +75,13 @@ export const TravelTypeSelector: React.FC<TravelTypeSelectorProps> = ({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white">
-          {t('selectTravelType')}
+          {t('newFlow.step1.selectTravelType')}
         </h3>
-        <span className="text-sm text-gray-500 dark:text-gray-400">
-          {t('selectMultiple', { selected: selected.length })}
-        </span>
+        {selected.length > 0 && (
+          <span className="text-sm font-medium text-blue-600 dark:text-blue-400">
+            {selected.length} {selected.length === 1 ? 'escolhido' : 'escolhidos'}
+          </span>
+        )}
       </div>
 
       <div className="grid grid-cols-2 gap-3 md:grid-cols-3">
@@ -128,7 +130,7 @@ export const TravelTypeSelector: React.FC<TravelTypeSelectorProps> = ({
 
       {/* Info text */}
       <p className="text-xs text-gray-500 dark:text-gray-400">
-        {t('travelTypeInfo')}
+        {t('newFlow.step1.travelTypeInfo')}
       </p>
     </div>
   );

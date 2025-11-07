@@ -515,8 +515,8 @@
 
   "newFlow": {
     "step1": {
-      "selectTravelType": "What type of trip are you looking for?",
-      "selectMultiple": "Selected: {{selected}}",
+      "selectTravelType": "🎯 What kind of trip do you want?",
+      "selectMultiple": "Select your preferences",
       "relaxamento": "Relaxation",
       "relaxamento_desc": "Beach, resort, spa - rest and recharge",
       "aventura": "Adventure",
@@ -529,7 +529,7 @@
       "exploracao_desc": "Multiple cities, road trip - discover new places",
       "romantica": "Romantic",
       "romantica_desc": "Couple, romantic destinations - special moments",
-      "travelTypeInfo": "You can select multiple types. This will help us generate a more personalized itinerary!"
+      "travelTypeInfo": "Choose one or more types to explore different travel styles"
     },
     "step2": {
       "selectDuration": "⏱️ How much time do you have?",
