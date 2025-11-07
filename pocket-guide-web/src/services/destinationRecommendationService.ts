@@ -271,13 +271,22 @@ function buildRecommendationPrompt(
 
   prompt += `\n⚠️ CRITICAL INSTRUCTIONS:
 1. The user wants to travel DURING THESE DATES: ${startDate && endDate ? new Date(startDate).toLocaleDateString() + ' to ' + new Date(endDate).toLocaleDateString() : 'Month: ' + (month || 'not specified')}
-2. The user prefers the "${season}" season for their activities and weather preferences
-3. Recommend destinations where "${season}" season occurs during the specified travel dates
-4. Consider seasonal weather, activities, and events typical of "${season}" season
-5. Verify each destination's weather and seasonal conditions during the travel period
-6. Reject any destination that would be in unfavorable season during travel dates
+2. The user prefers the "${season}" season for their travel experience
+3. IMPORTANT: Match the ACTUAL season in the destination's hemisphere during the travel dates:
+   - If user wants "primavera" (Spring): Recommend destinations in SOUTHERN hemisphere where it's spring (Sep-Nov) OR NORTHERN hemisphere where it's spring (Mar-May). For Nov dates, prioritize SOUTHERN hemisphere destinations!
+   - If user wants "verão" (Summer): Recommend destinations in SOUTHERN hemisphere where it's summer (Dec-Feb) OR NORTHERN hemisphere where it's summer (Jun-Aug). For Nov dates, this is transition season!
+   - If user wants "outono" (Autumn): Recommend destinations in NORTHERN hemisphere where it's autumn (Sep-Nov) OR SOUTHERN hemisphere where it's autumn (Mar-May)
+   - If user wants "inverno" (Winter): Recommend destinations in SOUTHERN hemisphere where it's winter (Jun-Aug) OR NORTHERN hemisphere where it's winter (Dec-Feb)
 
-Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND season preference.`;
+4. For November specifically:
+   - Southern Hemisphere = PRIMAVERA (Spring) - use: Brazil (South), Argentina, Chile, New Zealand, Australia, Uruguay
+   - Northern Hemisphere = OUTONO (Autumn) - use: Japan, Korea, USA Northeast, Europe East, Thailand, India (for fall colors/mild weather)
+
+5. DO NOT recommend a destination in the wrong season! Example: If user wants "primavera" in November, do NOT recommend India/Nepal/Thailand (Northern Hemisphere Autumn)
+
+6. Each recommendation MUST explain why the season is appropriate
+
+Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND correct seasonal hemisphere.`;
 
   return prompt;
 }
