@@ -47,34 +47,34 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
 
   const getTripTypeLabel = (type?: TripType) => {
     const labels: Record<TripType, string> = {
-      relaxamento: t('newFlow.step1.types.relaxamento.label'),
-      aventura: t('newFlow.step1.types.aventura.label'),
-      cultura: t('newFlow.step1.types.cultura.label'),
-      diversao: t('newFlow.step1.types.diversao.label'),
-      exploracao: t('newFlow.step1.types.exploracao.label'),
-      romantica: t('newFlow.step1.types.romantica.label'),
+      relaxamento: t('newFlow.step1.relaxamento'),
+      aventura: t('newFlow.step1.aventura'),
+      cultura: t('newFlow.step1.cultura'),
+      diversao: t('newFlow.step1.diversao'),
+      exploracao: t('newFlow.step1.exploracao'),
+      romantica: t('newFlow.step1.romantica'),
     };
     return type ? labels[type] : t('newFlow.step7.notSelected');
   };
 
   const getBudgetLabel = (budget?: BudgetPerDay) => {
     const labels: Record<BudgetPerDay, string> = {
-      'ultra-economico': t('newFlow.step2.budgets.ultraBudget'),
-      economico: t('newFlow.step2.budgets.budget'),
-      medio: t('newFlow.step2.budgets.medium'),
-      premium: t('newFlow.step2.budgets.premium'),
-      luxo: t('newFlow.step2.budgets.luxury'),
+      'ultra-economico': t('newFlow.step2.ultraEconomico'),
+      economico: t('newFlow.step2.economico'),
+      medio: t('newFlow.step2.medio'),
+      premium: t('newFlow.step2.premium'),
+      luxo: t('newFlow.step2.luxo'),
     };
     return budget ? labels[budget] : t('newFlow.step7.notSelected');
   };
 
   const getGroupLabel = (group?: GroupType) => {
     const labels: Record<GroupType, string> = {
-      solo: t('newFlow.step3.groups.solo'),
-      casal: t('newFlow.step3.groups.couple'),
-      familia: t('newFlow.step3.groups.family'),
-      amigos: t('newFlow.step3.groups.friends'),
-      group: t('newFlow.step3.groups.group'),
+      solo: t('newFlow.step3.solo'),
+      casal: t('newFlow.step3.casal'),
+      familia: t('newFlow.step3.familia'),
+      amigos: t('newFlow.step3.amigos'),
+      group: t('newFlow.step3.group'),
     };
     return group ? labels[group] : t('newFlow.step7.notSelected');
   };
@@ -126,7 +126,7 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
         {/* Step 4: Destination */}
         <PreviewCard
           step={4}
-          title={t('newFlow.step5.title')}
+          title={t('newFlow.step4.title')}
           emoji={destinationInfo?.emoji || '🌍'}
           value={trip.destination || t('newFlow.step7.notSelected')}
           onEdit={() => onEdit(4)}

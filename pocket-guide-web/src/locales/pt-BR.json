@@ -516,6 +516,7 @@
 
   "newFlow": {
     "step1": {
+      "title": "🎯 Tipo de Viagem",
       "selectTravelType": "🎯 Que tipo de viagem você quer fazer?",
       "selectMultiple": "Selecione suas preferências",
       "relaxamento": "Relaxamento",
@@ -533,6 +534,7 @@
       "travelTypeInfo": "Escolha um ou mais tipos para explorar diferentes estilos de viagem"
     },
     "step2": {
+      "title": "👥 Grupo & Orçamento",
       "selectDuration": "⏱️ Quanto tempo você tem?",
       "selectBudget": "💰 Orçamento por dia",
       "fimDeSemana": "Fim de semana",
@@ -557,6 +559,7 @@
       "summary": "Resumo"
     },
     "step3": {
+      "title": "📅 Datas",
       "selectGroup": "👥 Com quem você viaja?",
       "solo": "Solo",
       "solo_desc": "Viajando sozinho - liberdade total",
@@ -577,6 +580,7 @@
       "groupInfo": "A composição do grupo nos ajudará a personalizar atividades e hospedagem adequadas para sua viagem."
     },
     "step4": {
+      "title": "🌍 Destino",
       "selectMonth": "📅 Qual é o melhor mês?",
       "selectYear": "📆 Selecione o ano",
       "selectingFor": "Selecionando datas para",
@@ -601,7 +605,7 @@
       "selectDestination": "Selecionar Destino"
     },
     "step6": {
-      "title": "⭐ Quais atividades te atraem?",
+      "title": "⭐ Interesses",
       "subtitle": "Selecione os seus interesses para personalizar a viagem",
       "selected": "Interesses Selecionados",
       "helper": "Você pode selecionar quantos interesses quiser! Quanto mais específico, melhor a personalização do seu itinerário."
