@@ -9,6 +9,10 @@ import { OfflineIndicator } from './components/OfflineIndicator'
 import { WebVitalsDebugger } from './components/WebVitalsDebugger'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { cleanupInvalidStorage, logStorageState } from './utils/storageCleanup'
+// Import diagnostics for browser console access
+import './utils/firestoreDiagnostics'
+import './utils/debugPersistence'
+import './utils/migrationCleanup'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))

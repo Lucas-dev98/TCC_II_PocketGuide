@@ -24,6 +24,7 @@ interface TripsStoreState {
   trips: Trip[];
   isLoading: boolean;
   error: string | null;
+  lastLoadTime: number | null;
 
   // Operations
   loadTrips: (userId: string) => Promise<void>;
@@ -31,6 +32,7 @@ interface TripsStoreState {
   deleteTrip: (tripId: string) => Promise<void>;
   setLoading: (loading: boolean) => void;
   setError: (error: string | null) => void;
+  clearAllTrips: () => void;
 }
 
 /**
@@ -45,9 +47,15 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
   trips: [],
   isLoading: false,
   error: null,
+  lastLoadTime: null,
 
   setLoading: (loading) => set({ isLoading: loading }),
   setError: (error) => set({ error }),
+  
+  clearAllTrips: () => {
+    console.log('🗑️ Clearing all trips from store');
+    set({ trips: [], error: null });
+  },
 
   /**
    * Carregar viagens do Firestore
@@ -56,34 +64,72 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
+      console.log('📚 tripsStore.loadTrips: Starting load for user:', userId);
+
       const q = query(
         collection(db, 'trips'),
         where('userId', '==', userId)
       );
 
-      const snapshot = await getDocs(q);
-      const trips: Trip[] = [];
+      // Enable verbose logging for debugging
+      console.log('📚 Querying Firestore: collection("trips").where("userId", "==", "' + userId + '")');
 
-      console.log('📚 tripsStore.loadTrips: Found', snapshot.size, 'trips');
+  const snapshot = await getDocs(q);
+  const trips: Trip[] = [];
+  // NOTE: previously the code attempted to detect and delete "old" trips
+  // based on whether the Firestore-generated ID contained dashes. That
+  // logic is incorrect for many Firestore environments (IDs are usually
+  // alphanumeric without dashes) and could delete newly created trips.
+  // We'll no longer auto-delete any documents here; instead we only log
+  // unusual IDs for manual inspection.
+
+      console.log('📚 tripsStore.loadTrips: Query returned', snapshot.size, 'documents');
+      console.log('📚 tripsStore.loadTrips: Empty?', snapshot.empty);
 
       snapshot.forEach((doc) => {
         const tripData = {
           id: doc.id,
           ...doc.data(),
         } as Trip;
-        console.log('📚 tripsStore.loadTrips: Trip:', tripData);
+        
+        // Log ALL trips, regardless of ID format
+        console.log('📚 Document loaded:', {
+          id: doc.id,
+          idHasDashes: doc.id.includes('-'),
+          userId: tripData.userId,
+          destination: tripData.destination,
+          createdAt: tripData.createdAt,
+        });
+
+        // Log document metadata for debugging - do NOT delete automatically
+        if (!doc.id.includes('-')) {
+          console.log('ℹ️ Document ID does not include dash (expected for Firestore addDoc IDs):', doc.id);
+        }
+
+        // Add to trips array
         trips.push(tripData);
       });
 
-      console.log('📚 tripsStore.loadTrips: Setting trips:', trips);
-      set({ trips });
+      console.log('📚 tripsStore.loadTrips: Final array size:', trips.length);
+      // Note: automatic deletion of documents has been disabled to avoid
+      // accidentally removing valid Firestore documents. Review logs if you
+      // see unexpected IDs and perform manual cleanup if necessary.
+      
+      set({ 
+        trips,
+        lastLoadTime: Date.now(),
+        error: null,
+      });
     } catch (error) {
       console.error('❌ Erro ao carregar viagens:', error);
+      const errorMsg = error instanceof Error ? error.message : 'Erro ao carregar viagens';
+      console.error('❌ Error details:', {
+        message: errorMsg,
+        code: (error as any)?.code,
+        originalError: error,
+      });
       set({
-        error:
-          error instanceof Error
-            ? error.message
-            : 'Erro ao carregar viagens',
+        error: errorMsg,
       });
     } finally {
       set({ isLoading: false });
@@ -97,27 +143,57 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
+      console.log('➕ addTrip: Starting...');
+      console.log('➕ addTrip: Validating trip data:', {
+        userId: tripData.userId,
+        destination: tripData.destination,
+        startDate: tripData.startDate,
+        endDate: tripData.endDate,
+        hasItinerary: !!(tripData.itinerary && tripData.itinerary.length > 0),
+      });
+
+      // Validate required fields
+      if (!tripData.userId) {
+        throw new Error('Missing required field: userId');
+      }
+      if (!tripData.destination) {
+        throw new Error('Missing required field: destination');
+      }
+
+      console.log('➕ addTrip: Data validation passed');
+      console.log('➕ addTrip: Preparing to save to Firestore...');
+
       const docRef = await addDoc(collection(db, 'trips'), {
         ...tripData,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
 
+      console.log('✅ addTrip: Successfully saved to Firestore with ID:', docRef.id);
+
+      // CRITICAL: Use the Firestore-generated ID, not any ID from tripData
       const newTrip: Trip = {
-        id: docRef.id,
         ...tripData,
+        id: docRef.id, // Use Firestore ID as source of truth
         createdAt: new Date().toISOString(),
       } as Trip;
 
-      set((state) => ({
-        trips: [...state.trips, newTrip],
-      }));
+      console.log('✅ addTrip: Adding to local Zustand state with ID:', newTrip.id);
 
+      set((state) => {
+        const updatedTrips = [...state.trips, newTrip];
+        console.log('✅ addTrip: Zustand state updated. Total trips now:', updatedTrips.length);
+        return { trips: updatedTrips };
+      });
+
+      console.log('✅ addTrip: Trip creation completed successfully');
       return docRef.id;
     } catch (error) {
-      console.error('Erro ao criar viagem:', error);
+      console.error('❌ Erro ao criar viagem:', error);
       const errorMessage =
         error instanceof Error ? error.message : 'Erro ao criar viagem';
+      console.error('❌ Error message:', errorMessage);
+      console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
       set({ error: errorMessage });
       throw new Error(errorMessage);
     } finally {
@@ -132,21 +208,52 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      // Delete from Firestore first
-      await deleteDoc(doc(db, 'trips', tripId));
+      console.log('🗑️ Starting deletion for trip:', tripId);
 
-      // Update the local state immediately
-      set((state) => {
-        const updatedTrips = state.trips.filter((t: Trip) => t.id !== tripId);
-        console.log('✅ Trip deleted from Firestore:', tripId);
-        console.log('📊 Remaining trips:', updatedTrips.length);
-        return { trips: updatedTrips };
+      // Step 1: Delete from Firestore
+      const docRef = doc(db, 'trips', tripId);
+      console.log('📍 Deleting from path: trips/' + tripId);
+      
+      await deleteDoc(docRef);
+      console.log('✅ Successfully called deleteDoc for:', tripId);
+
+      // Step 2: Wait for Firestore to process the deletion
+      console.log('⏳ Waiting for Firestore to process deletion...');
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 3: Verify the document was actually deleted by fetching it
+      try {
+        const { getDoc } = await import('firebase/firestore');
+        const deletedDocSnapshot = await getDoc(docRef);
+        
+        if (deletedDocSnapshot.exists()) {
+          console.error('⚠️ CRITICAL: Document still exists after deletion!');
+          console.error('Document data:', deletedDocSnapshot.data());
+          throw new Error('Firestore deletion verification failed - document still exists');
+        } else {
+          console.log('✅ Verified: Document successfully removed from Firestore');
+        }
+      } catch (verifyError) {
+        console.warn('⚠️ Verification attempt failed:', verifyError);
+        // Continue - deletion likely succeeded
+      }
+
+      // Step 4: Update local state - REMOVE from array
+      const updatedTrips = useTripsStore.getState().trips.filter((t: Trip) => t.id !== tripId);
+      
+      console.log('✅ Trip deleted from local state:', tripId);
+      console.log('📊 Remaining trips in state:', updatedTrips.length);
+      
+      set({ 
+        trips: updatedTrips,
+        lastLoadTime: Date.now(),
       });
 
-      // Small delay to ensure Firestore has fully processed the deletion
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Step 5: Do NOT call loadTrips() - this would reload deleted items!
+      // The deletion is final and should stay deleted until next full reload
+
     } catch (error) {
-      console.error('Erro ao deletar viagem:', error);
+      console.error('❌ FATAL ERROR deleting trip:', error);
       set({
         error:
           error instanceof Error

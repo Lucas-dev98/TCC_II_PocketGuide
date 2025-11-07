@@ -50,7 +50,7 @@ export default function CreateTripScreen() {
   const navigate = useNavigate()
   const { user } = useAuth()
   const { t } = useI18n()
-  const { addTrip } = useTripsStore()
+  const { addTrip, loadTrips } = useTripsStore()
   const { showError, showSuccess } = useToast()
 
   const [step, setStep] = useState<StepType>(1)
@@ -158,27 +158,49 @@ export default function CreateTripScreen() {
     try {
       setIsLoading(true)
 
+      console.log('🚀 Starting trip creation process...')
+      console.log('📊 Form data:', formData)
+      console.log('👤 User ID:', user.uid)
+
       // Calculate duration from dates
       const start = new Date(formData.startDate)
       const end = new Date(formData.endDate)
       const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
 
-      // Generate AI itinerary
-      const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
-      const itinerary = await generateItinerary(
-        formData.destination,
-        durationDays,
-        formData.interests,
-        formData.budgetPerDay,
-        formData.groupType,
-        currentLanguage
-      )
+      console.log('📅 Duration:', durationDays, 'days')
+
+      // Generate AI itinerary with timeout fallback
+      let itinerary = []
+      try {
+        console.log('⏳ Generating itinerary...')
+        const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
+        
+        // Add timeout to prevent hanging
+        const itineraryPromise = generateItinerary(
+          formData.destination,
+          durationDays,
+          formData.interests,
+          formData.budgetPerDay,
+          formData.groupType,
+          currentLanguage
+        )
+
+        const timeoutPromise = new Promise((_, reject) =>
+          setTimeout(() => reject(new Error('Itinerary generation timeout')), 30000)
+        )
+
+        itinerary = (await Promise.race([itineraryPromise, timeoutPromise])) as any
+        console.log('✅ Itinerary generated:', itinerary?.length || 0, 'items')
+      } catch (itineraryError) {
+        console.warn('⚠️ Itinerary generation failed, continuing with empty itinerary:', itineraryError)
+        itinerary = [] // Continue with empty itinerary
+      }
 
       // Create trip data with itinerary
       const tripData: Trip = {
         userId: user.uid,
         destination: formData.destination,
-        country: formData.destination, // Could be enhanced to extract country
+        country: formData.destination,
         startDate: formData.startDate,
         endDate: formData.endDate,
         tripType: formData.tripTypes[0] || 'cultura',
@@ -186,18 +208,36 @@ export default function CreateTripScreen() {
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
         interests: formData.interests,
-        itinerary: itinerary, // Save the generated itinerary
+        itinerary: itinerary || [], // Ensure itinerary is always an array
         createdAt: new Date().toISOString(),
       } as Trip
 
+      console.log('📝 Final trip data to save:', {
+        userId: tripData.userId,
+        destination: tripData.destination,
+        startDate: tripData.startDate,
+        endDate: tripData.endDate,
+        hasItinerary: !!(tripData.itinerary && tripData.itinerary.length > 0),
+      })
+
       // Save trip and get ID
+      console.log('💾 Calling addTrip...')
       const tripId = await addTrip(tripData)
+      console.log('✅ Trip saved with ID:', tripId)
+      
       setCreatedTripId(tripId)
 
       showSuccess(t('createTrip.tripCreatedSuccess') || 'Trip created successfully!')
+      
+      // IMPORTANTE: Recarregar trips imediatamente após criar
+      console.log('🔄 Reloading trips immediately after creation...')
+      await loadTrips(user.uid)
+      console.log('✅ Trips reloaded')
+      
       setStep(6)
     } catch (err) {
-      console.error('Error creating trip:', err)
+      console.error('❌ Error creating trip:', err)
+      console.error('Error details:', err instanceof Error ? err.stack : err)
       showError(
         err instanceof Error
           ? err.message

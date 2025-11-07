@@ -41,10 +41,17 @@ export default function HomeScreen() {
   // Carregar viagens ao montar
   useEffect(() => {
     if (user?.uid) {
+      console.log('🏠 HomeScreen: useEffect triggered, loading trips for user:', user.uid)
+      console.log('🏠 HomeScreen: Current trips in state:', trips.length)
       debug.log('🏠 HomeScreen: Loading trips for user:', user.uid)
-      loadTrips(user.uid)
+      loadTrips(user.uid).then(() => {
+        console.log('🏠 HomeScreen: loadTrips completed')
+        console.log('🏠 HomeScreen: Total trips loaded:', trips.length)
+      }).catch((err) => {
+        console.error('🏠 HomeScreen: loadTrips failed:', err)
+      })
     }
-  }, [user?.uid])
+  }, [user?.uid, loadTrips])
 
   const handleViewTrip = (tripId: string) => {
     navigate(`/trip/${tripId}`)
