@@ -40,6 +40,7 @@ interface TripFormData {
   travelMonth: string;
   startDate: string;
   endDate: string;
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno';
   destination: string;
   interests: string[];
 }
@@ -64,6 +65,7 @@ export default function CreateTripScreen() {
     travelMonth: '6',
     startDate: '',
     endDate: '',
+    season: 'primavera',
     destination: '',
     interests: [],
   })
@@ -363,16 +365,20 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 3: Duration and Dates */}
+            {/* Step 3: Dates and Season */}
             {step === 3 && (
               <DurationAndBudgetSelector
                 startDate={formData.startDate}
                 endDate={formData.endDate}
+                season={formData.season}
                 onStartDateChange={(startDate) =>
                   setFormData((prev) => ({ ...prev, startDate }))
                 }
                 onEndDateChange={(endDate) =>
                   setFormData((prev) => ({ ...prev, endDate }))
+                }
+                onSeasonChange={(season) =>
+                  setFormData((prev) => ({ ...prev, season }))
                 }
               />
             )}

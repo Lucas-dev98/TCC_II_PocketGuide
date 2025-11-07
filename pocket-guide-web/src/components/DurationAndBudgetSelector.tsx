@@ -4,17 +4,28 @@ import { useTranslation } from 'react-i18next';
 interface DurationAndBudgetProps {
   startDate?: string;
   endDate?: string;
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno';
   onStartDateChange?: (date: string) => void;
   onEndDateChange?: (date: string) => void;
+  onSeasonChange?: (season: 'primavera' | 'verão' | 'outono' | 'inverno') => void;
   disabled?: boolean;
 }
+
+const SEASON_OPTIONS = [
+  { id: 'primavera', label: '🌸 Primavera', emoji: '🌸' },
+  { id: 'verão', label: '☀️ Verão', emoji: '☀️' },
+  { id: 'outono', label: '🍂 Outono', emoji: '🍂' },
+  { id: 'inverno', label: '❄️ Inverno', emoji: '❄️' },
+] as const;
 
 
 export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
   startDate,
   endDate,
+  season,
   onStartDateChange,
   onEndDateChange,
+  onSeasonChange,
   disabled = false,
 }) => {
   const { t } = useTranslation();
@@ -97,6 +108,53 @@ export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
             </p>
           </div>
         )}
+      </div>
+
+      {/* Season Selection */}
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t('newFlow.step2.selectSeason', '🌍 Qual estação do ano?')}
+        </h3>
+
+        <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
+          {SEASON_OPTIONS.map((opt) => (
+            <button
+              key={opt.id}
+              onClick={() => !disabled && onSeasonChange?.(opt.id as 'primavera' | 'verão' | 'outono' | 'inverno')}
+              disabled={disabled}
+              className={`p-4 rounded-lg border-2 transition-all duration-200 text-center relative ${
+                season === opt.id
+                  ? 'border-purple-500 bg-purple-50 dark:bg-purple-950 dark:border-purple-400'
+                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600'
+              } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+            >
+              {season === opt.id && (
+                <div className="absolute top-2 right-2 w-5 h-5 bg-purple-500 rounded-full flex items-center justify-center">
+                  <svg
+                    className="w-3 h-3 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={3}
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+              )}
+
+              <div className="flex flex-col items-center gap-2">
+                <span className="text-3xl">{opt.emoji}</span>
+                <span className="text-sm font-semibold text-gray-900 dark:text-white">
+                  {opt.label.split(' ')[1]}
+                </span>
+              </div>
+            </button>
+          ))}
+        </div>
       </div>
 
     </div>
