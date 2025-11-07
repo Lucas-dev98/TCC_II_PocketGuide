@@ -13,6 +13,7 @@ import { ExportButton } from '../components/ExportButton';
 import { FavoriteButton } from '../components/FavoriteButton';
 import { MainLayout } from '../components/Layout';
 import { debug } from '../utils/debug';
+import { BudgetPerDay } from '../types';
 import {
   ArrowLeft,
   Calendar,
@@ -149,6 +150,26 @@ const getPlaceholderImage = (query: string): string => {
   }
 
   return `https://via.placeholder.com/400x300/${color}/FFFFFF?text=${encodeURIComponent(query.substring(0, 20))}`;
+};
+
+/**
+ * Mapeia o tipo de orçamento (BudgetPerDay) para a chave de tradução
+ */
+const getBudgetLabel = (budget?: BudgetPerDay | string): string => {
+  if (!budget) return 'N/A';
+  
+  const labels: Record<string, string> = {
+    'ultra-economico': 'Ultra Econômico',
+    'economico': 'Econômico',
+    'medio': 'Médio',
+    'premium': 'Premium',
+    'luxo': 'Luxo',
+    // Valores antigos para compatibilidade
+    'econômico': 'Econômico',
+    'médio': 'Médio',
+  };
+
+  return labels[budget] || 'N/A';
 };
 
 /**
@@ -512,11 +533,7 @@ export default function TripDetailScreen() {
             <div>
               <p className="text-small text-slate-600 dark:text-slate-300 mb-1">{t('tripDetail.budget')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
-                {trip.budget === 'econômico'
-                  ? t('tripDetail.budgetEconomic')
-                  : trip.budget === 'médio'
-                    ? t('tripDetail.budgetMedium')
-                    : t('tripDetail.budgetLuxury')}
+                {getBudgetLabel(trip.budgetPerDay || trip.budget)}
               </p>
             </div>
             <div>
@@ -551,11 +568,7 @@ export default function TripDetailScreen() {
             <div>
               <p className="text-small text-slate-600 dark:text-slate-300 mb-1">{t('tripDetail.budget')}</p>
               <p className="font-semibold text-slate-900 dark:text-white">
-                {trip.budget === 'econômico'
-                  ? t('tripDetail.budgetEconomic')
-                  : trip.budget === 'médio'
-                    ? t('tripDetail.budgetMedium')
-                    : t('tripDetail.budgetLuxury')}
+                {getBudgetLabel(trip.budgetPerDay || trip.budget)}
               </p>
             </div>
             <div>

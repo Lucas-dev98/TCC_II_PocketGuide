@@ -149,6 +149,9 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         destination: tripData.destination,
         startDate: tripData.startDate,
         endDate: tripData.endDate,
+        budgetPerDay: tripData.budgetPerDay,  // ✅ ADICIONADO
+        groupType: tripData.groupType,        // ✅ ADICIONADO
+        tripType: tripData.tripType,          // ✅ ADICIONADO
         hasItinerary: !!(tripData.itinerary && tripData.itinerary.length > 0),
       });
 
@@ -162,6 +165,10 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
 
       console.log('➕ addTrip: Data validation passed');
       console.log('➕ addTrip: Preparing to save to Firestore...');
+      console.log('➕ addTrip: Data being saved to Firestore:', {
+        ...tripData,
+        budgetPerDay: tripData.budgetPerDay,
+      });
 
       const docRef = await addDoc(collection(db, 'trips'), {
         ...tripData,

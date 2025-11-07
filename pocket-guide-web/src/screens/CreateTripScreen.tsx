@@ -220,6 +220,8 @@ export default function CreateTripScreen() {
         destination: tripData.destination,
         startDate: tripData.startDate,
         endDate: tripData.endDate,
+        budgetPerDay: tripData.budgetPerDay,  // ✅ ADICIONADO
+        groupType: tripData.groupType,        // ✅ ADICIONADO
         hasItinerary: !!(tripData.itinerary && tripData.itinerary.length > 0),
       })
 
