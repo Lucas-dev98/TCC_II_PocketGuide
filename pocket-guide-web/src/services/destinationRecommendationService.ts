@@ -105,60 +105,6 @@ interface GeminiResponse {
 }
 
 /**
- * Determines which hemisphere the user is in based on language
- * pt-BR (Brazil) = Southern Hemisphere
- * en-US (USA) & es-ES (Spain) = Northern Hemisphere
- */
-function getHemisphere(language: string): 'north' | 'south' {
-  if (language === 'pt-BR') {
-    return 'south';
-  }
-  return 'north'; // Default to Northern Hemisphere for other locales
-}
-
-/**
- * Detects the season based on the provided date and hemisphere
- * 
- * Northern Hemisphere (en-US, es-ES):
- * - Primavera (Spring): March-May (months 3-5)
- * - Verão (Summer): June-August (months 6-8)
- * - Outono (Autumn): September-November (months 9-11)
- * - Inverno (Winter): December-February (months 12, 1-2)
- * 
- * Southern Hemisphere (pt-BR):
- * - Primavera (Spring): September-November (months 9-11)
- * - Verão (Summer): December-February (months 12, 1-2)
- * - Outono (Autumn): March-May (months 3-5)
- * - Inverno (Winter): June-August (months 6-8)
- */
-function detectSeasonFromDate(dateString: string, language: string = 'en-US'): 'primavera' | 'verão' | 'outono' | 'inverno' | undefined {
-  if (!dateString) return undefined;
-  
-  try {
-    const date = new Date(dateString);
-    const month = date.getMonth() + 1; // getMonth() returns 0-11, we need 1-12
-    const hemisphere = getHemisphere(language);
-    
-    if (hemisphere === 'north') {
-      // Northern Hemisphere
-      if (month >= 3 && month <= 5) return 'primavera';
-      if (month >= 6 && month <= 8) return 'verão';
-      if (month >= 9 && month <= 11) return 'outono';
-      return 'inverno'; // December-February
-    } else {
-      // Southern Hemisphere (inverted)
-      if (month >= 9 && month <= 11) return 'primavera';
-      if (month >= 12 || month <= 2) return 'verão';
-      if (month >= 3 && month <= 5) return 'outono';
-      return 'inverno'; // June-August
-    }
-  } catch (error) {
-    logger.warn(`Error detecting season from date: ${dateString}`);
-    return undefined;
-  }
-}
-
-/**
  * Builds a comprehensive prompt for Gemini based on user preferences
  */
 function buildRecommendationPrompt(
@@ -206,17 +152,15 @@ function buildRecommendationPrompt(
     'inverno': 'Winter (December-February) - cold weather, snow activities, holiday season',
   };
 
-  let prompt = `Recommend destinations based on these preferences:\n\n`;
+  let prompt = `You are a destination recommendation expert. CRITICAL: You MUST recommend destinations that match the user's PREFERRED SEASON, not just any season.\n\n`;
 
-  // Trip types
+  prompt += `USER PREFERENCES:\n`;
   prompt += `📍 Travel Type: ${tripTypes.map(t => tripTypeTranslations[t]).join(', ')}\n`;
-
-  // Interests
+  
   if (interests && interests.length > 0) {
     prompt += `⭐ Interests: ${interests.join(', ')}\n`;
   }
-
-  // Group composition
+  
   if (groupType) {
     prompt += `👥 Group: ${groupDescriptions[groupType]}`;
     if (numPeople) prompt += ` (${numPeople} people`;
@@ -224,89 +168,96 @@ function buildRecommendationPrompt(
     if (numPeople || numChildren) prompt += `)`;
     prompt += `\n`;
   }
-
-  // Budget
+  
   if (budget) {
     prompt += `💰 Budget: ${budgetDescriptions[budget]}\n`;
   }
 
-  // Dates and Season
   if (startDate && endDate) {
     const start = new Date(startDate);
     const end = new Date(endDate);
     const duration = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24));
-    prompt += `📅 Dates: ${start.toLocaleDateString()} to ${end.toLocaleDateString()} (~${duration} days)\n`;
-    
-    // Use explicitly selected season if provided, otherwise auto-detect
-    if (season && seasonDescriptions[season]) {
-      prompt += `🌍 Season (User Preference): ${season} - ${seasonDescriptions[season]}\n`;
-    } else {
-      const detectedSeason = detectSeasonFromDate(startDate, language);
-      if (detectedSeason && seasonDescriptions[detectedSeason]) {
-        prompt += `🌍 Season (Auto-detected): ${detectedSeason} - ${seasonDescriptions[detectedSeason]}\n`;
-      }
-    }
+    prompt += `📅 Travel Dates: ${start.toLocaleDateString()} to ${end.toLocaleDateString()} (~${duration} days)\n`;
   } else if (month) {
-    const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    prompt += `📅 Preferred Month: ${months[month - 1]}\n`;
-    
-    // Auto-detect season from month if not explicitly provided
-    const hemisphere = getHemisphere(language);
-    let detectedSeason: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined;
-    
-    if (hemisphere === 'north') {
-      detectedSeason = season || (month >= 3 && month <= 5 ? 'primavera' : month >= 6 && month <= 8 ? 'verão' : month >= 9 && month <= 11 ? 'outono' : 'inverno');
-    } else {
-      // Southern Hemisphere
-      detectedSeason = season || (month >= 9 && month <= 11 ? 'primavera' : month >= 12 || month <= 2 ? 'verão' : month >= 3 && month <= 5 ? 'outono' : 'inverno');
-    }
-    
-    if (detectedSeason && seasonDescriptions[detectedSeason]) {
-      prompt += `🌍 Season: ${detectedSeason} - ${seasonDescriptions[detectedSeason]}\n`;
-    }
-  } else if (season && seasonDescriptions[season]) {
-    // If no dates/month but season is provided
-    prompt += `🌍 Season Preference: ${season} - ${seasonDescriptions[season]}\n`;
+    const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+    prompt += `📅 Travel Month: ${months[month - 1]}\n`;
   }
 
-  prompt += `\n⚠️ CRITICAL INSTRUCTIONS:
-1. The user wants to travel DURING THESE DATES: ${startDate && endDate ? new Date(startDate).toLocaleDateString() + ' to ' + new Date(endDate).toLocaleDateString() : 'Month: ' + (month || 'not specified')}
-2. The user prefers the "${season}" season for their travel experience
-3. IMPORTANT: Match the ACTUAL season in the destination's hemisphere during the travel dates:
-   - If user wants "primavera" (Spring): Recommend destinations in SOUTHERN hemisphere where it's spring (Sep-Nov) OR NORTHERN hemisphere where it's spring (Mar-May). For Nov dates, prioritize SOUTHERN hemisphere destinations!
-   - If user wants "verão" (Summer): Recommend destinations in SOUTHERN hemisphere where it's summer (Dec-Feb) OR NORTHERN hemisphere where it's summer (Jun-Aug). For Nov dates, this is transition season!
-   - If user wants "outono" (Autumn): Recommend destinations in NORTHERN hemisphere where it's autumn (Sep-Nov) OR SOUTHERN hemisphere where it's autumn (Mar-May)
-   - If user wants "inverno" (Winter): Recommend destinations in SOUTHERN hemisphere where it's winter (Jun-Aug) OR NORTHERN hemisphere where it's winter (Dec-Feb)
+  // CRITICAL: Season takes priority
+  if (season && seasonDescriptions[season]) {
+    prompt += `🌍 PREFERRED SEASON: ${season.toUpperCase()} - ${seasonDescriptions[season]}\n`;
+  }
 
-4. For November specifically:
-   - Southern Hemisphere = PRIMAVERA (Spring) - use: Brazil (South), Argentina, Chile, New Zealand, Australia, Uruguay
-   - Northern Hemisphere = OUTONO (Autumn) - use: Japan, Korea, USA Northeast, Europe East, Thailand, India (for fall colors/mild weather)
+  prompt += `\n${'='.repeat(80)}\n`;
+  prompt += `🚨 MANDATORY REQUIREMENTS (MUST FOLLOW):\n`;
+  prompt += `${'='.repeat(80)}\n\n`;
 
-5. DO NOT recommend a destination in the wrong season! Example: If user wants "primavera" in November, do NOT recommend India/Nepal/Thailand (Northern Hemisphere Autumn)
+  if (season === 'primavera') {
+    prompt += `1. User MUST experience SPRING (primavera) during their travel
+2. Spring months: March-May (Northern), September-November (Southern)
+3. For November travel dates: MUST prioritize SOUTHERN hemisphere destinations in spring
+4. CORRECT destinations for Nov Primavera: Brazil (South), Argentina, Chile, Uruguay, New Zealand, Australia
+5. REJECT these: India, Nepal, Vietnam, Thailand, Indonesia, Japan, Korea (these are AUTUMN in Nov, NOT SPRING)
+6. Each destination MUST have spring-like activities: flower festivals, mild weather, outdoor activities
+7. EXPLAIN in reasons why each destination is ideal for spring travelers\n\n`;
+  } else if (season === 'verão') {
+    prompt += `1. User MUST experience SUMMER (verão) during their travel
+2. Summer months: June-August (Northern), December-February (Southern)
+3. For November travel dates: Recommend warm/beach destinations with summer vibes
+4. CORRECT destinations: Caribbean, Mediterranean, Northern hemisphere beach destinations
+5. REJECT: Cold weather destinations
+6. Each destination MUST have beach/outdoor activities\n\n`;
+  } else if (season === 'outono') {
+    prompt += `1. User MUST experience AUTUMN (outono) during their travel
+2. Autumn months: September-November (Northern), March-May (Southern)
+3. For November travel dates: MUST prioritize NORTHERN hemisphere destinations in autumn
+4. CORRECT destinations for Nov Outono: Japan, Korea, USA Northeast, Europe East (Prague, Budapest)
+5. REJECT: Southern hemisphere destinations (these are AUTUMN there, not spring or summer)
+6. Each destination MUST have autumn activities: fall foliage, harvest festivals, cool weather
+7. EXPLAIN in reasons the autumn appeal\n\n`;
+  } else if (season === 'inverno') {
+    prompt += `1. User MUST experience WINTER (inverno) during their travel
+2. Winter months: December-February (Northern), June-August (Southern)
+3. CORRECT destinations: Ski resorts, snow activities, holiday markets, tropical destinations
+4. Each destination MUST offer winter-appropriate activities\n\n`;
+  }
 
-6. Each recommendation MUST explain why the season is appropriate
+  prompt += `${'='.repeat(80)}\n`;
+  prompt += `RESPONSE FORMAT (MANDATORY):\n`;
+  prompt += `${'='.repeat(80)}\n`;
+  prompt += `Return EXACTLY this JSON format (no markdown, no additional text):\n{\n  "recommendations": [\n    {\n      "name": "Destination Name",\n      "country": "Country",\n      "emoji": "🌍",\n      "score": 95,\n      "reasons": [\n        "Reason 1 explaining why this matches the PREFERRED SEASON",\n        "Reason 2 explaining seasonal activities/weather"\n      ]\n    }\n  ]\n}\n\n`;
 
-Provide 4-5 destinations that match ALL criteria: travel type, interests, group, budget, dates, AND correct seasonal hemisphere.`;
+  prompt += `${'='.repeat(80)}\n`;
+  prompt += `⚠️ VERIFICATION CHECKLIST (ALL MUST BE TRUE):\n`;
+  prompt += `${'='.repeat(80)}\n`;
+  prompt += `☑️ Every destination has the user's preferred season during ${month ? `month ${month}` : 'the specified dates'}\n`;
+  prompt += `☑️ All destinations match the travel type: ${tripTypes.join(', ')}\n`;
+  prompt += `☑️ All destinations are suitable for interests: ${interests?.join(', ') || 'general interests'}\n`;
+  prompt += `☑️ All destinations match budget range: ${budget}\n`;
+  prompt += `☑️ Each destination has seasonal activities/weather explained in reasons\n`;
+  prompt += `☑️ NO destinations are in the WRONG season for the travel dates\n\n`;
+
+  prompt += `Provide 4-5 destinations that match ALL criteria above. Start with the HIGHEST match first.`;
 
   // DEBUG: Log all parameters and final prompt
   console.log('════════════════════════════════════════════════════════');
-  console.log('🎯 DESTINATION RECOMMENDATION PARAMETERS:');
+  console.log('🎯 DESTINATION RECOMMENDATION - FINAL PARAMETERS:');
   console.log('════════════════════════════════════════════════════════');
   console.log('📍 Trip Types:', tripTypes.join(', '));
   console.log('⭐ Interests:', interests?.join(', ') || 'None');
   console.log('👥 Group Type:', groupType, '| People:', numPeople, '| Children:', numChildren);
   console.log('💰 Budget:', budget);
   console.log('📅 Dates:', startDate, 'to', endDate);
-  console.log('🌍 Season:', season || 'Not selected');
+  console.log('🌍 SEASON (CRITICAL):', season?.toUpperCase() || 'NOT SET!');
   console.log('🗓️ Month:', month);
   console.log('🌐 Language:', language);
   console.log('════════════════════════════════════════════════════════');
-  console.log('📝 FULL PROMPT TO GEMINI:');
+  console.log('📝 PROMPT BEING SENT TO GEMINI:');
   console.log('════════════════════════════════════════════════════════');
   console.log(prompt);
-  console.log('════════════════════════════════════════════════════════');
+  console.log('════════════════════════════════════════════════════════\n');
   
-  logger.info('🎯 Final Destination Recommendation Prompt:', { season, language });
+  logger.info('🎯 Final Destination Recommendation Prompt - Season:', { season, language });
   return prompt;
 }
 
