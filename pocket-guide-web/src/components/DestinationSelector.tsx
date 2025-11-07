@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TripType, BudgetPerDay, GroupType } from '../types';
 import {
@@ -6,7 +6,11 @@ import {
   getDestinationInfo,
   DestinationScore,
 } from '../utils/destinationMatcher';
+import {
+  getHybridDestinationRecommendations,
+} from '../services/destinationRecommendationService';
 import { CityAutocomplete } from './CityAutocomplete';
+import logger from '../services/logger';
 
 interface DestinationSelectorProps {
   tripTypes: TripType[];
@@ -39,33 +43,80 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
 }) => {
   const { t, i18n } = useTranslation();
   const [showSearch, setShowSearch] = useState(false);
+  const [recommendations, setRecommendations] = useState<DestinationScore[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
-  const recommendations = useMemo(
+  // Generate recommendations using Gemini (with fallback to rule-based)
+  useEffect(() => {
+    setIsLoading(true);
+    const generateRecommendations = async () => {
+      try {
+        const recs = await getHybridDestinationRecommendations(
+          tripTypes,
+          interests,
+          groupType,
+          numPeople,
+          numChildren,
+          budget,
+          startDate,
+          endDate,
+          selectedMonth,
+          () => matchDestinations(
+            tripTypes,
+            interests,
+            groupType,
+            numPeople,
+            numChildren,
+            budget,
+            startDate,
+            endDate,
+            selectedMonth || '',
+            selectedDestination
+          ),
+          i18n?.language || 'en-US'
+        );
+        setRecommendations(recs);
+      } catch (error) {
+        logger.error('Error generating recommendations:', error instanceof Error ? error : new Error(String(error)));
+        // Fallback to rule-based matching
+        const fallbackRecs = matchDestinations(
+          tripTypes,
+          interests,
+          groupType,
+          numPeople,
+          numChildren,
+          budget,
+          startDate,
+          endDate,
+          selectedMonth || '',
+          selectedDestination
+        );
+        setRecommendations(fallbackRecs);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    generateRecommendations();
+  }, [
+    tripTypes,
+    interests,
+    groupType,
+    numPeople,
+    numChildren,
+    budget,
+    startDate,
+    endDate,
+    selectedMonth,
+    selectedDestination,
+    i18n?.language,
+  ]);
+
+  // Memoize selected destination info
+  const selectedInfo = useMemo(
     () =>
-      matchDestinations(
-        tripTypes,
-        interests,
-        groupType,
-        numPeople,
-        numChildren,
-        budget,
-        startDate,
-        endDate,
-        selectedMonth || '',
-        selectedDestination
-      ),
-    [
-      tripTypes,
-      interests,
-      groupType,
-      numPeople,
-      numChildren,
-      budget,
-      startDate,
-      endDate,
-      selectedMonth,
-      selectedDestination,
-    ]
+      selectedDestination ? getDestinationInfo(selectedDestination) : undefined,
+    [selectedDestination]
   );
 
   const handleSelectRecommendation = (destination: string) => {
@@ -77,12 +128,6 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     onDestinationChange(destination);
     setShowSearch(false);
   };
-
-  const selectedInfo = useMemo(
-    () =>
-      selectedDestination ? getDestinationInfo(selectedDestination) : undefined,
-    [selectedDestination]
-  );
 
   return (
     <div className="space-y-6">
@@ -138,6 +183,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 <h3 className="font-semibold text-gray-900 dark:text-white flex items-center gap-2">
                   <span>🤖</span>
                   {t('newFlow.step5.aiRecommendations')}
+                  {isLoading && <span className="animate-spin text-lg">⏳</span>}
                 </h3>
                 <button
                   onClick={() => setShowSearch(true)}
@@ -148,7 +194,19 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                 </button>
               </div>
 
-              {recommendations.length > 0 ? (
+              {isLoading && recommendations.length === 0 ? (
+                <div className="p-6 bg-gray-50 dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded text-center">
+                  <div className="flex items-center justify-center gap-2 mb-2">
+                    <div className="animate-spin text-2xl">🤖</div>
+                    <span className="text-gray-700 dark:text-gray-300 font-medium">
+                      {t('newFlow.step5.loadingRecommendations') || 'Analisando preferências...'}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-600 dark:text-gray-400">
+                    {t('newFlow.step5.loadingSubtitle') || 'Buscando os melhores destinos para você'}
+                  </p>
+                </div>
+              ) : recommendations.length > 0 ? (
                 <div className="grid grid-cols-1 gap-3">
                   {recommendations.map((rec, idx) => (
                     <RecommendationCard
