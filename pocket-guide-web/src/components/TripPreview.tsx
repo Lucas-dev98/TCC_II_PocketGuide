@@ -1,6 +1,6 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Trip, TripType, TripDuration, BudgetPerDay, GroupType } from '../types';
+import { Trip, TripType, BudgetPerDay, GroupType } from '../types';
 import { getDestinationInfo } from '../utils/destinationMatcher';
 import { getInterestsByIds } from '../utils/interestsMatcher';
 
@@ -57,16 +57,6 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
     return type ? labels[type] : t('newFlow.step7.notSelected');
   };
 
-  const getDurationLabel = (duration?: TripDuration) => {
-    const labels: Record<TripDuration, string> = {
-      'fim-de-semana': t('newFlow.step2.durations.weekend'),
-      'uma-semana': t('newFlow.step2.durations.oneWeek'),
-      'duas-semanas': t('newFlow.step2.durations.twoWeeks'),
-      'mes-plus': t('newFlow.step2.durations.oneMonth'),
-    };
-    return duration ? labels[duration] : t('newFlow.step7.notSelected');
-  };
-
   const getBudgetLabel = (budget?: BudgetPerDay) => {
     const labels: Record<BudgetPerDay, string> = {
       'ultra-economico': t('newFlow.step2.budgets.ultraBudget'),
@@ -89,16 +79,6 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
     return group ? labels[group] : t('newFlow.step7.notSelected');
   };
 
-  const getMonthName = (month?: number | string) => {
-    if (!month) return t('newFlow.step7.notSelected');
-    const monthNum = typeof month === 'string' ? parseInt(month, 10) : month;
-    const months = [
-      'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
-      'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro',
-    ];
-    return months[monthNum - 1] || t('newFlow.step7.notSelected');
-  };
-
   return (
     <div className="space-y-6">
       {/* Header */}
@@ -113,7 +93,7 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
 
       {/* Preview Cards Grid */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Step 1: Trip Type */}
+        {/* Step 1: Trip Type & Interests */}
         <PreviewCard
           step={1}
           title={t('newFlow.step1.title')}
@@ -123,50 +103,40 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
           disabled={disabled}
         />
 
-        {/* Step 2: Duration & Budget */}
+        {/* Step 2: Group & Budget */}
         <PreviewCard
           step={2}
           title={t('newFlow.step2.title')}
-          emoji="⏱️"
-          value={`${getDurationLabel(trip.duration)} • ${getBudgetLabel(trip.budgetPerDay)}`}
+          emoji="👥"
+          value={`${getGroupLabel(trip.groupType)} • ${getBudgetLabel(trip.budgetPerDay)}`}
           onEdit={() => onEdit(2)}
           disabled={disabled}
         />
 
-        {/* Step 3: Group */}
+        {/* Step 3: Dates */}
         <PreviewCard
           step={3}
           title={t('newFlow.step3.title')}
-          emoji="👥"
-          value={getGroupLabel(trip.groupType)}
+          emoji="📅"
+          value={`${trip.startDate || '-'} → ${trip.endDate || '-'}`}
           onEdit={() => onEdit(3)}
           disabled={disabled}
         />
 
-        {/* Step 4: Month */}
+        {/* Step 4: Destination */}
         <PreviewCard
           step={4}
-          title={t('newFlow.step4.selectMonth')}
-          emoji="📅"
-          value={getMonthName(trip.travelMonth)}
+          title={t('newFlow.step5.title')}
+          emoji={destinationInfo?.emoji || '🌍'}
+          value={trip.destination || t('newFlow.step7.notSelected')}
           onEdit={() => onEdit(4)}
           disabled={disabled}
         />
 
-        {/* Step 5: Destination */}
-        <PreviewCard
-          step={5}
-          title={t('newFlow.step5.title')}
-          emoji={destinationInfo?.emoji || '🌍'}
-          value={trip.destination || t('newFlow.step7.notSelected')}
-          onEdit={() => onEdit(5)}
-          disabled={disabled}
-        />
-
-        {/* Step 6: Interests */}
+        {/* Interests Display */}
         <div
           className="border-2 border-indigo-200 dark:border-indigo-700 rounded-lg p-4 hover:border-indigo-400 dark:hover:border-indigo-500 transition cursor-pointer"
-          onClick={() => !disabled && onEdit(6)}
+          onClick={() => !disabled && onEdit(1)}
         >
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
