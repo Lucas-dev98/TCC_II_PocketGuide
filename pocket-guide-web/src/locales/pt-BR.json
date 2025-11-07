@@ -622,21 +622,21 @@
       "perDay": "por dia",
       "estimatedTotal": "Total estimado",
       "for7days": "para 7 dias",
-      "completeInfo": "⚠️ Por favor, preencha todas as informações necessárias para continuar.",
-      "confirm": "✅ Confirmar e Criar Viagem",
-      "confirming": "⏳ Criando sua viagem...",
+      "completeInfo": "⚠️ Preencha todos os detalhes da sua viagem para continuar. Selecione pelo menos um destino.",
+      "confirm": "✅ Criar Minha Viagem",
+      "confirming": "⏳ Gerando seu itinerário com IA...",
       "success": {
-        "title": "🎉 Viagem Criada com Sucesso!",
-        "subtitle": "Sua incrível aventura está pronta!",
+        "title": "🎉 Sua Viagem Está Pronta!",
+        "subtitle": "Prepare-se para uma jornada inesquecível com um itinerário personalizado",
         "yourTrip": "Sua Viagem",
         "tripId": "ID da Viagem",
         "copyId": "Copiar ID",
-        "itineraryGenerated": "Itinerário gerado com IA",
-        "budgetCalculated": "Orçamento calculado",
-        "saved": "Salvo na sua conta",
-        "viewTrip": "👀 Ver Detalhes",
-        "createNew": "➕ Criar Nova Viagem",
-        "shareMessage": "Compartilhe o ID da sua viagem com amigos para planejarem juntos!"
+        "itineraryGenerated": "✨ Itinerário personalizado gerado com IA",
+        "budgetCalculated": "💰 Orçamento calculado com precisão",
+        "saved": "💾 Salvo com segurança na sua conta",
+        "viewTrip": "👀 Ver Itinerário Completo",
+        "createNew": "➕ Planejar Nova Viagem",
+        "shareMessage": "Compartilhe o ID com amigos e familiares para planejar juntos!"
       }
     }
   },

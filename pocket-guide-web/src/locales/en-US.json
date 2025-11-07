@@ -622,21 +622,21 @@
       "perDay": "per day",
       "estimatedTotal": "Estimated total",
       "for7days": "for 7 days",
-      "completeInfo": "⚠️ Please fill in all required information to continue.",
-      "confirm": "✅ Confirm & Create Trip",
-      "confirming": "⏳ Creating your trip...",
+      "completeInfo": "⚠️ Fill in all your trip details to continue. Select at least one destination.",
+      "confirm": "✅ Create My Trip",
+      "confirming": "⏳ Generating your AI itinerary...",
       "success": {
-        "title": "🎉 Trip Created Successfully!",
-        "subtitle": "Your amazing adventure is ready!",
+        "title": "🎉 Your Journey Awaits!",
+        "subtitle": "Get ready for an unforgettable adventure with your personalized itinerary",
         "yourTrip": "Your Trip",
         "tripId": "Trip ID",
         "copyId": "Copy ID",
-        "itineraryGenerated": "AI-generated itinerary",
-        "budgetCalculated": "Budget calculated",
-        "saved": "Saved to your account",
-        "viewTrip": "👀 View Details",
-        "createNew": "➕ Create New Trip",
-        "shareMessage": "Share your trip ID with friends to plan together!"
+        "itineraryGenerated": "✨ Personalized itinerary generated with AI",
+        "budgetCalculated": "💰 Budget calculated with precision",
+        "saved": "💾 Securely saved to your account",
+        "viewTrip": "👀 View Full Itinerary",
+        "createNew": "➕ Plan Another Trip",
+        "shareMessage": "Share the ID with friends and family to plan together!"
       }
     }
   },
