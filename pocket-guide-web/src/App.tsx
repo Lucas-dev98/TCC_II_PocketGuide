@@ -1,5 +1,5 @@
 import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom'
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useEffect } from 'react'
 import { ThemeProvider } from './contexts/ThemeContext'
 import { AuthProvider } from './contexts/AuthContext'
 import { I18nProvider } from './i18n/I18nContext'
@@ -8,6 +8,7 @@ import { RouteLoadingFallback } from './components/RouteLoadingFallback'
 import { OfflineIndicator } from './components/OfflineIndicator'
 import { WebVitalsDebugger } from './components/WebVitalsDebugger'
 import { ErrorBoundary } from './components/ErrorBoundary'
+import { cleanupInvalidStorage, logStorageState } from './utils/storageCleanup'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))
@@ -38,6 +39,12 @@ import { BottomNavigation } from './components/BottomNavigation'
  * - / (raiz) ......................... Redireciona para /home ou /login
  */
 function App() {
+  // Cleanup invalid localStorage data on app initialization
+  useEffect(() => {
+    cleanupInvalidStorage()
+    logStorageState()
+  }, [])
+
   return (
     <ErrorBoundary>
       <I18nProvider>

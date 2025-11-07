@@ -77,7 +77,7 @@ class SharingService {
     }
 
     // Recupera dados da viagem do localStorage
-    const tripData = this.getSharedTripData(shareRecord.tripId)
+    const tripData = this.getSharedTripData()
     
     if (!tripData) {
       return null
@@ -220,23 +220,14 @@ class SharingService {
 
   /**
    * Obtém dados completos de uma viagem compartilhada
+   * Nota: Trips não devem ser persistidos em localStorage, eles devem sempre vir do Firestore
    */
-  private getSharedTripData(tripId: string): { trip: Trip; sharedBy: { name: string; email: string } } | null {
+  private getSharedTripData(): { trip: Trip; sharedBy: { name: string; email: string } } | null {
     try {
-      const trips = JSON.parse(localStorage.getItem('trips') || '[]')
-      const trip = trips.find((t: Trip) => t.id === tripId)
-      
-      if (!trip) {
-        return null
-      }
-
-      // Mock de dados do compartilhador
-      const sharedBy = {
-        name: localStorage.getItem('user-name') || 'Usuário',
-        email: localStorage.getItem('user-email') || 'user@example.com',
-      }
-
-      return { trip, sharedBy }
+      // Trips should come from Firestore, not localStorage
+      // If accessed, return null and let the caller handle it
+      console.warn(`⚠️ sharingService: getSharedTripData called but trips are not stored in localStorage`)
+      return null
     } catch (error) {
       console.error('Erro ao recuperar dados de viagem:', error)
       return null
