@@ -213,6 +213,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                       key={`${rec.name}-${idx}`}
                       recommendation={rec}
                       rank={idx + 1}
+                      isSelected={selectedDestination === rec.name}
                       onSelect={() => handleSelectRecommendation(rec.name)}
                       disabled={disabled}
                     />
@@ -263,6 +264,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
 interface RecommendationCardProps {
   recommendation: DestinationScore;
   rank: number;
+  isSelected?: boolean;
   onSelect: () => void;
   disabled?: boolean;
 }
@@ -270,6 +272,7 @@ interface RecommendationCardProps {
 const RecommendationCard: React.FC<RecommendationCardProps> = ({
   recommendation,
   rank,
+  isSelected = false,
   onSelect,
   disabled,
 }) => {
@@ -278,9 +281,11 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
       onClick={onSelect}
       disabled={disabled}
       className={`w-full text-left p-4 border-2 rounded-lg transition ${
-        disabled
-          ? 'opacity-50 cursor-not-allowed'
-          : 'border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer'
+        isSelected
+          ? 'border-indigo-500 dark:border-indigo-400 bg-indigo-50 dark:bg-indigo-900/30 shadow-lg shadow-indigo-500/20'
+          : disabled
+            ? 'opacity-50 cursor-not-allowed border-gray-200 dark:border-gray-700'
+            : 'border-gray-200 dark:border-gray-700 hover:border-indigo-500 dark:hover:border-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20 cursor-pointer'
       }`}
     >
       <div className="flex items-start justify-between">
@@ -329,8 +334,12 @@ const RecommendationCard: React.FC<RecommendationCardProps> = ({
           )}
         </div>
 
-        <div className="ml-3 text-indigo-600 dark:text-indigo-400 text-2xl">
-          →
+        <div className={`ml-3 text-2xl transition-all ${
+          isSelected
+            ? 'text-indigo-600 dark:text-indigo-400'
+            : 'text-indigo-600 dark:text-indigo-400 opacity-60'
+        }`}>
+          {isSelected ? '✓' : '→'}
         </div>
       </div>
     </button>
