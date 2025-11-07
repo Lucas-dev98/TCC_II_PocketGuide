@@ -179,6 +179,8 @@
     "nextButton": "Next →",
     "createButton": "Create Trip",
     "createButtonLoading": "Generating with AI...",
+    "confirm": "✅ Create My Trip",
+    "confirming": "⏳ Generating your AI itinerary...",
     "invalidDestination": "Please enter the destination",
     "invalidCountry": "Please enter the country",
     "invalidStartDate": "Please select the start date",

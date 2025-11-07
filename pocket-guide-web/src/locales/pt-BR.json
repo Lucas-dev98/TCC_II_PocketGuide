@@ -179,6 +179,8 @@
     "nextButton": "Próximo →",
     "createButton": "Criar Viagem",
     "createButtonLoading": "Gerando com IA...",
+    "confirm": "✅ Criar Minha Viagem",
+    "confirming": "⏳ Gerando seu itinerário com IA...",
     "invalidDestination": "Por favor, digite o destino",
     "invalidCountry": "Por favor, digite o país",
     "invalidStartDate": "Por favor, selecione a data de início",
