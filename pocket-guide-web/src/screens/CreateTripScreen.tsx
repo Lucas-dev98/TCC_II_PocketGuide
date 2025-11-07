@@ -55,6 +55,7 @@ export default function CreateTripScreen() {
 
   const [step, setStep] = useState<StepType>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [createdTripId, setCreatedTripId] = useState<string>('')
 
   const [formData, setFormData] = useState<TripFormData>({
     tripTypes: [],
@@ -190,8 +191,9 @@ export default function CreateTripScreen() {
         createdAt: new Date().toISOString(),
       }
 
-      // Save trip
-      await addTrip(tripData)
+      // Save trip and get ID
+      const tripId = await addTrip(tripData)
+      setCreatedTripId(tripId)
 
       showSuccess(t('createTrip.tripCreatedSuccess') || 'Trip created successfully!')
       setStep(6)
@@ -368,12 +370,13 @@ export default function CreateTripScreen() {
             {/* Step 6: Success */}
             {step === 6 && (
               <TripSuccess
-                tripId="new-trip"
+                tripId={createdTripId}
                 tripName={formData.destination}
                 destination={formData.destination}
-                onViewTrip={() => navigate('/home')}
+                onViewTrip={() => navigate(`/trip/${createdTripId}`)}
                 onCreateNew={() => {
                   setStep(1)
+                  setCreatedTripId('')
                   setFormData({
                     tripTypes: [],
                     budgetPerDay: 'medio',
