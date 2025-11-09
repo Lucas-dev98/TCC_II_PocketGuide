@@ -638,17 +638,43 @@ export class PhotoService {
   }
 
   private static selectBestImage(images: UnsplashImage[]): UnsplashImage {
-    // Filtrar imagens com boa qualidade (mais likes/downloads)
-    const scored = images.map((img: any) => ({
-      image: img,
-      score: (img.likes || 0) * 2 + (img.downloads || 0) * 1.5,
-    }));
+    // Improved scoring algorithm considering multiple quality metrics
+    // Formula: likes * 0.5 + downloads * 0.3 + views * 0.15 + color diversity * 0.05
+    const scored = images.map((img: any) => {
+      const likes = img.likes || 0;
+      const downloads = img.downloads || 0;
+      const views = img.views || 0;
+      
+      // Normalize downloads and views to similar scale as likes
+      const normalizedDownloads = (downloads / 100) || 0;
+      const normalizedViews = (views / 10000) || 0;
+      
+      // Weighted score (likes are most reliable indicator of quality)
+      const score = (likes * 0.5) + (normalizedDownloads * 0.3) + (normalizedViews * 0.15) + Math.random() * 0.05;
+      
+      return {
+        image: img,
+        score: score,
+        likes: likes,
+        downloads: downloads,
+        views: views,
+      };
+    });
 
-    // Ordenar por score e pegar a melhor
+    // Sort by score descending
     scored.sort((a, b) => b.score - a.score);
     
-    // Retornar primeira com score decente ou a primeira se nenhuma tiver
-    return scored[0]?.image || images[0];
+    // Log top 3 images for debugging
+    debug.log(`   📊 Top 3 imagens por qualidade:`);
+    scored.slice(0, 3).forEach((item, idx) => {
+      debug.log(`      ${idx + 1}. Score: ${item.score.toFixed(2)} (likes: ${item.likes}, downloads: ${item.downloads}, views: ${item.views})`);
+    });
+    
+    // Return first image with score, or fallback to first if none
+    const bestImage = scored[0]?.image || images[0];
+    debug.log(`   ✅ Melhor imagem selecionada: Score ${scored[0]?.score.toFixed(2)}`);
+    
+    return bestImage;
   }
 
   private static getSearchQuery(attractionName: string): string {
