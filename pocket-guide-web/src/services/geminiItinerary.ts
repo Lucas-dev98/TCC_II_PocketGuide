@@ -256,12 +256,12 @@ const parseGeminiResponse = (textContent: string): any => {
  * Generate a diversified fallback itinerary when Gemini fails
  * This creates varied activities based on tags and destination
  */
-const generateDiversifiedFallbackItinerary = (
+const generateDiversifiedFallbackItinerary = async (
   destination: string,
   days: number,
   _tags: string[],  // Tags parameter (can be used in future for interest-based variety)
   budget: string
-): ItineraryItem[] => {
+): Promise<ItineraryItem[]> => {
   // Predefined activity templates with variations
   interface ActivityTemplate {
     name: string;
@@ -369,21 +369,18 @@ const generateDiversifiedFallbackItinerary = (
     ],
   };
 
-  const defaultCoords: { [key: string]: [number, number] } = {
-    'paris': [48.8566, 2.3522],
-    'london': [51.5074, -0.1278],
-    'new york': [40.7128, -74.0060],
-    'tokyo': [35.6762, 139.6503],
-    'rio de janeiro': [-22.9068, -43.1729],
-    'barcelona': [41.3851, 2.1734],
-    'rome': [41.9028, 12.4964],
-    'dubai': [25.2048, 55.2708],
-    'singapore': [1.3521, 103.8198],
-    'bangkok': [13.7563, 100.5018],
-  };
-
-  const destLower = destination.toLowerCase();
-  const baseCoords = defaultCoords[destLower] || [0, 0];
+  // Geocode the destination to get accurate base coordinates
+  console.log(`🌍 Geocoding destination "${destination}" for fallback itinerary`);
+  const geocodedDest = await geocodeLocation(destination);
+  const baseCoords: [number, number] = geocodedDest 
+    ? [geocodedDest.lat, geocodedDest.lng]
+    : [0, 0];
+  
+  if (baseCoords[0] === 0 && baseCoords[1] === 0) {
+    console.warn(`⚠️ Could not geocode destination "${destination}", using Null Island (0,0)`);
+  } else {
+    console.log(`✅ Geocoded destination to [${baseCoords[0]}, ${baseCoords[1]}]`);
+  }
 
   const itinerary: ItineraryItem[] = [];
   const usedCategoriesByDay: Record<number, string[]> = {};
@@ -699,7 +696,7 @@ export const generateItineraryWithGemini = async (
         console.warn('🚨 REPETITIONS DETECTED! Using diversified fallback itinerary instead...');
         
         // Generate a well-structured, diversified fallback
-        const fallbackActivities = generateDiversifiedFallbackItinerary(
+        const fallbackActivities = await generateDiversifiedFallbackItinerary(
           destination,
           days,
           tags,
@@ -729,7 +726,7 @@ export const generateItineraryWithGemini = async (
     console.warn('⚠️ Using enhanced fallback itinerary instead...');
     
     // Generate a well-structured, diversified fallback
-    const fallbackActivities = generateDiversifiedFallbackItinerary(
+    const fallbackActivities = await generateDiversifiedFallbackItinerary(
       destination,
       days,
       tags,
