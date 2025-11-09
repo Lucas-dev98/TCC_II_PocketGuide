@@ -120,6 +120,8 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         lastLoadTime: Date.now(),
         error: null,
       });
+      
+      console.log('📚 tripsStore.loadTrips: Final state set with trips:', trips.map(t => ({ id: t.id, destination: t.destination })));
     } catch (error) {
       console.error('❌ Erro ao carregar viagens:', error);
       const errorMsg = error instanceof Error ? error.message : 'Erro ao carregar viagens';

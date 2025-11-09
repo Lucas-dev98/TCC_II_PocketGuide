@@ -358,7 +358,12 @@ export default function TripDetailScreen() {
   useEffect(() => {
     if (id && trips.length > 0) {
       const foundTrip = trips.find((t) => t.id === id);
-      debug.log('🔄 Trips updated, looking for trip:', { id, tripsCount: trips.length, found: !!foundTrip, tripIds: trips.map(t => t.id) });
+      debug.log('🔄 Trips updated, looking for trip:', { id, tripsCount: trips.length, found: !!foundTrip, tripIds: trips.map(t => t.id).join(', ') });
+      if (foundTrip) {
+        debug.log('✅ Trip found after loading from Firestore!', { id, destination: foundTrip.destination });
+      } else {
+        debug.error('❌ Trip still not found after loading. This is a data mismatch issue.', { id, tripsCount: trips.length });
+      }
     }
   }, [trips, id]);
 
