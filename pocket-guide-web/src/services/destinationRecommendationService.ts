@@ -189,12 +189,12 @@ function buildRecommendationPrompt(
     prompt += `🌍 PREFERRED SEASON: ${season.toUpperCase()} - ${seasonDescriptions[season]}\n`;
   }
 
-  // Trip scope guidance (national vs international)
+  // Trip scope guidance (national vs international) - MANDATORY RESTRICTION
   if (tripScope) {
     if (tripScope === 'nacional') {
-      prompt += `🌐 TRIP SCOPE: NACIONAL - Prioritize destinations within the user's country where possible. Avoid international recommendations unless no suitable national options exist.\n`;
+      prompt += `🌐 TRIP SCOPE: NACIONAL - MANDATORY RULE: ALL destinations MUST be within Brazil ONLY. NO international destinations allowed. REJECT any destination outside Brazil.\n`;
     } else if (tripScope === 'internacional') {
-      prompt += `🌐 TRIP SCOPE: INTERNACIONAL - Prioritize destinations outside the user's country.\n`;
+      prompt += `🌐 TRIP SCOPE: INTERNACIONAL - MANDATORY RULE: ALL destinations MUST be outside Brazil ONLY. NO Brazilian destinations allowed. REJECT any destination inside Brazil.\n`;
     }
   }
 
@@ -245,7 +245,16 @@ function buildRecommendationPrompt(
   prompt += `☑️ All destinations are suitable for interests: ${interests?.join(', ') || 'general interests'}\n`;
   prompt += `☑️ All destinations match budget range: ${budget}\n`;
   prompt += `☑️ Each destination has seasonal activities/weather explained in reasons\n`;
-  prompt += `☑️ NO destinations are in the WRONG season for the travel dates\n\n`;
+  prompt += `☑️ NO destinations are in the WRONG season for the travel dates\n`;
+  
+  // Add MANDATORY trip scope verification
+  if (tripScope === 'nacional') {
+    prompt += `☑️ ⚠️ CRITICAL: ALL destinations are INSIDE Brazil ONLY - NO exceptions!\n`;
+  } else if (tripScope === 'internacional') {
+    prompt += `☑️ ⚠️ CRITICAL: ALL destinations are OUTSIDE Brazil ONLY - NO exceptions!\n`;
+  }
+  
+  prompt += `\n`;
 
   prompt += `Provide 4-5 destinations that match ALL criteria above. Start with the HIGHEST match first.`;
 

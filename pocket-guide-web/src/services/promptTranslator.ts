@@ -89,6 +89,14 @@ export const generateItineraryPrompt = (
 - Tipo de Viagem: ${tripScopeDescription}
 - Estação: ${season || 'não especificada'}
 
+⚠️ REGRA CRÍTICA - TIPO DE VIAGEM (${tripScopeDescription.toUpperCase()}):
+${tripScope === 'nacional' 
+  ? '🇧🇷 NACIONAL OBRIGATÓRIO: Todas as atividades DEVEM estar dentro do Brasil APENAS.\n   ❌ NÃO PERMITIDO: Atividades no exterior.\n   ✅ VÁLIDO: São Paulo, Rio, Bahia, Santa Catarina, Minas Gerais, qualquer lugar do Brasil.'
+  : tripScope === 'internacional'
+  ? '🌍 INTERNACIONAL OBRIGATÓRIO: Todas as atividades DEVEM estar fora do Brasil.\n   ❌ NÃO PERMITIDO: Atividades dentro do Brasil.\n   ✅ VÁLIDO: Argentina, Peru, Chile, Europa, Ásia, qualquer lugar FORA do Brasil.'
+  : 'Tipo de viagem não especificado'
+}
+
 🎯 REQUISITOS CRÍTICOS - DEVE CUMPRIR TODOS:
 
 1. EXATAMENTE ${activitiesCount} ATIVIDADES (${days} atividades por dia):
@@ -185,6 +193,14 @@ RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 - Trip Type: ${tripScopeDescription}
 - Season: ${season || 'not specified'}
 
+⚠️ CRITICAL RULE - TRIP TYPE (${tripScopeDescription.toUpperCase()}):
+${tripScope === 'nacional' 
+  ? '🇧🇷 DOMESTIC MANDATORY: All activities MUST be within Brazil ONLY.\n   ❌ NOT ALLOWED: Activities outside Brazil.\n   ✅ VALID: São Paulo, Rio, Bahia, Santa Catarina, Minas Gerais, any location in Brazil.'
+  : tripScope === 'internacional'
+  ? '🌍 INTERNATIONAL MANDATORY: All activities MUST be outside Brazil.\n   ❌ NOT ALLOWED: Activities inside Brazil.\n   ✅ VALID: Argentina, Peru, Chile, Europe, Asia, any location OUTSIDE Brazil.'
+  : 'Trip type not specified'
+}
+
 🎯 CRITICAL REQUIREMENTS - MUST COMPLY WITH ALL:
 
 1. EXACTLY ${activitiesCount} ACTIVITIES (${days} activities per day):
@@ -280,6 +296,14 @@ RESPOND NOW - ONLY JSON, NO EXPLANATIONS:`,
 - Intereses: ${tagsString}
 - Tipo de Viaje: ${tripScopeDescription}
 - Estación: ${season || 'no especificada'}
+
+⚠️ REGLA CRÍTICA - TIPO DE VIAJE (${tripScopeDescription.toUpperCase()}):
+${tripScope === 'nacional' 
+  ? '🇧🇷 NACIONAL OBLIGATORIO: Todas las actividades DEBEN estar dentro de Brasil SOLAMENTE.\n   ❌ NO PERMITIDO: Actividades fuera de Brasil.\n   ✅ VÁLIDO: São Paulo, Rio, Bahia, Santa Catarina, Minas Gerais, cualquier lugar en Brasil.'
+  : tripScope === 'internacional'
+  ? '🌍 INTERNACIONAL OBLIGATORIO: Todas las actividades DEBEN estar fuera de Brasil.\n   ❌ NO PERMITIDO: Actividades dentro de Brasil.\n   ✅ VÁLIDO: Argentina, Perú, Chile, Europa, Asia, cualquier lugar FUERA de Brasil.'
+  : 'Tipo de viaje no especificado'
+}
 
 🎯 REQUISITOS CRÍTICOS - DEBE CUMPLIR TODOS:
 
