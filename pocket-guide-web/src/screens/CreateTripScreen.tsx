@@ -33,6 +33,7 @@ import i18n from 'i18next'
  */
 
 interface TripFormData {
+  tripScope: 'nacional' | 'internacional' | '';
   tripTypes: TripType[];
   budgetPerDay: BudgetPerDay;
   groupType: GroupType;
@@ -46,7 +47,7 @@ interface TripFormData {
   interests: string[];
 }
 
-type StepType = 1 | 2 | 3 | 4 | 5 | 6;
+type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -60,6 +61,7 @@ export default function CreateTripScreen() {
   const [createdTripId, setCreatedTripId] = useState<string>('')
 
   const [formData, setFormData] = useState<TripFormData>({
+    tripScope: '',
     tripTypes: [],
     budgetPerDay: 'medio',
     groupType: 'casal',
@@ -213,6 +215,7 @@ export default function CreateTripScreen() {
         budgetPerDay: formData.budgetPerDay,
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
+        tripScope: formData.tripScope,
         interests: formData.interests,
         itinerary: itinerary || [], // Ensure itinerary is always an array
         createdAt: new Date().toISOString(),
@@ -225,6 +228,7 @@ export default function CreateTripScreen() {
         endDate: tripData.endDate,
         budgetPerDay: tripData.budgetPerDay,  // ✅ ADICIONADO
         groupType: tripData.groupType,        // ✅ ADICIONADO
+        tripScope: tripData.tripScope,        // ✅ ADICIONADO
         hasItinerary: !!(tripData.itinerary && tripData.itinerary.length > 0),
       })
 
@@ -242,7 +246,7 @@ export default function CreateTripScreen() {
       await loadTrips(user.uid)
       console.log('✅ Trips reloaded')
       
-      setStep(6)
+      setStep(7)
     } catch (err) {
       console.error('❌ Error creating trip:', err)
       console.error('Error details:', err instanceof Error ? err.stack : err)
@@ -267,6 +271,7 @@ export default function CreateTripScreen() {
     budgetPerDay: formData.budgetPerDay,
     groupType: formData.groupType,
     travelMonth: formData.travelMonth,
+    tripScope: formData.tripScope || undefined,
     interests: formData.interests,
     createdAt: new Date().toISOString(),
   } : null
@@ -436,6 +441,7 @@ export default function CreateTripScreen() {
                   setStep(1)
                   setCreatedTripId('')
                   setFormData({
+                    tripScope: '',
                     tripTypes: [],
                     budgetPerDay: 'medio',
                     groupType: 'casal',

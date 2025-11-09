@@ -94,6 +94,7 @@ export interface Trip {
   numChildrens?: number;
   travelDate?: Date | string;
   travelMonth?: string;
+  tripScope?: 'nacional' | 'internacional';
 }
 
 /**
