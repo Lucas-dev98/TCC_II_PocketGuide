@@ -1,49 +1,74 @@
-# 🎯 Fixes: Itinerário Diversificado
+# 🎯 Fixes: Itinerário Diversificado - Atualização Final
 
 ## ✅ Problemas Corrigidos
 
-### 1. **Temperatura do Gemini Aumentada**
-- **Antes**: `temperature: 0.3` (muito previsível)
-- **Depois**: `temperature: 0.8` (mais criativo)
-- **TopK**: 40 → 50
-- **TopP**: 0.8 → 0.9
-- **Por quê**: Temperatura baixa faz IA gerar respostas muito genéricas e repetitivas
+### 1. **Temperatura do Gemini Aumentada (0.8 → 1.0)**
+- **Antes**: `temperature: 0.8` (menos criativo)
+- **Depois**: `temperature: 1.0` (muito mais criativo)
+- **TopP**: 0.9 → 0.95 (mais variação)
+- **Por quê**: Aumentar temperatura força IA a gerar respostas mais diversas
 
-### 2. **Prompt Completamente Reescrito**
-- **Adicionado**: Lista explícita de 15+ categorias diferentes
-- **Adicionado**: Estrutura obrigatória de TIPOS por dia (Tipo A, B, C, D)
-- **Adicionado**: Instrução forte: "ZERO REPETIÇÃO"
-- **Adicionado**: Exemplos de variação correta por dia
-- **Adicionado**: Validação final antes de responder
-- **Adicionado**: Requisitos muito mais explícitos para cada atividade
-
-**Exemplo da nova estrutura:**
-```
-Dia 1 - TIPO A: [Cultura Histórica] [Comida Local] [Entretenimento Noturno]
-Dia 2 - TIPO B: [Natureza/Outdoor] [Comida Sofisticada] [Arte/Museu]
-Dia 3 - TIPO C: [Experiência Imersiva] [Comida Casual] [Vida Noturna/Bar]
-Dia 4 - TIPO D: [Compras/Mercado] [Comida Moderna] [Atividade Ativa]
-```
-
-### 3. **Validação Pós-Gemini Adicionada**
+### 2. **Fallback Itinerary Completamente Reescrito**
+**ANTES (❌ Problema):**
 ```typescript
-function validateAndFixItinerary(itinerary: ItineraryItem[])
+if (day % 4 === 1 || tags.includes('yoga')) categoryPool = cultural;
+if (day % 4 === 2 || tags.includes('natureza')) categoryPool = nature;
+```
+**Problema**: Para Rio + Yoga, TODOS os dias davam match, causando MESMAS CATEGORIAS!
+
+**DEPOIS (✅ Solução):**
+```typescript
+const categoryRotation = [
+  ['cultural', 'foodie', 'nightlife'],      // Dia 1 - sempre diferente
+  ['nature', 'adventure', 'wellness'],      // Dia 2 - sempre diferente
+  ['shopping', 'cultural', 'adventure'],    // Dia 3 - sempre diferente
+  ['foodie', 'nature', 'nightlife'],        // Dia 4 - sempre diferente
+];
+
+// CADA DIA tem categorias completamente diferentes
+const dayRotationIndex = (day - 1) % categoryRotation.length;
+const baseCategoriesForDay = categoryRotation[dayRotationIndex];
 ```
 
-**O que valida:**
-- ✅ Verifica se há categorias repetidas no mesmo dia
-- ✅ Verifica se há nomes de atividades repetidos no mesmo dia
-- ✅ Verifica se há categorias repetidas entre dias diferentes
-- ✅ Verifica se há atividades repetidas entre dias diferentes
-- ✅ Loga EXATAMENTE quais são as repetições encontradas
+**Resultado:**
+- ✅ Dia 1: Museu + Comida Local + Vida Noturna
+- ✅ Dia 2: Trilha + Aventura + Yoga/Wellness
+- ✅ Dia 3: Compras + Museu + Aventura
+- ✅ Dia 4: Comida + Natureza + Samba
 
-**Console output exemplo:**
+### 3. **Rastreamento de Atividades Usadas**
+```typescript
+const usedActivities = new Set<string>();
+const usedCategoriesByDay: Record<number, string[]> = {};
+
+// Garante que NENHUMA atividade se repete
+const availableActivities = categoryPool.filter(
+  (activity) => !usedActivities.has(activity.name)
+);
+
+// Log final mostra distribuição
+console.log('🎯 Fallback Itinerary Category Distribution:');
+// Day 1: Museum/Art, Food Local/Market, Bar/Drinks
+// Day 2: Hiking/Trail, Adventure/Active, Spa/Wellness
 ```
-⚠️ ITINERARY VALIDATION ISSUES:
-   - Day 1: Repeated category "Food"
-   - Repeated category "Museum" across different days
-✅ ITINERARY VALIDATION PASSED - All activities are unique!
+
+### 4. **Validação Inteligente com Fallback Automático**
+```typescript
+const validation = validateAndFixItinerary(itineraryItems);
+
+// Se Gemini retorna > 5 issues (muitas repetições),
+// automaticamente usa fallback diversificado
+if (!validation.valid && validation.issues.length > 5) {
+  console.warn('⚠️ Too many repetitions. Using fallback...');
+  return generateDiversifiedFallbackItinerary(...);
+}
 ```
+
+### 5. **Prompt Explícito ZERO REPETIÇÃO**
+- ✅ Lista de categorias permitidas (15+)
+- ✅ Estrutura obrigatória TIPO A, B, C, D
+- ✅ Exemplos claros de variação correta
+- ✅ Validação final checklist
 
 ---
 
