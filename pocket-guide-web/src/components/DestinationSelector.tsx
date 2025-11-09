@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
 import { useTranslation } from 'react-i18next';
-import { TripType, BudgetPerDay, GroupType } from '../types';
+import { TripType, BudgetPerDay, GroupType, Location } from '../types';
 import {
   matchDestinations,
   getDestinationInfo,
@@ -25,6 +25,7 @@ interface DestinationSelectorProps {
   tripScope?: 'nacional' | 'internacional' | '';
   selectedMonth?: number;
   selectedDestination?: string;
+  userLocation?: Location | null;
   onDestinationChange: (destination: string) => void;
   onNext?: () => void; // Called when destination is selected to auto-advance
   disabled?: boolean;
@@ -43,6 +44,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   tripScope,
   selectedMonth,
   selectedDestination,
+  userLocation,
   onDestinationChange,
   onNext,
   disabled = false,
@@ -86,6 +88,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           season,
           selectedMonth,
           tripScope,
+          userLocation,
           () => matchDestinations(
             tripTypes,
             interests,

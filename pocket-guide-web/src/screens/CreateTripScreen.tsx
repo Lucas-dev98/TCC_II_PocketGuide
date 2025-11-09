@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import useI18n from '../hooks/useI18n'
@@ -8,6 +8,7 @@ import { Button } from '../components/Button'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
+import { getUserLocation } from '../services/userLocationService'
 import { TripScopeSelector } from '../components/TripScopeSelector'
 import { TravelTypeSelector } from '../components/TravelTypeSelector'
 import { DurationAndBudgetSelector } from '../components/DurationAndBudgetSelector'
@@ -61,6 +62,7 @@ export default function CreateTripScreen() {
   const [step, setStep] = useState<StepType>(1)
   const [isLoading, setIsLoading] = useState(false)
   const [createdTripId, setCreatedTripId] = useState<string>('')
+  const [userLocation, setUserLocation] = useState<any>(null)
 
   const [formData, setFormData] = useState<TripFormData>({
     tripScope: '',
@@ -74,6 +76,18 @@ export default function CreateTripScreen() {
     destination: '',
     interests: [],
   })
+
+  // Get user location on component mount
+  useEffect(() => {
+    const fetchUserLocation = async () => {
+      const location = await getUserLocation()
+      if (location) {
+        console.log('📍 User location obtained:', location)
+        setUserLocation(location)
+      }
+    }
+    fetchUserLocation()
+  }, [])
 
   const handleGoBack = () => {
     if (step === 1) {
@@ -180,7 +194,13 @@ export default function CreateTripScreen() {
       // Calculate duration from dates
       const start = new Date(formData.startDate)
       const end = new Date(formData.endDate)
-      const durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+      let durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
+      
+      // Ensure minimum 1 day for same-day trips (nearby destinations)
+      if (durationDays <= 0) {
+        durationDays = 1
+        console.log('📍 Same-day trip detected, setting to 1 day')
+      }
 
       console.log('📅 Duration:', durationDays, 'days')
 
@@ -423,6 +443,7 @@ export default function CreateTripScreen() {
             {/* Step 5: Destination */}
             {step === 5 && (
               <DestinationSelector
+                userLocation={userLocation}
                 tripTypes={formData.tripTypes}
                 interests={formData.interests}
                 groupType={formData.groupType}

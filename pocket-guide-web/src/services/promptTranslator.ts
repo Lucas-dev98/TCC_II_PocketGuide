@@ -59,6 +59,70 @@ const getBudgetDescription = (budget: string, language: LanguageCode): string =>
 };
 
 /**
+ * Map user interests to suggested activity types
+ */
+const mapInterestsToActivities = (tags: string[]): string => {
+  const interestActivityMap: Record<string, string> = {
+    // Beach & Water Activities
+    'praia': 'Beach clubs, water sports, snorkeling, sunset beach walks',
+    'natureza': 'National parks, hiking trails, waterfalls, wildlife observation',
+    'trilha': 'Mountain trails, guided hikes, rock climbing, nature reserves',
+    'água': 'Beach bars, swimming, kayaking, boat tours, water activities',
+    
+    // Culture & History
+    'cultura': 'Museums, historical sites, cultural centers, local markets',
+    'história': 'Historical monuments, archaeological sites, local heritage tours',
+    'gastronomia': 'Food tours, cooking classes, local restaurants, markets',
+    'local': 'Authentic local experiences, community tours, street food',
+    
+    // Adventure & Sports
+    'aventura': 'Rock climbing, paragliding, zip-lining, extreme sports',
+    'esportes': 'Sports centers, activities, adventure parks, outdoor challenges',
+    'adrenalina': 'Adrenaline activities, speed sports, thrilling experiences',
+    
+    // Relaxation & Wellness
+    'relaxamento': 'Spas, wellness centers, meditation, peaceful environments',
+    'yoga': 'Yoga studios, meditation classes, wellness retreats',
+    'spa': 'Massage centers, sauna, hot springs, beauty treatments',
+    'bem-estar': 'Wellness activities, mindfulness, healing experiences',
+    
+    // Arts & Entertainment
+    'arte': 'Art galleries, museums, artist studios, cultural performances',
+    'música': 'Live music venues, concerts, music festivals, local performances',
+    'noturna': 'Nightclubs, bars, lounges, evening entertainment',
+    'diversão': 'Entertainment venues, theme parks, fun activities, shows',
+    
+    // Food & Drink
+    'comida': 'Restaurants, street food, food markets, dining experiences',
+    'bebida': 'Wine bars, breweries, cocktail lounges, beverage tastings',
+    'café': 'Coffee shops, local cafés, specialty coffee experiences',
+    'vinho': 'Wine regions, wine bars, tastings, vineyards tours',
+    
+    // Shopping & Urban
+    'compras': 'Shopping centers, markets, boutiques, local shops',
+    'shopping': 'Shopping malls, designer stores, bargain hunting',
+    'urbana': 'City tours, street art, urban culture, local neighborhoods',
+    
+    // Nature & Wildlife
+    'animais': 'Wildlife sanctuaries, animal encounters, nature reserves',
+    'fotografia': 'Photography tours, scenic viewpoints, picturesque locations',
+    'paisagem': 'Scenic landscapes, viewpoints, photography spots, natural beauty',
+  };
+
+  return tags
+    .map(tag => {
+      const normalized = tag.toLowerCase().trim();
+      const activities = interestActivityMap[normalized] || 'Relevant local experiences';
+      return `• ${tag.toUpperCase()}: ${activities}`;
+    })
+    .join('\n   ');
+};
+
+/**
+ * Map budget codes to detailed descriptions with price ranges
+ */
+
+/**
  * Generate itinerary prompt in the specified language
  */
 export const generateItineraryPrompt = (
@@ -98,6 +162,25 @@ ${tripScope === 'nacional'
 }
 
 🎯 REQUISITOS CRÍTICOS - DEVE CUMPRIR TODOS:
+
+⭐⭐⭐ REQUIREMENT #0: INTERESSES SELECIONADOS (HIGHEST PRIORITY!) ⭐⭐⭐
+   🎯 INTERESSES DO USUÁRIO: ${tagsString.toUpperCase()}
+   📋 OBRIGAÇÃO: CADA atividade DEVE estar alinhada com UM dos interesses selecionados
+   ✅ EXEMPLO: Se usuário selecionou "Praia, Relaxamento, Gastronomia":
+      - Atividade 1: Praia com piscinas naturais (alinhado com PRAIA)
+      - Atividade 2: Spa com massagem relaxante (alinhado com RELAXAMENTO)
+      - Atividade 3: Restaurante com gastronomia local (alinhado com GASTRONOMIA)
+   ❌ NÃO FAZER: Sugerir trilha de montanha extrema se usuário não selecionou "Aventura"
+   ❌ NÃO FAZER: Sugerir museu de arte se usuário selecionou "Praia, Comida, Diversão"
+   
+   📊 MAPEAMENTO DE INTERESSES → ATIVIDADES:
+   ${mapInterestsToActivities(tags)}
+   
+   🔄 DISTRIBUIÇÃO DE INTERESSES POR DIA:
+   - Cada dia DEVE ter atividades de DIFERENTES interesses
+   - Se 3 interesses, cada dia tem 1 interesse diferente
+   - Ou alterne entre interesses nos 3 horários do dia
+   - NUNCA coloque 3 atividades do mesmo interesse em um dia
 
 1. EXATAMENTE ${activitiesCount} ATIVIDADES (${days} atividades por dia):
    ✅ Total de atividades: ${activitiesCount}
@@ -180,6 +263,9 @@ FORMATO JSON (sem markdown, sem código blocks, válido):
 ✓ Nenhuma atividade se repete?
 ✓ Todos os preços foram informados?
 ✓ Horários são DIFERENTES em cada atividade?
+✓ ⭐ INTERESSES COBERTOS: Cada um dos interesses [${tagsString}] está representado NO MÍNIMO 1 vez?
+✓ ⭐ ALINHAMENTO: Cada atividade está alinhada com UM DOS interesses selecionados?
+✓ ⭐ DISTRIBUIÇÃO: Interesses são distribuídos ao longo dos dias, não concentrados?
 
 RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 
@@ -284,6 +370,9 @@ JSON FORMAT (no markdown, no code blocks, valid):
 ✓ Does no activity repeat?
 ✓ Were all prices informed?
 ✓ Are times DIFFERENT in each activity?
+✓ ⭐ INTERESTS COVERED: Is each of the interests [${tagsString}] represented AT LEAST once?
+✓ ⭐ ALIGNMENT: Is every activity aligned with ONE OF the selected interests?
+✓ ⭐ DISTRIBUTION: Are interests spread across days, not concentrated?
 
 RESPOND NOW - ONLY JSON, NO EXPLANATIONS:`,
 
@@ -306,6 +395,25 @@ ${tripScope === 'nacional'
 }
 
 🎯 REQUISITOS CRÍTICOS - DEBE CUMPLIR TODOS:
+
+⭐⭐⭐ REQUISITO #0: INTERESES SELECCIONADOS (¡PRIORIDAD MÁXIMA!) ⭐⭐⭐
+   🎯 INTERESES DEL USUARIO: ${tagsString.toUpperCase()}
+   📋 OBLIGACIÓN: CADA actividad DEBE estar alineada con UNO de los intereses seleccionados
+   ✅ EJEMPLO: Si usuario seleccionó "Playa, Relajación, Gastronomía":
+      - Actividad 1: Playa con piscinas naturales (alineado con PLAYA)
+      - Actividad 2: Spa con masaje relajante (alineado con RELAJACIÓN)
+      - Actividad 3: Restaurante con gastronomía local (alineado con GASTRONOMÍA)
+   ❌ NO HACER: Sugerir trekking de montaña extrema si usuario no seleccionó "Aventura"
+   ❌ NO HACER: Sugerir museo de arte si usuario seleccionó "Playa, Comida, Diversión"
+   
+   📊 MAPEO DE INTERESES → ACTIVIDADES:
+   ${mapInterestsToActivities(tags)}
+   
+   🔄 DISTRIBUCIÓN DE INTERESES POR DÍA:
+   - Cada día DEBE tener actividades de DIFERENTES intereses
+   - Si 3 intereses, cada día tiene 1 interés diferente
+   - O alterne entre intereses en los 3 horarios del día
+   - NUNCA coloque 3 actividades del mismo interés en un día
 
 1. EXACTAMENTE ${activitiesCount} ACTIVIDADES (${days} actividades por día):
    ✅ Total actividades: ${activitiesCount}
@@ -388,6 +496,9 @@ FORMATO JSON (sin markdown, sin bloques de código, válido):
 ✓ ¿Ninguna actividad se repite?
 ✓ ¿Se informaron todos los precios?
 ✓ ¿Los horarios son DIFERENTES en cada actividad?
+✓ ⭐ INTERESES CUBIERTOS: ¿Cada uno de los intereses [${tagsString}] está representado AL MENOS una vez?
+✓ ⭐ ALINEACIÓN: ¿Cada actividad está alineada con UNO DE los intereses seleccionados?
+✓ ⭐ DISTRIBUCIÓN: ¿Los intereses se distribuyen entre los días, no concentrados?
 
 RESPONDA AHORA - SOLO JSON, SIN EXPLICACIONES:`,
   };

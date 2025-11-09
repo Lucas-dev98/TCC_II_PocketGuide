@@ -119,6 +119,7 @@ function buildRecommendationPrompt(
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
   tripScope: 'nacional' | 'internacional' | '' | undefined,
+  userLocation: any | undefined,
   language: string = 'pt-BR'
 ): string {
   const budgetDescriptions: Record<BudgetPerDay, string> = {
@@ -184,6 +185,35 @@ function buildRecommendationPrompt(
     prompt += `📅 Travel Month: ${months[month - 1]}\n`;
   }
 
+  // Add user's current location information with MANDATORY proximity scoring
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `\n${'='.repeat(80)}\n`;
+    prompt += `� USER LOCATION - MANDATORY FOR DESTINATION SCORING:\n`;
+    prompt += `${'='.repeat(80)}\n`;
+    prompt += `�📍 User's Current Location: ${userLocation.address || 'Unknown city'}\n`;
+    prompt += `📊 Coordinates: Latitude ${userLocation.lat?.toFixed(4)}, Longitude ${userLocation.lng?.toFixed(4)}\n\n`;
+    
+    prompt += `⚠️ CRITICAL INSTRUCTIONS FOR PROXIMITY SCORING:\n`;
+    prompt += `1️⃣ CALCULATE DISTANCE: For each recommended destination, estimate distance from ${userLocation.address}\n`;
+    prompt += `2️⃣ PRIORITIZE CLOSER: Destinations CLOSER to user's location get HIGHER scores\n`;
+    prompt += `3️⃣ FOR NACIONAL (1-DAY TRIPS): MUST prioritize destinations within 100km of ${userLocation.address}\n`;
+    prompt += `4️⃣ FOR NACIONAL (MULTI-DAY): Still prioritize closer destinations, but geographic diversity is OK\n`;
+    prompt += `5️⃣ INCLUDE DISTANCE INFO: In each recommendation reason, mention \"Approx X km from ${userLocation.address}\"\n`;
+    prompt += `6️⃣ SCORE ADJUSTMENT: Closer destinations get +20 to +50 points bonus based on distance\n\n`;
+    
+    prompt += `📋 DISTANCE BRACKETS (for reference):\n`;
+    prompt += `   • 0-50 km: IDEAL FOR DAY TRIPS (+50 points)\n`;
+    prompt += `   • 50-150 km: GOOD FOR DAY TRIPS (+30 points)\n`;
+    prompt += `   • 150-300 km: ACCEPTABLE FOR DAY TRIPS (+10 points)\n`;
+    prompt += `   • 300+ km: ONLY FOR MULTI-DAY TRIPS\n\n`;
+    
+    prompt += `🎯 EXAMPLE SCORING:\n`;
+    prompt += `   User Location: Vitória, ES\n`;
+    prompt += `   Day Trip: Nearby beach town (50km away) → Score: 95/100\n`;
+    prompt += `   Day Trip: Arraial do Cabo (200km away) → Score: 70/100 (too far for 1-day trip)\n`;
+    prompt += `   Multi-day: Florianópolis (350km away) → Score: 90/100 (acceptable for 2+ days)\n\n`;
+  }
+
   // CRITICAL: Season takes priority
   if (season && seasonDescriptions[season]) {
     prompt += `🌍 PREFERRED SEASON: ${season.toUpperCase()} - ${seasonDescriptions[season]}\n`;
@@ -201,6 +231,17 @@ function buildRecommendationPrompt(
   prompt += `\n${'='.repeat(80)}\n`;
   prompt += `🚨 MANDATORY REQUIREMENTS (MUST FOLLOW):\n`;
   prompt += `${'='.repeat(80)}\n\n`;
+
+  // Add proximity/location requirement FIRST if user location is available
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `⭐ PROXIMITY REQUIREMENT (HIGHEST PRIORITY AFTER TRIP TYPE):\n`;
+    prompt += `   User is located in: ${userLocation.address}\n`;
+    prompt += `   For 1-DAY trips: MUST include destinations within 100-150km radius first\n`;
+    prompt += `   For 2-3 DAY trips: Can go up to 200-300km but PRIORITIZE closer options\n`;
+    prompt += `   For 5+ DAY trips: Can consider further destinations but still mention proximity\n`;
+    prompt += `   SCORING: Closer destinations ALWAYS get higher scores than distant ones\n`;
+    prompt += `   REASONING: Each recommendation MUST mention distance from user's location\n\n`;
+  }
 
   if (season === 'primavera') {
     prompt += `1. User MUST experience SPRING (primavera) during their travel
@@ -232,10 +273,45 @@ function buildRecommendationPrompt(
 4. Each destination MUST offer winter-appropriate activities\n\n`;
   }
 
+  // Add MANDATORY location-aware recommendations section
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `${'='.repeat(80)}\n`;
+    prompt += `📍 LOCATION-AWARE RECOMMENDATIONS (MANDATORY TO CONSIDER):\n`;
+    prompt += `${'='.repeat(80)}\n`;
+    prompt += `User is currently in: ${userLocation.address || 'Unknown location'} (${userLocation.lat?.toFixed(2)}°, ${userLocation.lng?.toFixed(2)}°)\n\n`;
+    
+    if (tripScope === 'nacional') {
+      prompt += `🇧🇷 FOR NACIONAL TRIPS:\n`;
+      prompt += `1. PROXIMITY IS KEY: Destinations closer to ${userLocation.address} should have HIGHER SCORES\n`;
+      prompt += `2. SCORING RULE:\n`;
+      prompt += `   - Very Close (same state): +20 points bonus\n`;
+      prompt += `   - Close (1-3 states away): +10 points bonus\n`;
+      prompt += `   - Medium (4-6 states away): +5 points bonus\n`;
+      prompt += `   - Far (7+ states away): 0 bonus but still consider if very good match\n`;
+      prompt += `3. For ${userLocation.address}, prioritize nearby destinations first if they match other criteria\n`;
+      prompt += `4. Include TRAVEL TIME ESTIMATE in the reasons (flight, car, bus)\n\n`;
+    } else if (tripScope === 'internacional') {
+      prompt += `🌍 FOR INTERNACIONAL TRIPS:\n`;
+      prompt += `1. Distance is less critical but still CONSIDER accessibility from ${userLocation.address}\n`;
+      prompt += `2. Include nearest airport/entry point to user's location\n`;
+      prompt += `3. Mention flight time from ${userLocation.address} if relevant\n\n`;
+    }
+  }
+
   prompt += `${'='.repeat(80)}\n`;
   prompt += `RESPONSE FORMAT (MANDATORY):\n`;
   prompt += `${'='.repeat(80)}\n`;
-  prompt += `Return EXACTLY this JSON format (no markdown, no additional text):\n{\n  "recommendations": [\n    {\n      "name": "Destination Name",\n      "country": "Country",\n      "emoji": "🌍",\n      "score": 95,\n      "reasons": [\n        "Reason 1 explaining why this matches the PREFERRED SEASON",\n        "Reason 2 explaining seasonal activities/weather"\n      ]\n    }\n  ]\n}\n\n`;
+  prompt += `Return EXACTLY this JSON format (no markdown, no additional text):\n{\n  "recommendations": [\n    {\n      "name": "Destination Name",\n      "country": "Country",\n      "emoji": "🌍",\n      "score": 95,\n      "reasons": [\n        "Reason 1 explaining why this matches the PREFERRED SEASON",\n        "Reason 2 explaining seasonal activities/weather"${userLocation && userLocation.address ? `,\n        "Reason 3 including APPROXIMATE DISTANCE from ${userLocation.address} and WHY this proximity is good"` : ''}\n      ]\n    }\n  ]\n}\n\n`;
+  
+  // Add location context to reasons
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `⚠️ IMPORTANT: For "reasons" field, include information about:\n`;
+    prompt += `   - Distance from user's current location (${userLocation.address})\n`;
+    prompt += `   - Travel time estimates if available\n`;
+    prompt += `   - Why this distance/proximity is beneficial for the user's trip type\n`;
+    prompt += `   - If closer to user: Mention it's CONVENIENT and ACCESSIBLE\n`;
+    prompt += `   - If farther but recommended: Explain why it's WORTH the travel\n\n`;
+  }
 
   prompt += `${'='.repeat(80)}\n`;
   prompt += `⚠️ VERIFICATION CHECKLIST (ALL MUST BE TRUE):\n`;
@@ -247,11 +323,29 @@ function buildRecommendationPrompt(
   prompt += `☑️ Each destination has seasonal activities/weather explained in reasons\n`;
   prompt += `☑️ NO destinations are in the WRONG season for the travel dates\n`;
   
+  // Add MANDATORY location-aware verification
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `☑️ 📍 LOCATION-AWARE CRITICAL: Distance from user's location (${userLocation.address || 'Unknown'}) has been CONSIDERED in destination scoring\n`;
+    if (tripScope === 'nacional') {
+      prompt += `   - For NACIONAL trips: MUST prioritize CLOSER destinations to user's location (${userLocation.address})\n`;
+      prompt += `   - EXAMPLE: If user is in São Paulo, prefer nearby states like Minas Gerais, Paraná over far destinations like Amazonas\n`;
+      prompt += `   - Score destinations by proximity: Closer = Higher Score\n`;
+    }
+  }
+  
   // Add MANDATORY trip scope verification
   if (tripScope === 'nacional') {
     prompt += `☑️ ⚠️ CRITICAL: ALL destinations are INSIDE Brazil ONLY - NO exceptions!\n`;
   } else if (tripScope === 'internacional') {
     prompt += `☑️ ⚠️ CRITICAL: ALL destinations are OUTSIDE Brazil ONLY - NO exceptions!\n`;
+  }
+
+  // Add location-aware recommendation guidance
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `☑️ 📍 LOCATION-AWARE: Consider distance from user's current location (${userLocation.address || 'Unknown'}) when scoring destinations\n`;
+    if (tripScope === 'nacional') {
+      prompt += `   - For Nacional trips: Prioritize destinations closer to user's location\n`;
+    }
   }
   
   prompt += `\n`;
@@ -270,6 +364,7 @@ function buildRecommendationPrompt(
   console.log('🌍 SEASON (CRITICAL):', season?.toUpperCase() || 'NOT SET!');
   console.log('🌐 TRIP SCOPE:', tripScope || 'NOT SET');
   console.log('🗓️ Month:', month);
+  console.log('📍 USER LOCATION:', userLocation?.address || 'Not obtained', `(${userLocation?.lat}, ${userLocation?.lng})`);
   console.log('🌐 Language:', language);
   console.log('════════════════════════════════════════════════════════');
   console.log('📝 PROMPT BEING SENT TO GEMINI:');
@@ -296,6 +391,7 @@ export async function getGeminiDestinationRecommendations(
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
   tripScope: 'nacional' | 'internacional' | '' | undefined,
+  userLocation: any | undefined,
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
   if (!GEMINI_API_KEY) {
@@ -312,6 +408,7 @@ export async function getGeminiDestinationRecommendations(
       endDate,
       tripTypes: tripTypes.join(','),
       interests: interests?.join(','),
+      userLocation,
     });
 
     const systemPrompt = SYSTEM_PROMPTS[language as keyof typeof SYSTEM_PROMPTS] || SYSTEM_PROMPTS['en-US'];
@@ -327,6 +424,7 @@ export async function getGeminiDestinationRecommendations(
       season,
       month,
       tripScope,
+      userLocation,
       language
     );
 
@@ -415,6 +513,7 @@ export async function getHybridDestinationRecommendations(
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
   tripScope: 'nacional' | 'internacional' | '' | undefined,
+  userLocation: any | undefined,
   fallbackFunction: () => DestinationScore[],
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
@@ -432,6 +531,7 @@ export async function getHybridDestinationRecommendations(
       season,
       month,
       tripScope,
+      userLocation,
       language
     );
 
