@@ -152,15 +152,21 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     if (hasValidMarkers && markersRef.current.length > 0) {
       try {
         debug.log('🗺️ MapboxMap: Fitting bounds to', markersRef.current.length, 'markers');
+        debug.log('🗺️ MapboxMap: First marker coords:', markersRef.current[0]?.getLngLat());
+        debug.log('🗺️ MapboxMap: Last marker coords:', markersRef.current[markersRef.current.length - 1]?.getLngLat());
+        
         if (markersRef.current.length === 1) {
           // Single marker: just center on it
+          const coords = markersRef.current[0].getLngLat();
+          debug.log('🗺️ MapboxMap: Single marker, flying to:', coords);
           map.current.flyTo({
-            center: markersRef.current[0].getLngLat(),
+            center: coords,
             zoom: 15,
             duration: 1000,
           });
         } else {
           // Multiple markers: fit bounds
+          debug.log('🗺️ MapboxMap: Multiple markers, fitting bounds');
           (map.current as mapboxgl.Map).fitBounds(bounds, { padding: 80, duration: 1000 });
         }
       } catch (error) {
