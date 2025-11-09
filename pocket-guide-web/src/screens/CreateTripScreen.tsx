@@ -202,6 +202,7 @@ export default function CreateTripScreen() {
 
       // Create trip data with itinerary
       const tripData: Trip = {
+        id: crypto.randomUUID(),
         userId: user.uid,
         destination: formData.destination,
         country: formData.destination,
