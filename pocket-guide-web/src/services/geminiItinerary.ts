@@ -13,7 +13,6 @@
 import { Location } from "../types";
 import { generateItineraryPrompt, getSystemInstruction, LanguageCode } from "./promptTranslator";
 import { geocodePlaceInDestination, geocodeLocation } from "./geocodingService";
-import logger from "./logger";
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
 const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
@@ -134,6 +133,7 @@ const extractCoordinates = async (item: GeminiActivity, destination: string): Pr
   
   // If valid coordinates provided by Gemini, use them
   if (isValidCoordinate(lat, lng)) {
+    console.log(`✅ Using Gemini-provided coordinates for "${item.name}": [${lat}, ${lng}]`);
     return {
       lat: Number(lat),
       lng: Number(lng),
@@ -142,20 +142,37 @@ const extractCoordinates = async (item: GeminiActivity, destination: string): Pr
 
   // Try to geocode the place name in the destination
   if (item.name) {
+    console.log(`🔍 Attempting geocoding for "${item.name}" in "${destination}"`);
     const geocoded = await geocodePlaceInDestination(item.name, destination);
-    if (geocoded) {
+    if (geocoded && geocoded.lat !== 0 && geocoded.lng !== 0) {
+      console.log(`✅ Successfully geocoded "${item.name}" to [${geocoded.lat}, ${geocoded.lng}]`);
       return geocoded;
     }
   }
 
   // Fallback: use destination center
+  console.log(`⚠️ Geocoding failed for "${item.name}", using destination center for "${destination}"`);
   const destCoords = await geocodeLocation(destination);
-  if (destCoords) {
+  if (destCoords && destCoords.lat !== 0 && destCoords.lng !== 0) {
+    console.log(`✅ Using destination center [${destCoords.lat}, ${destCoords.lng}]`);
     return destCoords;
   }
 
-  // Last resort: return 0,0 (Null Island - shouldn't reach here)
-  logger.warn(`⚠️ Could not geocode "${item.name}" in "${destination}"`);
+  // Last resort: log warning and return destination center attempt again with different approach
+  console.warn(`❌ Could not geocode "${item.name}" in "${destination}", attempting direct geocoding of destination`);
+  try {
+    // Try one more time with just the destination
+    const finalAttempt = await geocodeLocation(destination);
+    if (finalAttempt) {
+      console.log(`✅ Final attempt: Using geocoded destination [${finalAttempt.lat}, ${finalAttempt.lng}]`);
+      return finalAttempt;
+    }
+  } catch (e) {
+    console.error(`Final geocoding attempt failed:`, e);
+  }
+
+  // Absolute last resort: return 0,0 (should be very rare)
+  console.error(`🚨 CRITICAL: Could not determine coordinates for "${item.name}" in "${destination}"`);
   return { lat: 0, lng: 0 };
 };
 

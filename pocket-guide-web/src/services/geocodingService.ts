@@ -22,11 +22,15 @@ export const geocodeLocation = async (locationName: string): Promise<Location | 
       return geocodingCache[cacheKey];
     }
 
+    console.log(`🌐 Geocoding location: "${locationName}"`);
+
     // Use Nominatim API (free, no API key needed)
     const url = new URL('https://nominatim.openstreetmap.org/search');
     url.searchParams.append('q', locationName);
     url.searchParams.append('format', 'json');
     url.searchParams.append('limit', '1');
+
+    console.log(`📡 Fetching from Nominatim: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -35,8 +39,10 @@ export const geocodeLocation = async (locationName: string): Promise<Location | 
       }
     });
 
+    console.log(`📊 Nominatim response status: ${response.status}`);
+
     if (!response.ok) {
-      console.warn(`⚠️ Nominatim API error for "${locationName}": ${response.status}`);
+      console.warn(`⚠️ Nominatim API error for "${locationName}": ${response.status} ${response.statusText}`);
       return null;
     }
 
@@ -45,6 +51,8 @@ export const geocodeLocation = async (locationName: string): Promise<Location | 
       lon: string;
       display_name: string;
     }>;
+
+    console.log(`📝 Nominatim returned ${results.length} result(s) for "${locationName}"`);
 
     if (results.length === 0) {
       console.warn(`⚠️ No geocoding results for "${locationName}"`);
@@ -57,9 +65,16 @@ export const geocodeLocation = async (locationName: string): Promise<Location | 
       lng: parseFloat(result.lon)
     };
 
+    console.log(`✅ Nominatim result for "${locationName}": lat=${location.lat}, lng=${location.lng}`);
+
+    // Validate the coordinates
+    if (isNaN(location.lat) || isNaN(location.lng)) {
+      console.error(`❌ Invalid coordinates from Nominatim for "${locationName}": lat=${result.lat}, lng=${result.lon}`);
+      return null;
+    }
+
     // Cache the result
     geocodingCache[cacheKey] = location;
-    console.log(`✅ Geocoded "${locationName}" to [${location.lat}, ${location.lng}]`);
 
     return location;
   } catch (error) {
@@ -87,11 +102,15 @@ export const geocodePlaceInDestination = async (
       return geocodingCache[cacheKey];
     }
 
+    console.log(`🌐 Geocoding place in destination: "${fullAddress}"`);
+
     // Use Nominatim API
     const url = new URL('https://nominatim.openstreetmap.org/search');
     url.searchParams.append('q', fullAddress);
     url.searchParams.append('format', 'json');
     url.searchParams.append('limit', '1');
+
+    console.log(`📡 Fetching from Nominatim: ${url.toString()}`);
 
     const response = await fetch(url.toString(), {
       headers: {
@@ -100,9 +119,12 @@ export const geocodePlaceInDestination = async (
       }
     });
 
+    console.log(`📊 Nominatim response status: ${response.status}`);
+
     if (!response.ok) {
       console.warn(`⚠️ Nominatim API error for "${fullAddress}": ${response.status}`);
       // Fallback: try just the place name
+      console.log(`↩️ Fallback: trying just place name "${placeName}"`);
       return geocodeLocation(placeName);
     }
 
@@ -111,6 +133,8 @@ export const geocodePlaceInDestination = async (
       lon: string;
       display_name: string;
     }>;
+
+    console.log(`📝 Nominatim returned ${results.length} result(s) for "${fullAddress}"`);
 
     if (results.length === 0) {
       console.warn(`⚠️ No geocoding results for "${fullAddress}", trying place only`);
@@ -124,14 +148,21 @@ export const geocodePlaceInDestination = async (
       lng: parseFloat(result.lon)
     };
 
+    console.log(`✅ Nominatim result for "${fullAddress}": lat=${location.lat}, lng=${location.lng}`);
+
+    // Validate the coordinates
+    if (isNaN(location.lat) || isNaN(location.lng)) {
+      console.error(`❌ Invalid coordinates from Nominatim for "${fullAddress}"`);
+      return geocodeLocation(placeName);
+    }
+
     // Cache the result
     geocodingCache[cacheKey] = location;
-    console.log(`✅ Geocoded "${fullAddress}" to [${location.lat}, ${location.lng}]`);
 
     return location;
   } catch (error) {
     console.error(`❌ Geocoding error for "${placeName}, ${destination}":`, error);
-    // Fallback to destination center
+    // Fallback to just destination
     return geocodeLocation(destination);
   }
 };
