@@ -341,6 +341,14 @@ export default function TripDetailScreen() {
 
   // Load trips from Firestore if trip not found locally (only once)
   useEffect(() => {
+    debug.log('🔄 useEffect running - checking if we need to load trips', { 
+      tripExists: !!trip,
+      id,
+      userId: user?.uid,
+      hasTriedLoadingTrips,
+      shouldLoad: !trip && id && user?.uid && !hasTriedLoadingTrips
+    });
+    
     if (!trip && id && user?.uid && !hasTriedLoadingTrips) {
       debug.log('🔄 Trip not found locally, loading from Firestore...', { id, userId: user.uid, tripsCount: trips.length });
       setHasTriedLoadingTrips(true);
@@ -357,6 +365,20 @@ export default function TripDetailScreen() {
   // This effect runs whenever trips changes to check if we found our trip
   useEffect(() => {
     if (id && trips.length > 0) {
+      debug.log('🔍 DETAILED TRIP LOOKUP:', {
+        searchingForId: id,
+        searchingForIdType: typeof id,
+        searchingForIdLength: id?.length,
+        tripsCount: trips.length,
+        allTrips: trips.map(t => ({
+          id: t.id,
+          idType: typeof t.id,
+          idLength: t.id?.length,
+          destination: t.destination,
+          match: t.id === id,
+        })),
+      });
+
       const foundTrip = trips.find((t) => t.id === id);
       debug.log('🔄 Trips updated, looking for trip:', { id, tripsCount: trips.length, found: !!foundTrip, tripIds: trips.map(t => t.id).join(', ') });
       if (foundTrip) {

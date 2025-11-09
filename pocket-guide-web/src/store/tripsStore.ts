@@ -87,9 +87,11 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
       console.log('📚 tripsStore.loadTrips: Empty?', snapshot.empty);
 
       snapshot.forEach((doc) => {
+        const docData = doc.data();
+        // CRITICAL: Use Firestore document ID, and remove any empty or conflicting id from the document
         const tripData = {
-          id: doc.id,
-          ...doc.data(),
+          ...docData,
+          id: doc.id,  // Always use Firestore ID as source of truth, override any stored id field
         } as Trip;
         
         // Log ALL trips, regardless of ID format
@@ -167,13 +169,17 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
 
       console.log('➕ addTrip: Data validation passed');
       console.log('➕ addTrip: Preparing to save to Firestore...');
+      
+      // Extract only the fields we want to save, excluding the empty id field
+      const { id: _ignoreId, ...tripDataWithoutId } = tripData;
+      
       console.log('➕ addTrip: Data being saved to Firestore:', {
-        ...tripData,
-        budgetPerDay: tripData.budgetPerDay,
+        ...tripDataWithoutId,
+        budgetPerDay: tripDataWithoutId.budgetPerDay,
       });
 
       const docRef = await addDoc(collection(db, 'trips'), {
-        ...tripData,
+        ...tripDataWithoutId,
         createdAt: Timestamp.now(),
         updatedAt: Timestamp.now(),
       });
