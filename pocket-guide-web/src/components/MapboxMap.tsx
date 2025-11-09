@@ -45,6 +45,15 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     const lat = attraction?.location?.lat ?? attraction?.lat;
     const lng = attraction?.location?.lng ?? attraction?.lng;
     
+    debug.log('🗺️ MapboxMap.getCoordinates:', {
+      name: attraction?.name,
+      lat,
+      lng,
+      isValid: typeof lat === 'number' && typeof lng === 'number' && 
+        !isNaN(lat) && !isNaN(lng) &&
+        lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180,
+    });
+    
     if (typeof lat === 'number' && typeof lng === 'number' && 
         !isNaN(lat) && !isNaN(lng) &&
         lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
@@ -95,6 +104,13 @@ export const MapboxMap: React.FC<MapboxMapProps> = ({
     markersRef.current = [];
 
     debug.log('🗺️ MapboxMap: Adding/updating markers for', attractions.length, 'attractions');
+    debug.log('🗺️ MapboxMap: First attraction details:', {
+      name: attractions[0]?.name,
+      lat: attractions[0]?.lat,
+      lng: attractions[0]?.lng,
+      location: attractions[0]?.location,
+      allAttraction: attractions[0],
+    });
     
     const bounds = new mapboxgl.LngLatBounds();
     let hasValidMarkers = false;
