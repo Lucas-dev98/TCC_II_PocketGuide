@@ -190,7 +190,7 @@ export default function CreateTripScreen() {
         )
 
         const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Itinerary generation timeout')), 30000)
+          setTimeout(() => reject(new Error('Itinerary generation timeout')), 60000)
         )
 
         itinerary = (await Promise.race([itineraryPromise, timeoutPromise])) as any
@@ -201,8 +201,9 @@ export default function CreateTripScreen() {
       }
 
       // Create trip data with itinerary
+      // Note: Don't set ID here - Firestore will generate it via addDoc()
       const tripData: Trip = {
-        id: crypto.randomUUID(),
+        id: '', // Will be set by Firestore
         userId: user.uid,
         destination: formData.destination,
         country: formData.destination,
