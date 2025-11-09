@@ -336,19 +336,31 @@ export default function TripDetailScreen() {
   debug.log('🔍 TripDetailScreen - Trip:', trip);
   debug.log('🔍 TripDetailScreen - Raw itinerary:', trip?.itinerary);
   debug.log('🔍 TripDetailScreen - isStoreLoading:', isStoreLoading, 'hasTriedLoadingTrips:', hasTriedLoadingTrips);
+  debug.log('🔍 TripDetailScreen - Available trips in store:', trips.length, 'Trip IDs:', trips.map(t => t.id).join(', '));
+  debug.log('🔍 TripDetailScreen - Looking for ID:', id, 'Found:', !!trip);
 
   // Load trips from Firestore if trip not found locally (only once)
   useEffect(() => {
     if (!trip && id && user?.uid && !hasTriedLoadingTrips) {
-      debug.log('🔄 Trip not found locally, loading from Firestore...', { id, userId: user.uid });
+      debug.log('🔄 Trip not found locally, loading from Firestore...', { id, userId: user.uid, tripsCount: trips.length });
       setHasTriedLoadingTrips(true);
       loadTrips(user.uid).then(() => {
         debug.log('✅ Trips loaded from Firestore');
+        // After loading, trips should be updated in the store
+        // The component will re-render when Zustand state changes
       }).catch((error) => {
         debug.error('❌ Error loading trips:', error);
       });
     }
   }, [id, user?.uid, hasTriedLoadingTrips]);
+
+  // This effect runs whenever trips changes to check if we found our trip
+  useEffect(() => {
+    if (id && trips.length > 0) {
+      const foundTrip = trips.find((t) => t.id === id);
+      debug.log('🔄 Trips updated, looking for trip:', { id, tripsCount: trips.length, found: !!foundTrip, tripIds: trips.map(t => t.id) });
+    }
+  }, [trips, id]);
 
   // Carregar imagens das atrações
   useEffect(() => {
