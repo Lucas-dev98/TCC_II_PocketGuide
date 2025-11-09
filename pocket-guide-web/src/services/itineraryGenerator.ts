@@ -9,6 +9,7 @@ import { generateItineraryWithGemini } from './geminiItinerary';
 import { withRetry } from '../utils/retryService';
 import logger from './logger';
 import type { LanguageCode } from './promptTranslator';
+import type { Location } from '../types';
 
 export interface ItineraryItem {
   day: number;
@@ -157,7 +158,8 @@ export const generateItinerary = async (
   groupType: string = 'couple',
   language: LanguageCode = 'en-US',
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
-  tripScope?: 'nacional' | 'internacional' | ''
+  tripScope?: 'nacional' | 'internacional' | '',
+  userLocation?: Location | null
 ): Promise<ItineraryItem[]> => {
   try {
     // DEBUG: Log ALL parameters received
@@ -196,7 +198,8 @@ export const generateItinerary = async (
           groupType,
           language,
           season,
-          tripScope
+          tripScope,
+          userLocation
         ),
       {
         maxRetries: 3,

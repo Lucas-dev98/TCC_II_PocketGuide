@@ -8,6 +8,8 @@
  * - Support multi-language itinerary generation
  */
 
+import type { Location } from '../types';
+
 export type LanguageCode = 'pt-BR' | 'en-US' | 'es-ES';
 
 /**
@@ -133,7 +135,8 @@ export const generateItineraryPrompt = (
   tags: string[],
   language: LanguageCode,
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
-  tripScope?: 'nacional' | 'internacional' | ''
+  tripScope?: 'nacional' | 'internacional' | '',
+  userLocation?: Location | null
 ): string => {
   const tagsString = tags.join(', ');
   const budgetDescription = getBudgetDescription(budget, language);
@@ -151,7 +154,14 @@ export const generateItineraryPrompt = (
 - Grupo: ${groupType}
 - Interesses: ${tagsString}
 - Tipo de Viagem: ${tripScopeDescription}
-- Estação: ${season || 'não especificada'}
+- Estação: ${season || 'não especificada'}${userLocation && (userLocation.lat || userLocation.lng) ? `
+- Localização do Usuário: ${userLocation.address || `Latitude ${userLocation.lat?.toFixed(4)}, Longitude ${userLocation.lng?.toFixed(4)}`}
+
+📍 CONTEXTO DE LOCALIZAÇÃO DO USUÁRIO:
+   - O usuário está em: ${userLocation.address || `Coordenadas ${userLocation.lat?.toFixed(4)}, ${userLocation.lng?.toFixed(4)}`}
+   - Considere a distância de ${destination} ao planejar o roteiro
+   - Para viagens nacionais (Brasil): considere tempo de deslocamento/voos internos
+   - Para viagens internacionais: voos internacionais podem ser necessários` : ''}
 
 ⚠️ REGRA CRÍTICA - TIPO DE VIAGEM (${tripScopeDescription.toUpperCase()}):
 ${tripScope === 'nacional' 
@@ -277,7 +287,14 @@ RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 - Group: ${groupType}
 - Interests: ${tagsString}
 - Trip Type: ${tripScopeDescription}
-- Season: ${season || 'not specified'}
+- Season: ${season || 'not specified'}${userLocation && (userLocation.lat || userLocation.lng) ? `
+- User Location: ${userLocation.address || `Latitude ${userLocation.lat?.toFixed(4)}, Longitude ${userLocation.lng?.toFixed(4)}`}
+
+📍 USER LOCATION CONTEXT:
+   - User is located in: ${userLocation.address || `Coordinates ${userLocation.lat?.toFixed(4)}, ${userLocation.lng?.toFixed(4)}`}
+   - Consider the distance from ${destination} when planning
+   - For domestic trips (Brazil): consider travel time/domestic flights
+   - For international trips: international flights may be necessary` : ''}
 
 ⚠️ CRITICAL RULE - TRIP TYPE (${tripScopeDescription.toUpperCase()}):
 ${tripScope === 'nacional' 

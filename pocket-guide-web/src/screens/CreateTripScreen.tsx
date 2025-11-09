@@ -219,7 +219,8 @@ export default function CreateTripScreen() {
           formData.groupType,
           currentLanguage,
           formData.season,
-          formData.tripScope
+          formData.tripScope,
+          userLocation
         )
 
         const timeoutPromise = new Promise((_, reject) =>

@@ -558,7 +558,8 @@ export const generateItineraryWithGemini = async (
   groupType: string = 'couple',
   language: LanguageCode = 'en-US',
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
-  tripScope?: 'nacional' | 'internacional' | ''
+  tripScope?: 'nacional' | 'internacional' | '',
+  userLocation?: Location | null
 ): Promise<GeneratedItinerary | null> => {
   if (!GEMINI_API_KEY) {
     console.error('Gemini API key not configured');
@@ -567,7 +568,7 @@ export const generateItineraryWithGemini = async (
 
   try {
     // Generate prompt in the specified language
-    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season, tripScope);
+    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season, tripScope, userLocation);
     const systemInstruction = getSystemInstruction(language);
 
     // DEBUG: Log all parameters
