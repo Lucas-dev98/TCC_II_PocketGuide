@@ -19,6 +19,21 @@ import PhotoService from "@/services/photoService";
 const MapboxMap = lazy(() => import("@/components/MapboxMap").then(m => ({ default: m.MapboxMap })));
 
 /**
+ * Converte número do mês (1-12) para estação em português
+ */
+function getSeasonFromMonth(month: number): 'primavera' | 'verão' | 'outono' | 'inverno' | undefined {
+  if (!month || month < 1 || month > 12) return undefined;
+  
+  // Hemisfério sul (Brasil)
+  if (month >= 9 && month <= 11) return 'primavera';
+  if (month >= 12 || month <= 2) return 'verão';
+  if (month >= 3 && month <= 5) return 'outono';
+  if (month >= 6 && month <= 8) return 'inverno';
+  
+  return undefined;
+}
+
+/**
  * Tela de detalhes de um dia específico da viagem
  * Rota: /trip/:tripId/day/:dayNumber
  */
@@ -149,10 +164,17 @@ export const DayDetailScreen: React.FC = () => {
             } as AttractionDetail));
           
           // Carregar fotos de forma assíncrona
+          const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
+          
           filtered = await Promise.all(
             baseAttrs.map(async (a) => ({
               ...a,
-              photos: await generatePhotosForAttraction(a),
+              photos: await generatePhotosForAttraction(
+                a,
+                trip.destination,
+                season,
+                currentDay
+              ),
             }))
           );
           
@@ -267,10 +289,17 @@ export const DayDetailScreen: React.FC = () => {
           .sort((a: any, b: any) => a.time.localeCompare(b.time));
         
         // Carregar fotos de forma assíncrona
+        const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
+        
         filtered = await Promise.all(
           baseAttrs.map(async (a) => ({
             ...a,
-            photos: await generatePhotosForAttraction(a),
+            photos: await generatePhotosForAttraction(
+              a,
+              trip.destination,
+              season,
+              currentDay
+            ),
           }))
         );
         
@@ -590,15 +619,37 @@ export const DayDetailScreen: React.FC = () => {
 /**
  * Gera URLs de fotos para uma atração (função assíncrona)
  */
-async function generatePhotosForAttraction(attraction: any): Promise<PhotoData[]> {
-  debug.log(`📸 Gerando fotos para atração: "${attraction.name}"`);
+async function generatePhotosForAttraction(
+  attraction: any,
+  destination?: string,
+  season?: string,
+  tripDay?: number
+): Promise<PhotoData[]> {
+  debug.log(`📸 Gerando fotos para atração: "${attraction.name}" em ${destination || 'local desconhecido'}`);
 
   const photos: PhotoData[] = [];
+
+  // Validar e fazer cast da season para o tipo correto
+  const validSeasons = ['primavera', 'verão', 'outono', 'inverno'];
+  const validatedSeason = season && validSeasons.includes(season.toLowerCase()) 
+    ? (season.toLowerCase() as 'primavera' | 'verão' | 'outono' | 'inverno')
+    : undefined;
+
+  // Criar contexto com informações da viagem
+  const photoContext = {
+    destination: destination,
+    reason: attraction.reason || attraction.description,
+    category: attraction.category,
+    time: attraction.time,
+    tip: attraction.tip,
+    season: validatedSeason,
+    dayOfWeek: tripDay ? new Date().toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0] : undefined,
+  };
 
   // Gerar 2 URLs diferentes usando PhotoService
   for (let i = 0; i < 2; i++) {
     try {
-      const photoSource = await PhotoService.generatePhotoUrl(attraction.name);
+      const photoSource = await PhotoService.generatePhotoUrl(attraction.name, photoContext);
       
       photos.push({
         id: `${attraction.id || 'attraction'}-${i}`,
@@ -616,10 +667,10 @@ async function generatePhotosForAttraction(attraction: any): Promise<PhotoData[]
         downloadLocation: photoSource.downloadLocation,
       });
       
-      debug.log(`✅ Foto ${i + 1} gerada para "${attraction.name}":`);
+      debug.log(`✅ Foto ${i + 1} gerada para "${attraction.name}" (${destination}):`);
       debug.log(`   URL: ${photoSource.url}`);
       debug.log(`   Source: ${photoSource.source}`);
-      debug.log(`   Photographer: ${photoSource.photographer}`);
+      debug.log(`   Context: destination=${destination}, time=${attraction.time}, season=${validatedSeason}`);
     } catch (error) {
       debug.error(`❌ Erro gerando foto ${i + 1} para "${attraction.name}":`, error);
     }

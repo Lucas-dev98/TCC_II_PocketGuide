@@ -14,6 +14,20 @@ export interface PhotoSource {
   downloadLocation?: string;
 }
 
+/**
+ * Context information for photo search
+ * Helps create more targeted and relevant photo queries
+ */
+export interface PhotoContext {
+  destination?: string; // e.g., "Paris", "Rio de Janeiro"
+  reason?: string; // e.g., "Arquitetura modernista", "Seafood dinner"
+  category?: 'restaurante' | 'museu' | 'natureza' | 'compras' | 'cultura' | 'outro';
+  time?: string; // e.g., "09:00", "19:00"
+  tip?: string; // e.g., "Fotografar ao pôr do sol"
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno';
+  dayOfWeek?: string; // e.g., "Monday", "segunda"
+}
+
 interface UnsplashImage {
   urls: {
     regular: string;
@@ -417,16 +431,18 @@ export class PhotoService {
   private static readonly CACHE = new Map<string, PhotoSource>();
   private static downloadedPhotos = new Map<string, any>(); // Track photos with metadata
 
-  static async generatePhotoUrl(attractionName: string): Promise<PhotoSource> {
+  static async generatePhotoUrl(attractionName: string, context?: PhotoContext): Promise<PhotoSource> {
     try {
-      const cacheKey = attractionName.toLowerCase();
+      // Create cache key that includes destination for context-aware caching
+      const cacheKey = `${attractionName.toLowerCase()}_${context?.destination || 'default'}`;
       if (this.CACHE.has(cacheKey)) {
+        debug.log(`♻️ Usando foto em cache para: "${attractionName}" em ${context?.destination || 'local desconhecido'}`);
         return this.CACHE.get(cacheKey)!;
       }
 
       if (this.UNSPLASH_API_KEY) {
-        debug.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"`);
-        const photo = await this.fetchFromUnsplash(attractionName);
+        debug.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"${context?.destination ? ` em ${context.destination}` : ''}`);
+        const photo = await this.fetchFromUnsplash(attractionName, context);
         if (photo) {
           this.CACHE.set(cacheKey, photo);
           return photo;
@@ -478,10 +494,97 @@ export class PhotoService {
     }
   }
 
-  private static async fetchFromUnsplash(attractionName: string): Promise<PhotoSource | null> {
+  /**
+   * Enhance search query with context information
+   * Adds destination, category, and other contextual keywords
+   */
+  private static enhanceQueryWithContext(baseQuery: string, context: PhotoContext): string {
+    let enhanced = baseQuery;
+    
+    debug.log(`📍 Context recebido: destination="${context.destination}", category="${context.category}", time="${context.time}", season="${context.season}"`);
+
+    // Add destination for more specific results
+    if (context.destination) {
+      enhanced += ` ${context.destination}`;
+      debug.log(`   ✅ Adicionado destino: "${context.destination}"`);
+    }
+
+    // Add category-specific keywords
+    if (context.category) {
+      const categoryKeywords: Record<string, string> = {
+        'restaurante': 'restaurant dining cuisine local',
+        'museu': 'museum gallery interior exhibition',
+        'natureza': 'nature landscape outdoor scenic beautiful',
+        'compras': 'shopping retail store local boutique',
+        'cultura': 'cultural heritage historic site',
+        'outro': '',
+      };
+      if (categoryKeywords[context.category]) {
+        enhanced += ` ${categoryKeywords[context.category]}`;
+      }
+    }
+
+    // Enhance with time of day for better results
+    if (context.time) {
+      enhanced = this.enhanceQueryByTime(enhanced, context.time);
+    }
+
+    // Add season-specific keywords for nature/outdoor content
+    if (context.season && (context.category === 'natureza' || context.reason?.toLowerCase().includes('nature') || context.reason?.toLowerCase().includes('parque'))) {
+      const seasonKeywords: Record<string, string> = {
+        'primavera': 'spring flowers blooming cherry blossom',
+        'verão': 'summer bright sunny vacation beach',
+        'outono': 'autumn fall colors leaves golden',
+        'inverno': 'winter snow cold frost landscape',
+      };
+      enhanced += ` ${seasonKeywords[context.season] || ''}`;
+    }
+
+    // Add quality hints
+    enhanced += ' high quality photography';
+
+    return enhanced;
+  }
+
+  /**
+   * Enhance query based on time of day for better aesthetic results
+   */
+  private static enhanceQueryByTime(query: string, time: string): string {
     try {
-      const query = this.getSearchQuery(attractionName);
-      debug.log(`   → Query de busca: "${query}"`);
+      const hour = parseInt(time.split(':')[0]);
+
+      if (hour >= 5 && hour <= 8) {
+        return query + ' sunrise morning light golden';
+      } else if (hour >= 8 && hour <= 11) {
+        return query + ' morning breakfast light';
+      } else if (hour >= 11 && hour <= 14) {
+        return query + ' afternoon daylight bright';
+      } else if (hour >= 14 && hour <= 17) {
+        return query + ' afternoon golden hour light';
+      } else if (hour >= 17 && hour <= 20) {
+        return query + ' sunset golden hour evening romantic';
+      } else if (hour >= 20 && hour <= 22) {
+        return query + ' evening night lights city';
+      } else {
+        return query + ' night dark moody';
+      }
+    } catch (error) {
+      debug.warn(`⚠️ Error parsing time "${time}", using generic query`);
+      return query;
+    }
+  }
+
+  private static async fetchFromUnsplash(attractionName: string, context?: PhotoContext): Promise<PhotoSource | null> {
+    try {
+      let query = this.getSearchQuery(attractionName);
+      debug.log(`   📝 Query base: "${query}"`);
+      
+      // Enhance query with context if provided
+      if (context) {
+        query = this.enhanceQueryWithContext(query, context);
+      }
+      
+      debug.log(`   🚀 Query FINAL para Unsplash: "${query}"`);
 
       // Buscar múltiplas imagens e selecionar a melhor (mais likes/relevante)
       const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
