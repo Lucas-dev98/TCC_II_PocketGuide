@@ -68,20 +68,25 @@ export const generateItineraryPrompt = (
   groupType: string,
   tags: string[],
   language: LanguageCode,
-  season?: 'primavera' | 'verão' | 'outono' | 'inverno'
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno',
+  tripScope?: 'nacional' | 'internacional' | ''
 ): string => {
   const tagsString = tags.join(', ');
   const budgetDescription = getBudgetDescription(budget, language);
   const activitiesCount = days * 3;
+  const tripScopeDescription = tripScope === 'nacional' 
+    ? (language === 'pt-BR' ? 'Nacional' : language === 'en-US' ? 'Domestic' : 'Nacional')
+    : (language === 'pt-BR' ? 'Internacional' : language === 'en-US' ? 'International' : 'Internacional');
   
   const prompts: Record<LanguageCode, string> = {
-    'pt-BR': `GERAR ROTEIRO 100% DIVERSIFICADO E CRIATIVO PARA ${destination}
+    'pt-BR': `GERAR ROTEIRO 100% DIVERSIFICADO E CRIATIVO PARA ${destination} (${tripScopeDescription})
 
 🚨 PARÂMETROS OBRIGATÓRIOS:
 - Duração: ${days} dias
 - Orçamento: ${budgetDescription}
 - Grupo: ${groupType}
 - Interesses: ${tagsString}
+- Tipo de Viagem: ${tripScopeDescription}
 - Estação: ${season || 'não especificada'}
 
 🎯 REQUISITOS CRÍTICOS - DEVE CUMPRIR TODOS:
@@ -170,13 +175,14 @@ FORMATO JSON (sem markdown, sem código blocks, válido):
 
 RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 
-    'en-US': `GENERATE 100% DIVERSIFIED AND CREATIVE ITINERARY FOR ${destination}
+    'en-US': `GENERATE 100% DIVERSIFIED AND CREATIVE ITINERARY FOR ${destination} (${tripScopeDescription})
 
 🚨 MANDATORY PARAMETERS:
 - Duration: ${days} days
 - Budget: ${budgetDescription}
 - Group: ${groupType}
 - Interests: ${tagsString}
+- Trip Type: ${tripScopeDescription}
 - Season: ${season || 'not specified'}
 
 🎯 CRITICAL REQUIREMENTS - MUST COMPLY WITH ALL:
@@ -265,13 +271,14 @@ JSON FORMAT (no markdown, no code blocks, valid):
 
 RESPOND NOW - ONLY JSON, NO EXPLANATIONS:`,
 
-    'es-ES': `GENERAR ITINERARIO 100% DIVERSIFICADO Y CREATIVO PARA ${destination}
+    'es-ES': `GENERAR ITINERARIO 100% DIVERSIFICADO Y CREATIVO PARA ${destination} (${tripScopeDescription})
 
 🚨 PARÁMETROS OBLIGATORIOS:
 - Duración: ${days} días
 - Presupuesto: ${budgetDescription}
 - Grupo: ${groupType}
 - Intereses: ${tagsString}
+- Tipo de Viaje: ${tripScopeDescription}
 - Estación: ${season || 'no especificada'}
 
 🎯 REQUISITOS CRÍTICOS - DEBE CUMPLIR TODOS:

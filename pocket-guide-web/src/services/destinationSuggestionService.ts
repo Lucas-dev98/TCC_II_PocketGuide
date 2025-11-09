@@ -22,7 +22,8 @@ export async function getAISuggestionsForSearchInput(
   interests?: string[],
   groupType?: GroupType,
   budget?: BudgetPerDay,
-  language: string = 'pt-BR'
+  language: string = 'pt-BR',
+  tripScope?: 'nacional' | 'internacional' | ''
 ): Promise<DestinationSuggestion[]> {
   if (!searchInput || searchInput.trim().length < 2) {
     return [];
@@ -45,7 +46,7 @@ export async function getAISuggestionsForSearchInput(
     const groupStr = groupType || 'não especificado';
     const langStr = language === 'pt-BR' ? 'português' : language === 'es-ES' ? 'espanhol' : 'inglês';
 
-    const prompt = `Você é um especialista em viagens e turismo. O usuário está buscando por "${searchInput}" como destino de viagem.
+  const prompt = `Você é um especialista em viagens e turismo. O usuário está buscando por "${searchInput}" como destino de viagem.
 
 Preferências do usuário:
 - Tipos de viagem: ${tripTypeStr}
@@ -53,6 +54,7 @@ Preferências do usuário:
 - Tipo de grupo: ${groupStr}
 - Orçamento: ${budgetStr}
 - Idioma da resposta: ${langStr}
+ - Escopo da viagem: ${tripScope || 'não especificado'}
 
 Com base nessas preferências, forneça até 3 MELHORES sugestões de destinos que correspondem à busca do usuário.
 
@@ -77,7 +79,7 @@ Formato da resposta (JSON):
 Certifique-se de que o JSON está válido e que cada destino tem um matchScore entre 0-100.`;
 
     console.log('🤖 Requesting AI suggestions for:', searchInput);
-    const response = await model.generateContent(prompt);
+  const response = await model.generateContent(prompt);
     const textResponse = response.response.text();
 
     console.log('🤖 Raw AI response:', textResponse.substring(0, 200));

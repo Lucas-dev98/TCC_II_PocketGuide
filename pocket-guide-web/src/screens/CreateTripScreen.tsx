@@ -8,6 +8,7 @@ import { Button } from '../components/Button'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
+import { TripScopeSelector } from '../components/TripScopeSelector'
 import { TravelTypeSelector } from '../components/TravelTypeSelector'
 import { DurationAndBudgetSelector } from '../components/DurationAndBudgetSelector'
 import { GroupCompositionSelector } from '../components/GroupCompositionSelector'
@@ -24,12 +25,13 @@ import i18n from 'i18next'
  * CreateTripScreen - Simplified Trip Creation Flow
  * 
  * Flow (Simplified Order):
- * Step 1: Travel Type + Interests - Select trip type and interests together
- * Step 2: Group Composition + Budget - Select group type, number of people, and daily budget
- * Step 3: Duration + Dates - Select travel dates
- * Step 4: Destination - Select destination
- * Step 5: Trip Preview - Review all trip details
- * Step 6: Trip Success - Confirmation and next steps
+ * Step 1: Trip Scope - Select nacional or internacional
+ * Step 2: Travel Type + Interests - Select trip type and interests together
+ * Step 3: Group Composition + Budget - Select group type, number of people, and daily budget
+ * Step 4: Duration + Dates - Select travel dates
+ * Step 5: Destination - Select destination
+ * Step 6: Trip Preview - Review all trip details
+ * Step 7: Trip Success - Confirmation and next steps
  */
 
 interface TripFormData {
@@ -84,7 +86,15 @@ export default function CreateTripScreen() {
   const validateStep = (): boolean => {
     switch (step) {
       case 1:
-        // Step 1: Trip Type + Interests - required
+        // Step 1: Trip Scope - required
+        if (!formData.tripScope) {
+          showError(t('createTrip.selectTripScope') || 'Please select trip scope')
+          return false
+        }
+        return true
+
+      case 2:
+        // Step 2: Trip Type + Interests - required
         if (formData.tripTypes.length === 0) {
           showError(t('createTrip.selectTravelType') || 'Please select at least one travel type')
           return false
@@ -95,8 +105,8 @@ export default function CreateTripScreen() {
         }
         return true
 
-      case 2:
-        // Step 2: Group Composition + Budget Selection - required
+      case 3:
+        // Step 3: Group Composition + Budget Selection - required
         if (!formData.groupType) {
           showError(t('createTrip.selectGroupType') || 'Please select a group type')
           return false
@@ -107,8 +117,8 @@ export default function CreateTripScreen() {
         }
         return true
 
-      case 3:
-        // Step 3: Dates + Month - required
+      case 4:
+        // Step 4: Dates + Month - required
         if (!formData.startDate) {
           showError(t('createTrip.selectStartDate') || 'Please select a start date')
           return false
@@ -119,20 +129,20 @@ export default function CreateTripScreen() {
         }
         return true
 
-      case 4:
-        // Step 4: Destination - required
+      case 5:
+        // Step 5: Destination - required
         if (!formData.destination.trim()) {
           showError(t('createTrip.selectDestination') || 'Please select a destination')
           return false
         }
         return true
 
-      case 5:
-        // Step 5: Preview - always allowed
+      case 6:
+        // Step 6: Preview - always allowed
         return true
 
-      case 6:
-        // Step 6: Success - always allowed
+      case 7:
+        // Step 7: Success - always allowed
         return true
 
       default:
@@ -142,7 +152,7 @@ export default function CreateTripScreen() {
 
   const handleNext = () => {
     if (validateStep()) {
-      if (step < 6) {
+      if (step < 7) {
         setStep((step + 1) as StepType)
       }
     }
@@ -188,7 +198,8 @@ export default function CreateTripScreen() {
           formData.budgetPerDay,
           formData.groupType,
           currentLanguage,
-          formData.season
+          formData.season,
+          formData.tripScope
         )
 
         const timeoutPromise = new Promise((_, reject) =>
@@ -314,12 +325,12 @@ export default function CreateTripScreen() {
           <div
             className="mb-8 flex gap-2"
             role="progressbar"
-            aria-label={`Step ${step} of 6`}
+            aria-label={`Step ${step} of 7`}
             aria-valuenow={step}
             aria-valuemin={1}
-            aria-valuemax={6}
+            aria-valuemax={7}
           >
-            {[1, 2, 3, 4, 5, 6].map((s) => (
+            {[1, 2, 3, 4, 5, 6, 7].map((s) => (
               <div
                 key={s}
                 className={`flex-1 h-2 rounded-full transition ${
@@ -334,8 +345,18 @@ export default function CreateTripScreen() {
 
           {/* Steps */}
           <div className="bg-white dark:bg-slate-800 rounded-lg shadow-lg p-6 mb-8">
-            {/* Step 1: Travel Type + Interests */}
+            {/* Step 1: Trip Scope Selector */}
             {step === 1 && (
+              <TripScopeSelector
+                value={formData.tripScope as 'nacional' | 'internacional' | ''}
+                onChange={(scope: 'nacional' | 'internacional') =>
+                  setFormData((prev) => ({ ...prev, tripScope: scope }))
+                }
+              />
+            )}
+
+            {/* Step 2: Travel Type + Interests */}
+            {step === 2 && (
               <div className="space-y-8">
                 <TravelTypeSelector
                   selected={formData.tripTypes}
@@ -358,8 +379,8 @@ export default function CreateTripScreen() {
               </div>
             )}
 
-            {/* Step 2: Group Composition + Budget Selection */}
-            {step === 2 && (
+            {/* Step 3: Group Composition + Budget Selection */}
+            {step === 3 && (
               <GroupCompositionSelector
                 selectedGroup={formData.groupType}
                 numPeople={formData.numPeople}
@@ -381,8 +402,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 3: Dates and Season */}
-            {step === 3 && (
+            {/* Step 4: Dates and Season */}
+            {step === 4 && (
               <DurationAndBudgetSelector
                 startDate={formData.startDate}
                 endDate={formData.endDate}
@@ -399,8 +420,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 4: Destination */}
-            {step === 4 && (
+            {/* Step 5: Destination */}
+            {step === 5 && (
               <DestinationSelector
                 tripTypes={formData.tripTypes}
                 interests={formData.interests}
@@ -411,6 +432,7 @@ export default function CreateTripScreen() {
                 startDate={formData.startDate}
                 endDate={formData.endDate}
                 season={formData.season}
+                tripScope={formData.tripScope}
                 selectedMonth={parseInt(formData.travelMonth)}
                 selectedDestination={formData.destination}
                 onDestinationChange={(destination: string) =>
@@ -420,8 +442,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 5: Preview */}
-            {step === 5 && tripForPreview && (
+            {/* Step 6: Preview */}
+            {step === 6 && tripForPreview && (
               <TripPreview
                 trip={tripForPreview}
                 onEdit={(stepNum) => {
@@ -430,8 +452,8 @@ export default function CreateTripScreen() {
               />
             )}
 
-            {/* Step 6: Success */}
-            {step === 6 && (
+            {/* Step 7: Success */}
+            {step === 7 && (
               <TripSuccess
                 tripId={createdTripId}
                 tripName={formData.destination}
@@ -457,7 +479,7 @@ export default function CreateTripScreen() {
           </div>
 
           {/* Navigation Buttons */}
-          {step < 6 && (
+          {step < 7 && (
             <div className="flex gap-3">
               <Button
                 variant="secondary"
@@ -468,7 +490,7 @@ export default function CreateTripScreen() {
                 {t('common.previous') || 'Previous'}
               </Button>
 
-              {step < 5 ? (
+              {step < 6 ? (
                 <Button
                   variant="primary"
                   onClick={handleNext}

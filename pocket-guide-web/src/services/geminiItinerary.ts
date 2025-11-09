@@ -557,7 +557,8 @@ export const generateItineraryWithGemini = async (
   budget: string = 'mid',
   groupType: string = 'couple',
   language: LanguageCode = 'en-US',
-  season?: 'primavera' | 'verão' | 'outono' | 'inverno'
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno',
+  tripScope?: 'nacional' | 'internacional' | ''
 ): Promise<GeneratedItinerary | null> => {
   if (!GEMINI_API_KEY) {
     console.error('Gemini API key not configured');
@@ -566,7 +567,7 @@ export const generateItineraryWithGemini = async (
 
   try {
     // Generate prompt in the specified language
-    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season);
+    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season, tripScope);
     const systemInstruction = getSystemInstruction(language);
 
     // DEBUG: Log all parameters
@@ -579,6 +580,7 @@ export const generateItineraryWithGemini = async (
     console.log('💰 Budget:', budget);
     console.log('👥 Group Type:', groupType);
     console.log('🌍 Season:', season || 'Not selected');
+    console.log('🗺️ Trip Scope:', tripScope || 'Not selected');
     console.log('🌐 Language:', language);
     console.log('════════════════════════════════════════════════════════');
     console.log('📝 FULL PROMPT TO GEMINI:');

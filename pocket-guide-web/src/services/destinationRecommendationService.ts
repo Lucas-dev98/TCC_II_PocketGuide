@@ -118,6 +118,7 @@ function buildRecommendationPrompt(
   endDate: string | undefined,
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
+  tripScope: 'nacional' | 'internacional' | '' | undefined,
   language: string = 'pt-BR'
 ): string {
   const budgetDescriptions: Record<BudgetPerDay, string> = {
@@ -188,6 +189,15 @@ function buildRecommendationPrompt(
     prompt += `🌍 PREFERRED SEASON: ${season.toUpperCase()} - ${seasonDescriptions[season]}\n`;
   }
 
+  // Trip scope guidance (national vs international)
+  if (tripScope) {
+    if (tripScope === 'nacional') {
+      prompt += `🌐 TRIP SCOPE: NACIONAL - Prioritize destinations within the user's country where possible. Avoid international recommendations unless no suitable national options exist.\n`;
+    } else if (tripScope === 'internacional') {
+      prompt += `🌐 TRIP SCOPE: INTERNACIONAL - Prioritize destinations outside the user's country.\n`;
+    }
+  }
+
   prompt += `\n${'='.repeat(80)}\n`;
   prompt += `🚨 MANDATORY REQUIREMENTS (MUST FOLLOW):\n`;
   prompt += `${'='.repeat(80)}\n\n`;
@@ -249,6 +259,7 @@ function buildRecommendationPrompt(
   console.log('💰 Budget:', budget);
   console.log('📅 Dates:', startDate, 'to', endDate);
   console.log('🌍 SEASON (CRITICAL):', season?.toUpperCase() || 'NOT SET!');
+  console.log('🌐 TRIP SCOPE:', tripScope || 'NOT SET');
   console.log('🗓️ Month:', month);
   console.log('🌐 Language:', language);
   console.log('════════════════════════════════════════════════════════');
@@ -275,6 +286,7 @@ export async function getGeminiDestinationRecommendations(
   endDate: string | undefined,
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
+  tripScope: 'nacional' | 'internacional' | '' | undefined,
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
   if (!GEMINI_API_KEY) {
@@ -305,6 +317,7 @@ export async function getGeminiDestinationRecommendations(
       endDate,
       season,
       month,
+      tripScope,
       language
     );
 
@@ -392,6 +405,7 @@ export async function getHybridDestinationRecommendations(
   endDate: string | undefined,
   season: 'primavera' | 'verão' | 'outono' | 'inverno' | undefined,
   month: number | undefined,
+  tripScope: 'nacional' | 'internacional' | '' | undefined,
   fallbackFunction: () => DestinationScore[],
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
@@ -408,6 +422,7 @@ export async function getHybridDestinationRecommendations(
       endDate,
       season,
       month,
+      tripScope,
       language
     );
 

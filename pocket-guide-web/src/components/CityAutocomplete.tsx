@@ -16,6 +16,7 @@ interface CityAutocompleteProps {
   interests?: string[];
   groupType?: GroupType;
   budget?: BudgetPerDay;
+  tripScope?: 'nacional' | 'internacional' | '';
 }
 
 /**
@@ -112,6 +113,7 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
   interests,
   groupType,
   budget,
+  tripScope,
 }) => {
   const [suggestions, setSuggestions] = useState<CitySuggestion[]>([]);
   const [aiSuggestions, setAiSuggestions] = useState<any[]>([]);
@@ -150,22 +152,23 @@ export const CityAutocomplete: React.FC<CityAutocompleteProps> = ({
         setSuggestions(results);
 
         // Buscar sugestões personalizadas do Gemini
-        if (tripTypes && tripTypes.length > 0) {
-          try {
-            const aiResults = await getAISuggestionsForSearchInput(
-              inputValue,
-              tripTypes,
-              interests,
-              groupType,
-              budget,
-              language
-            );
-            setAiSuggestions(aiResults);
-          } catch (error) {
-            console.warn('⚠️ AI suggestions not available:', error);
-            setAiSuggestions([]);
+          if (tripTypes && tripTypes.length > 0) {
+            try {
+              const aiResults = await getAISuggestionsForSearchInput(
+                inputValue,
+                tripTypes,
+                interests,
+                groupType,
+                budget,
+                language,
+                tripScope
+              );
+              setAiSuggestions(aiResults);
+            } catch (error) {
+              console.warn('⚠️ AI suggestions not available:', error);
+              setAiSuggestions([]);
+            }
           }
-        }
       } catch (error) {
         console.error('❌ Erro ao buscar:', error);
         setSuggestions([]);

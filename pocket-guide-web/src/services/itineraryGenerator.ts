@@ -156,7 +156,8 @@ export const generateItinerary = async (
   budget: string = 'mid',
   groupType: string = 'couple',
   language: LanguageCode = 'en-US',
-  season?: 'primavera' | 'verão' | 'outono' | 'inverno'
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno',
+  tripScope?: 'nacional' | 'internacional' | ''
 ): Promise<ItineraryItem[]> => {
   try {
     // DEBUG: Log ALL parameters received
@@ -170,6 +171,7 @@ export const generateItinerary = async (
     console.log('👥 Group Type:', groupType);
     console.log('🌐 Language:', language);
     console.log('🌍 Season:', season);
+    console.log('🗺️ Trip Scope:', tripScope || 'Not selected');
     console.log('════════════════════════════════════════════════════════');
 
     logger.info('Generating itinerary', {
@@ -179,6 +181,7 @@ export const generateItinerary = async (
       budget,
       groupType,
       season,
+      tripScope,
       language,
     });
 
@@ -192,7 +195,8 @@ export const generateItinerary = async (
           budget,
           groupType,
           language,
-          season
+          season,
+          tripScope
         ),
       {
         maxRetries: 3,
