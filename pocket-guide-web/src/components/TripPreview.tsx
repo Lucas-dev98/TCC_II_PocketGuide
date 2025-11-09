@@ -1,6 +1,7 @@
 import React, { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Trip, TripType, BudgetPerDay, GroupType } from '../types';
+import { TRAVEL_TYPE_CONFIG } from '../constants/travelTypes';
 import { getDestinationInfo } from '../utils/destinationMatcher';
 import { getInterestsByIds } from '../utils/interestsMatcher';
 
@@ -45,15 +46,9 @@ export const TripPreview: React.FC<TripPreviewProps> = ({
   }, [trip.budgetPerDay]);
 
   const getTripTypeLabel = (type?: TripType) => {
-    const labels: Record<TripType, string> = {
-      relaxamento: t('newFlow.step1.relaxamento'),
-      aventura: t('newFlow.step1.aventura'),
-      cultura: t('newFlow.step1.cultura'),
-      diversao: t('newFlow.step1.diversao'),
-      exploracao: t('newFlow.step1.exploracao'),
-      romantica: t('newFlow.step1.romantica'),
-    };
-    return type ? labels[type] : t('newFlow.step7.notSelected');
+    if (!type) return t('newFlow.step7.notSelected');
+    const config = TRAVEL_TYPE_CONFIG[type];
+    return config ? t(config.labelKey) : t('newFlow.step7.notSelected');
   };
 
   const getBudgetLabel = (budget?: BudgetPerDay) => {

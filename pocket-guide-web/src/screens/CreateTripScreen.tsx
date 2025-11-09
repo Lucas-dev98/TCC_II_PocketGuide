@@ -16,6 +16,7 @@ import { InterestsSelector } from '../components/InterestsSelector'
 import { TripPreview } from '../components/TripPreview'
 import { TripSuccess } from '../components/TripSuccess'
 import { TripType, BudgetPerDay, GroupType, Trip } from '../types'
+import { TRAVEL_TYPES_ARRAY } from '../constants/travelTypes'
 import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
 
@@ -206,7 +207,7 @@ export default function CreateTripScreen() {
         country: formData.destination,
         startDate: formData.startDate,
         endDate: formData.endDate,
-        tripType: formData.tripTypes[0] || 'cultura',
+        tripType: formData.tripTypes[0] || TRAVEL_TYPES_ARRAY[0],
         budgetPerDay: formData.budgetPerDay,
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
@@ -260,7 +261,7 @@ export default function CreateTripScreen() {
     country: formData.destination,
     startDate: formData.startDate || new Date().toISOString().split('T')[0],
     endDate: formData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-    tripType: formData.tripTypes[0] || 'cultura',
+    tripType: formData.tripTypes[0] || TRAVEL_TYPES_ARRAY[0],
     budgetPerDay: formData.budgetPerDay,
     groupType: formData.groupType,
     travelMonth: formData.travelMonth,
@@ -331,7 +332,7 @@ export default function CreateTripScreen() {
               <div className="space-y-8">
                 <TravelTypeSelector
                   selected={formData.tripTypes}
-                  onChange={(types) =>
+                  onChange={(types: TripType[]) =>
                     setFormData((prev) => ({ ...prev, tripTypes: types }))
                   }
                 />
