@@ -19,41 +19,85 @@ export interface InterestCategory {
 }
 
 export const ALL_INTERESTS: Interest[] = [
-  // Activities
+  // 🏛️ CULTURE & HISTORY (8 items)
   { id: 'museus', label: 'Museus', emoji: '🏛️', category: 'culture' },
-  { id: 'monumentos', label: 'Monumentos', emoji: '🗿', category: 'culture' },
+  { id: 'monumentos', label: 'Monumentos Históricos', emoji: '🗿', category: 'culture' },
   { id: 'arquitetura', label: 'Arquitetura', emoji: '🏗️', category: 'culture' },
   { id: 'arte-rua', label: 'Arte de Rua', emoji: '🎨', category: 'culture' },
+  { id: 'sítios-arqueológicos', label: 'Sítios Arqueológicos', emoji: '⛏️', category: 'culture' },
+  { id: 'castelos', label: 'Castelos & Fortalezas', emoji: '🏰', category: 'culture' },
+  { id: 'templos', label: 'Templos Religiosos', emoji: '⛩️', category: 'culture' },
+  { id: 'patrimônio-cultural', label: 'Patrimônio Cultural', emoji: '📜', category: 'culture' },
   
-  // Dining
+  // 🍽️ DINING & GASTRONOMY (10 items)
   { id: 'gastronomia', label: 'Gastronomia Local', emoji: '🍽️', category: 'dining' },
   { id: 'street-food', label: 'Street Food', emoji: '🌮', category: 'dining' },
   { id: 'bares', label: 'Bares & Drinks', emoji: '🍷', category: 'dining' },
   { id: 'cafes', label: 'Cafés Tradicionais', emoji: '☕', category: 'dining' },
+  { id: 'restaurantes-fine-dining', label: 'Fine Dining', emoji: '🍴', category: 'dining' },
+  { id: 'food-tours', label: 'Food Tours', emoji: '🥘', category: 'dining' },
+  { id: 'padarias', label: 'Padarias & Confeitarias', emoji: '🥐', category: 'dining' },
+  { id: 'mercados-alimentos', label: 'Mercados de Alimentos', emoji: '🏪', category: 'dining' },
+  { id: 'cervejarias', label: 'Cervejarias Artesanais', emoji: '🍺', category: 'dining' },
+  { id: 'aulas-culinarias', label: 'Aulas Culinárias', emoji: '👨‍🍳', category: 'dining' },
   
-  // Nature
-  { id: 'trilhas', label: 'Trilhas', emoji: '🥾', category: 'nature' },
+  // 🌲 NATURE & OUTDOOR (12 items)
+  { id: 'trilhas', label: 'Trilhas & Caminhadas', emoji: '🥾', category: 'nature' },
   { id: 'praias', label: 'Praias', emoji: '🏖️', category: 'nature' },
   { id: 'montanhas', label: 'Montanhas', emoji: '⛰️', category: 'nature' },
   { id: 'parques', label: 'Parques Naturais', emoji: '🌲', category: 'nature' },
+  { id: 'cachoeiras', label: 'Cachoeiras', emoji: '💧', category: 'nature' },
+  { id: 'cavernas', label: 'Cavernas & Grutas', emoji: '🕳️', category: 'nature' },
+  { id: 'fauna', label: 'Observação de Fauna', emoji: '🦁', category: 'nature' },
+  { id: 'flora', label: 'Observação de Flora', emoji: '🌺', category: 'nature' },
+  { id: 'piscinas-naturais', label: 'Piscinas Naturais', emoji: '🏞️', category: 'nature' },
+  { id: 'jardins-botanicos', label: 'Jardins Botânicos', emoji: '🌿', category: 'nature' },
+  { id: 'safari', label: 'Safari & Safáris', emoji: '🚙', category: 'nature' },
+  { id: 'cicloturismo', label: 'Cicloturismo', emoji: '🚴', category: 'nature' },
   
-  // Relaxation
-  { id: 'spa', label: 'Spa & Wellness', emoji: '💆', category: 'relaxation' },
+  // 💆 RELAXATION & WELLNESS (10 items)
+  { id: 'spa', label: 'Spa & Massagem', emoji: '💆', category: 'relaxation' },
   { id: 'yoga', label: 'Yoga & Meditação', emoji: '🧘', category: 'relaxation' },
-  { id: 'retiros', label: 'Retiros', emoji: '🏡', category: 'relaxation' },
-  { id: 'piscinas', label: 'Piscinas & Resorts', emoji: '🏊', category: 'relaxation' },
+  { id: 'retiros', label: 'Retiros Espirituais', emoji: '🏡', category: 'relaxation' },
+  { id: 'piscinas', label: 'Piscinas & Termas', emoji: '🏊', category: 'relaxation' },
+  { id: 'banhos-termais', label: 'Banhos Termais', emoji: '♨️', category: 'relaxation' },
+  { id: 'balnearios', label: 'Balneários', emoji: '🛁', category: 'relaxation' },
+  { id: 'mindfulness', label: 'Mindfulness', emoji: '🧠', category: 'relaxation' },
+  { id: 'terapias', label: 'Terapias Alternativas', emoji: '💜', category: 'relaxation' },
+  { id: 'desintoxicacao', label: 'Retiros Detox', emoji: '🍃', category: 'relaxation' },
+  { id: 'leitura-repouso', label: 'Leitura & Repouso', emoji: '📖', category: 'relaxation' },
   
-  // Adventure
-  { id: 'escalada', label: 'Escalada', emoji: '🧗', category: 'adventure' },
-  { id: 'mergulho', label: 'Mergulho', emoji: '🤿', category: 'adventure' },
-  { id: 'skate', label: 'Skate & Esportes', emoji: '🛹', category: 'adventure' },
+  // 🧗 ADVENTURE & SPORTS (14 items)
+  { id: 'escalada', label: 'Escalada em Rocha', emoji: '🧗', category: 'adventure' },
+  { id: 'mergulho', label: 'Mergulho Subaquático', emoji: '🤿', category: 'adventure' },
+  { id: 'skate', label: 'Skate & Esportes de Rua', emoji: '🛹', category: 'adventure' },
   { id: 'parapente', label: 'Parapente', emoji: '🪂', category: 'adventure' },
+  { id: 'rafting', label: 'Rafting', emoji: '🚣', category: 'adventure' },
+  { id: 'surfe', label: 'Surfe & Windsurfe', emoji: '🏄', category: 'adventure' },
+  { id: 'esqui', label: 'Esqui & Snowboard', emoji: '⛷️', category: 'adventure' },
+  { id: 'tirolesa', label: 'Tirolesa', emoji: '🪶', category: 'adventure' },
+  { id: 'caiaque', label: 'Caiaque & Canoagem', emoji: '🛶', category: 'adventure' },
+  { id: 'bungee', label: 'Bungee Jumping', emoji: '🦘', category: 'adventure' },
+  { id: 'mountainbike', label: 'Mountain Bike', emoji: '🚵', category: 'adventure' },
+  { id: 'caminhada-gelo', label: 'Caminhada no Gelo', emoji: '❄️', category: 'adventure' },
+  { id: 'pesca', label: 'Pesca Esportiva', emoji: '🎣', category: 'adventure' },
+  { id: 'esqui-agua', label: 'Esqui Aquático', emoji: '🏂', category: 'adventure' },
   
-  // Night Life
-  { id: 'vida-noturna', label: 'Vida Noturna', emoji: '🎉', category: 'activities' },
+  // 🎭 ENTERTAINMENT & ACTIVITIES (14 items)
+  { id: 'vida-noturna', label: 'Vida Noturna & Discotecas', emoji: '🎉', category: 'activities' },
   { id: 'dancas-tradicionais', label: 'Danças Tradicionais', emoji: '💃', category: 'activities' },
   { id: 'musica-ao-vivo', label: 'Música ao Vivo', emoji: '🎸', category: 'activities' },
   { id: 'teatros', label: 'Teatros & Shows', emoji: '🎭', category: 'activities' },
+  { id: 'cinema', label: 'Cinema', emoji: '🎬', category: 'activities' },
+  { id: 'musica-classica', label: 'Música Clássica & Ópera', emoji: '🎻', category: 'activities' },
+  { id: 'festivals', label: 'Festivais & Eventos', emoji: '🎊', category: 'activities' },
+  { id: 'fotografía', label: 'Fotografia & Paisagens', emoji: '📸', category: 'activities' },
+  { id: 'museus-arte-moderna', label: 'Arte Moderna & Contemporânea', emoji: '🖼️', category: 'activities' },
+  { id: 'compras', label: 'Compras & Mercados', emoji: '🛍️', category: 'activities' },
+  { id: 'mercados-artesanato', label: 'Mercados de Artesanato', emoji: '🏺', category: 'activities' },
+  { id: 'parques-tematicos', label: 'Parques Temáticos', emoji: '🎪', category: 'activities' },
+  { id: 'observatorio', label: 'Observatórios Astronômicos', emoji: '🔭', category: 'activities' },
+  { id: 'museus-ciencia', label: 'Museus de Ciência', emoji: '🧪', category: 'activities' },
 ];
 
 // Interests organized by category
