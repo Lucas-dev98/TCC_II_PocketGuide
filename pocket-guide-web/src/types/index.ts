@@ -116,7 +116,7 @@ export interface CreateTripParams {
 /**
  * Trip Type - Used in Step 1 of new flow
  */
-export type TripType = "relaxamento" | "aventura" | "cultura" | "diversao" | "exploracao" | "romantica";
+export type TripType = "relaxamento" | "aventura" | "cultura" | "diversao" | "exploracao" | "romantica" | "gastronomia" | "natureza" | "esportes" | "bem-estar";
 
 /**
  * Trip Duration - Used in Step 2 of new flow

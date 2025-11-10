@@ -536,6 +536,14 @@
       "exploracao_desc": "Múltiplas cidades, road trip - descubra novos lugares",
       "romantica": "Romântica",
       "romantica_desc": "Casal, destinos românticos - moments especiais",
+      "gastronomia": "Gastronomia",
+      "gastronomia_desc": "Culinária local, food tours, restaurantes - descubra sabores",
+      "natureza": "Natureza",
+      "natureza_desc": "Parques, trilhas, paisagens - conexão com a natureza",
+      "esportes": "Esportes",
+      "esportes_desc": "Atividades esportivas, competições - adrenalina e movimento",
+      "bem-estar": "Bem-estar",
+      "bem-estar_desc": "Spa, yoga, retiros - saúde mental e física",
       "travelTypeInfo": "Escolha um ou mais tipos para explorar diferentes estilos de viagem"
     },
     "step2": {

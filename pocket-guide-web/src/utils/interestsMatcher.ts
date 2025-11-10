@@ -98,6 +98,10 @@ const TRIP_TYPE_RECOMMENDATIONS: Record<TripType, string[]> = {
   diversao: ['activities', 'dining', 'culture', 'adventure'],
   exploracao: ['nature', 'adventure', 'culture', 'activities'],
   romantica: ['dining', 'culture', 'relaxation', 'nature'],
+  gastronomia: ['dining', 'culture', 'activities', 'relaxation'],
+  natureza: ['nature', 'adventure', 'activities', 'relaxation'],
+  esportes: ['adventure', 'activities', 'nature', 'dining'],
+  'bem-estar': ['relaxation', 'dining', 'nature', 'activities'],
 };
 
 /**

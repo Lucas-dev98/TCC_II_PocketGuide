@@ -137,6 +137,10 @@ function buildRecommendationPrompt(
     'exploracao': 'Exploration',
     'diversao': 'Fun/Party',
     'romantica': 'Romantic',
+    'gastronomia': 'Gastronomy',
+    'natureza': 'Nature',
+    'esportes': 'Sports',
+    'bem-estar': 'Wellness',
   };
 
   const groupDescriptions: Record<GroupType, string> = {

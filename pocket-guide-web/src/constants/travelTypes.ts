@@ -14,6 +14,10 @@ export const TRAVEL_TYPES = {
   DIVERSAO: 'diversao',
   EXPLORACAO: 'exploracao',
   ROMANTICA: 'romantica',
+  GASTRONOMIA: 'gastronomia',
+  NATUREZA: 'natureza',
+  ESPORTES: 'esportes',
+  BEM_ESTAR: 'bem-estar',
 } as const;
 
 /**
@@ -95,6 +99,42 @@ export const TRAVEL_TYPE_CONFIG: Record<
     color: 'from-red-500 to-pink-500',
     bgColor: 'bg-red-50 dark:bg-red-950',
     borderColor: 'border-red-200 dark:border-red-800',
+  },
+  [TRAVEL_TYPES.GASTRONOMIA]: {
+    id: TRAVEL_TYPES.GASTRONOMIA,
+    icon: '🍽️',
+    labelKey: 'newFlow.step1.gastronomia',
+    descriptionKey: 'newFlow.step1.gastronomia_desc',
+    color: 'from-amber-500 to-orange-500',
+    bgColor: 'bg-amber-50 dark:bg-amber-950',
+    borderColor: 'border-amber-200 dark:border-amber-800',
+  },
+  [TRAVEL_TYPES.NATUREZA]: {
+    id: TRAVEL_TYPES.NATUREZA,
+    icon: '🌲',
+    labelKey: 'newFlow.step1.natureza',
+    descriptionKey: 'newFlow.step1.natureza_desc',
+    color: 'from-green-600 to-teal-500',
+    bgColor: 'bg-green-50 dark:bg-green-950',
+    borderColor: 'border-green-200 dark:border-green-800',
+  },
+  [TRAVEL_TYPES.ESPORTES]: {
+    id: TRAVEL_TYPES.ESPORTES,
+    icon: '⚽',
+    labelKey: 'newFlow.step1.esportes',
+    descriptionKey: 'newFlow.step1.esportes_desc',
+    color: 'from-indigo-500 to-blue-500',
+    bgColor: 'bg-indigo-50 dark:bg-indigo-950',
+    borderColor: 'border-indigo-200 dark:border-indigo-800',
+  },
+  [TRAVEL_TYPES.BEM_ESTAR]: {
+    id: TRAVEL_TYPES.BEM_ESTAR,
+    icon: '🧘',
+    labelKey: 'newFlow.step1.bem-estar',
+    descriptionKey: 'newFlow.step1.bem-estar_desc',
+    color: 'from-violet-500 to-purple-500',
+    bgColor: 'bg-violet-50 dark:bg-violet-950',
+    borderColor: 'border-violet-200 dark:border-violet-800',
   },
 };
 
