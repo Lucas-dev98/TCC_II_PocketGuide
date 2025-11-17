@@ -19,12 +19,18 @@ const GEMINI_API_URL = 'https://generativelanguage.googleapis.com/v1beta/models/
 
 // Language prompts
 const SYSTEM_PROMPTS = {
-  'pt-BR': `Você é um especialista em viagens com conhecimento profundo sobre destinos internacionais e regionais.
-Analise as preferências do usuário e recomende 4-5 destinos perfeitamente alinhados com suas necessidades.
+  'pt-BR': `🎯 VOCÊ É UM ESPECIALISTA EM VIAGENS COM FOCO EM PROXIMIDADE DO USUÁRIO
+  
+Sua tarefa: Recomendar 4-5 destinos que sejam PERFEITOS para o usuário, COM PRIORIDADE MÁXIMA À PROXIMIDADE.
+
+⚠️ REGRA CRÍTICA #1 - PROXIMIDADE É PRIORIDADE:
+- Se o usuário forneceu sua localização, destinos PRÓXIMOS recebem scores MUITO MAIS ALTOS (80-95)
+- Destinos LONGOS só podem receber scores altos (70+) se forem EXCEPCIONAIS
+- Sempre que possível, recomende destinos a menos de 150km do usuário PRIMEIRO
 
 IMPORTANTE:
 - Sempre retorne um JSON válido (sem markdown, sem \`\`\`json)
-- Considere ALL os fatores: tipo de viagem, interesses, grupo, orçamento, datas
+- Considere: tipo de viagem, interesses, grupo, orçamento, datas E ESPECIALMENTE PROXIMIDADE
 - Mostre porquê cada destino é adequado
 - Retorne exatamente este formato:
 {
@@ -42,12 +48,18 @@ IMPORTANTE:
   ]
 }`,
   
-  'en-US': `You are a travel expert with deep knowledge of international and regional destinations.
-Analyze the user's preferences and recommend 4-5 destinations perfectly aligned with their needs.
+  'en-US': `🎯 YOU ARE A TRAVEL EXPERT FOCUSED ON USER PROXIMITY
+  
+Your task: Recommend 4-5 destinations that are PERFECT for the user, WITH MAXIMUM PRIORITY ON PROXIMITY.
+
+⚠️ CRITICAL RULE #1 - PROXIMITY IS PRIORITY:
+- If user provided their location, CLOSE destinations get MUCH HIGHER scores (80-95)
+- FAR destinations can only get high scores (70+) if they are EXCEPTIONAL
+- Always recommend destinations within 150km of user FIRST when possible
 
 IMPORTANT:
 - Always return valid JSON (no markdown, no \`\`\`json)
-- Consider ALL factors: travel type, interests, group, budget, dates
+- Consider: travel type, interests, group, budget, dates AND ESPECIALLY PROXIMITY
 - Show why each destination is suitable
 - Return exactly this format:
 {
@@ -65,12 +77,18 @@ IMPORTANT:
   ]
 }`,
   
-  'es-ES': `Eres un experto en viajes con profundo conocimiento de destinos internacionales y regionales.
-Analiza las preferencias del usuario y recomienda 4-5 destinos perfectamente alineados con sus necesidades.
+  'es-ES': `🎯 ERES UN EXPERTO EN VIAJES ENFOCADO EN PROXIMIDAD DEL USUARIO
+  
+Tu tarea: Recomendar 4-5 destinos que sean PERFECTOS para el usuario, CON MÁXIMA PRIORIDAD EN PROXIMIDAD.
+
+⚠️ REGLA CRÍTICA #1 - LA PROXIMIDAD ES PRIORIDAD:
+- Si el usuario proporcionó su ubicación, destinos CERCANOS obtienen puntuaciones MUCHO MÁS ALTAS (80-95)
+- Destinos LEJANOS solo pueden obtener puntuaciones altas (70+) si son EXCEPCIONALES
+- Siempre recomienda destinos dentro de 150km del usuario PRIMERO cuando sea posible
 
 IMPORTANTE:
 - Siempre devuelve JSON válido (sin markdown, sin \`\`\`json)
-- Considera TODOS los factores: tipo de viaje, intereses, grupo, presupuesto, fechas
+- Considera: tipo de viaje, intereses, grupo, presupuesto, fechas Y ESPECIALMENTE PROXIMIDAD
 - Muestra por qué cada destino es adecuado
 - Retorna exactamente este formato:
 {
@@ -429,6 +447,14 @@ export async function getGeminiDestinationRecommendations(
 
   try {
     // DEBUG: Log parameters being sent to Gemini
+    console.log('\n\n🎯🎯🎯 GEMINI DESTINATION RECOMMENDATIONS - START 🎯🎯🎯');
+    console.log('📍 User Location Received:', {
+      hasUserLocation: !!(userLocation && (userLocation.lat || userLocation.lng)),
+      address: userLocation?.address || 'NONE',
+      lat: userLocation?.lat || 'NONE',
+      lng: userLocation?.lng || 'NONE',
+    });
+    
     logger.info('📊 Destination Recommendations Parameters:', {
       season,
       language,
@@ -502,6 +528,14 @@ export async function getGeminiDestinationRecommendations(
       recommendations = JSON.parse(jsonMatch[0]);
     }
 
+    // Log Gemini's response for debugging
+    console.log('📋 GEMINI RESPONSE (Raw Recommendations):');
+    console.log(recommendations.recommendations?.map((r: any) => ({
+      name: r.name,
+      score: r.score,
+      reasons: r.reasons,
+    })));
+
     // Transform Gemini recommendations to DestinationScore format
     if (!recommendations.recommendations || !Array.isArray(recommendations.recommendations)) {
       throw new Error('Invalid recommendations format from Gemini');
@@ -518,6 +552,10 @@ export async function getGeminiDestinationRecommendations(
       })
     );
 
+    console.log('✅ GEMINI RECOMMENDATIONS GENERATED:', {
+      count: scores.length,
+      destinations: scores.map(s => ({ name: s.name, score: s.score })),
+    });
     logger.info(`✅ Gemini recommendations generated: ${scores.length} destinations`, { scores: scores.length });
     return scores;
   } catch (error) {
