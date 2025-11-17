@@ -160,6 +160,20 @@ function buildRecommendationPrompt(
 
   let prompt = `You are a destination recommendation expert. CRITICAL: You MUST recommend destinations that match the user's PREFERRED SEASON, not just any season.\n\n`;
 
+  // Add MAXIMUM PRIORITY location instruction FIRST if available
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    prompt += `${'🚨'.repeat(20)}\n`;
+    prompt += `🚨 CRITICAL PRIORITY #1 - USER LOCATION FILTERING 🚨\n`;
+    prompt += `${'🚨'.repeat(20)}\n`;
+    prompt += `USER IS LOCATED IN: ${userLocation.address || 'Unknown'}\n`;
+    prompt += `COORDINATES: ${userLocation.lat?.toFixed(4)}°, ${userLocation.lng?.toFixed(4)}°\n\n`;
+    prompt += `⭐ MAXIMUM PRIORITY - PROXIMITY FILTERING:\n`;
+    prompt += `1. FIRST FILTER by PROXIMITY to user's location (${userLocation.address})\n`;
+    prompt += `2. THEN filter by season and travel preferences\n`;
+    prompt += `3. RANK recommendations by CLOSEST distance first\n\n`;
+    prompt += `${'='.repeat(80)}\n\n`;
+  }
+
   prompt += `USER PREFERENCES:\n`;
   prompt += `📍 Travel Type: ${tripTypes.map(t => tripTypeTranslations[t]).join(', ')}\n`;
   
@@ -368,7 +382,17 @@ function buildRecommendationPrompt(
   console.log('🌍 SEASON (CRITICAL):', season?.toUpperCase() || 'NOT SET!');
   console.log('🌐 TRIP SCOPE:', tripScope || 'NOT SET');
   console.log('🗓️ Month:', month);
-  console.log('📍 USER LOCATION:', userLocation?.address || 'Not obtained', `(${userLocation?.lat}, ${userLocation?.lng})`);
+  
+  // Detailed user location logging
+  if (userLocation && (userLocation.lat || userLocation.lng)) {
+    console.log('✅ 📍 USER LOCATION AVAILABLE:');
+    console.log('   Address:', userLocation.address);
+    console.log('   Latitude:', userLocation.lat);
+    console.log('   Longitude:', userLocation.lng);
+  } else {
+    console.warn('⚠️ ⚠️ USER LOCATION NOT AVAILABLE - Recommendations will NOT be filtered by proximity!');
+  }
+  
   console.log('🌐 Language:', language);
   console.log('════════════════════════════════════════════════════════');
   console.log('📝 PROMPT BEING SENT TO GEMINI:');

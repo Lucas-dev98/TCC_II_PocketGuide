@@ -61,7 +61,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     setIsLoading(true);
     const generateRecommendations = async () => {
       try {
-        // DEBUG: Log all parameters being passed to AI
+        // DEBUG: Log all parameters being passed to AI, INCLUDING userLocation
         console.log('🎯 DestinationSelector - Parameters for AI:', {
           tripTypes,
           interests,
@@ -73,8 +73,19 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           endDate,
           season,
           selectedMonth,
+          userLocation, // ✅ Log user location to verify it's being used
           language: i18n?.language || 'en-US',
         });
+        
+        if (userLocation) {
+          console.log('📍 User Location Details:', {
+            address: userLocation.address,
+            lat: userLocation.lat,
+            lng: userLocation.lng,
+          });
+        } else {
+          console.warn('⚠️ No user location available for proximity filtering');
+        }
 
         const recs = await getHybridDestinationRecommendations(
           tripTypes,
@@ -138,7 +149,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     season,
     selectedMonth,
     i18n?.language,
-  ]); // Added season to regenerate recommendations when season changes
+    userLocation, // ✅ CRITICAL: Added to regenerate recommendations when user location changes
+  ]); // Regenerate when season or user location changes
 
   // Memoize selected destination info
   const selectedInfo = useMemo(

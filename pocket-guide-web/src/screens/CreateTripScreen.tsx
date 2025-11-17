@@ -80,14 +80,29 @@ export default function CreateTripScreen() {
   // Get user location on component mount
   useEffect(() => {
     const fetchUserLocation = async () => {
+      console.log('📍 Fetching user location...')
       const location = await getUserLocation()
       if (location) {
-        console.log('📍 User location obtained:', location)
+        console.log('✅ User location obtained:', location)
+        console.log('📍 Address:', location.address)
+        console.log('📍 Coordinates:', { lat: location.lat, lng: location.lng })
         setUserLocation(location)
+      } else {
+        console.warn('⚠️ Could not obtain user location')
       }
     }
     fetchUserLocation()
   }, [])
+
+  // Monitor userLocation changes
+  useEffect(() => {
+    console.log('🔍 userLocation state changed:', {
+      hasLocation: !!userLocation,
+      address: userLocation?.address || 'none',
+      lat: userLocation?.lat,
+      lng: userLocation?.lng,
+    })
+  }, [userLocation])
 
   const handleGoBack = () => {
     if (step === 1) {
