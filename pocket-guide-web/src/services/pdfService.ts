@@ -48,6 +48,17 @@ class PDFService {
     } = options
 
     try {
+      console.log('📄 Starting PDF export for trip:', trip.destination)
+      console.log('📅 Start date:', trip.startDate, '| End date:', trip.endDate)
+
+      // Validar dados essenciais
+      if (!trip.destination) {
+        throw new Error('❌ Destination é obrigatório')
+      }
+      if (!trip.startDate || !trip.endDate) {
+        throw new Error('❌ Start date e End date são obrigatórios')
+      }
+
       const pdf = new jsPDF({
         orientation,
         unit: 'mm',
@@ -60,8 +71,11 @@ class PDFService {
       const margin = 12
       const contentWidth = pageWidth - 2 * margin
 
+      console.log('📏 PDF dimensions: width=' + pageWidth + 'mm, height=' + pageHeight + 'mm')
+
       // Organizar atrações por dia
       const daySchedules = this.organizeDaySchedules(trip)
+      console.log('📅 Day schedules:', daySchedules.length, 'dias')
 
       // PAGE 1: Capa/Resumo
       this.addCoverPage(pdf, trip, margin, pageWidth, pageHeight, contentWidth)
@@ -101,10 +115,12 @@ class PDFService {
 
       // Download
       const filename = `${trip.destination.replace(/\s+/g, '_')}_itinerario_${new Date().toISOString().split('T')[0]}.pdf`
+      console.log('💾 Saving PDF:', filename)
       pdf.save(filename)
+      console.log('✅ PDF exportado com sucesso!')
     } catch (error) {
       console.error('❌ Erro ao exportar PDF:', error)
-      throw new Error('Não foi possível exportar o PDF')
+      throw new Error(`Não foi possível exportar o PDF: ${error instanceof Error ? error.message : 'erro desconhecido'}`)
     }
   }
 
@@ -135,107 +151,117 @@ class PDFService {
     pageHeight: number,
     width: number
   ): void {
-    let yPos = pageHeight * 0.2
+    try {
+      let yPos = pageHeight * 0.2
 
-    // DESTINO - Grande e em destaque
-    pdf.setFontSize(48)
-    pdf.setTextColor(...this.PRIMARY_COLOR)
-    pdf.setFont('helvetica', 'bold')
-    pdf.text(`✈️ ${trip.destination}`, pageWidth / 2, yPos, { align: 'center' })
-    yPos += 20
-
-    // País - subtítulo
-    if (trip.country) {
-      pdf.setFontSize(14)
-      pdf.setTextColor(...this.TEXT_LIGHT)
-      pdf.setFont('helvetica', 'normal')
-      pdf.text(trip.country, pageWidth / 2, yPos, { align: 'center' })
-      yPos += 12
-    }
-
-    // Linha divisória elegante
-    pdf.setDrawColor(...this.PRIMARY_COLOR)
-    pdf.setLineWidth(1)
-    pdf.line(pageWidth / 2 - 30, yPos, pageWidth / 2 + 30, yPos)
-    yPos += 16
-
-    // Informações principais em grid 2x2
-    const infoData = [
-      {
-        label: '📅 DATAS',
-        value: `${formatDate(trip.startDate)} até ${formatDate(trip.endDate)}`
-      },
-      {
-        label: '🗓️ DURAÇÃO',
-        value: `${this.calculateDays(trip.startDate, trip.endDate)} dias`
-      },
-      {
-        label: '💰 ORÇAMENTO',
-        value: this.getBudgetLabel(trip.budget)
-      },
-      {
-        label: '👥 TIPO',
-        value: this.getGroupTypeLabel(trip.groupType)
-      },
-    ]
-
-    const boxWidth = (width - 8) / 2
-    const boxHeight = 18
-    const boxPadding = 2
-
-    for (let i = 0; i < infoData.length; i++) {
-      const row = Math.floor(i / 2)
-      const col = i % 2
-      const boxX = x + col * (boxWidth + 4)
-      const boxY = yPos + row * (boxHeight + 6)
-
-      // Box background com borda
-      pdf.setFillColor(...this.BG_LIGHT)
-      pdf.setDrawColor(...this.PRIMARY_COLOR)
-      pdf.setLineWidth(0.8)
-      pdf.rect(boxX, boxY, boxWidth, boxHeight, 'FD')
-
-      // Label - MAIÚSCULO
-      pdf.setFontSize(9)
+      // DESTINO - Grande e em destaque
+      pdf.setFontSize(48)
       pdf.setTextColor(...this.PRIMARY_COLOR)
       pdf.setFont('helvetica', 'bold')
-      pdf.text(infoData[i].label, boxX + boxPadding + 1, boxY + 5)
+      pdf.text(`✈️ ${trip.destination}`, pageWidth / 2, yPos, { align: 'center' })
+      yPos += 20
 
-      // Value - destaque
-      pdf.setFontSize(11)
-      pdf.setTextColor(...this.DEFAULT_COLOR)
-      pdf.setFont('helvetica', 'bold')
-      const splitValue = pdf.splitTextToSize(infoData[i].value, boxWidth - 4)
-      pdf.text(splitValue, boxX + boxPadding + 1, boxY + 11)
-    }
+      // País - subtítulo
+      if (trip.country) {
+        pdf.setFontSize(14)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'normal')
+        pdf.text(trip.country, pageWidth / 2, yPos, { align: 'center' })
+        yPos += 12
+      }
 
-    yPos += 50
+      // Linha divisória elegante
+      pdf.setDrawColor(...this.PRIMARY_COLOR)
+      pdf.setLineWidth(1)
+      pdf.line(pageWidth / 2 - 30, yPos, pageWidth / 2 + 30, yPos)
+      yPos += 16
 
-    // Descrição da viagem (se existir)
-    if (trip.description) {
-      pdf.setFontSize(10)
+      // Validar datas antes de usar
+      const startDateFormatted = trip.startDate ? formatDate(trip.startDate, 'pt-BR') : 'Data não disponível'
+      const endDateFormatted = trip.endDate ? formatDate(trip.endDate, 'pt-BR') : 'Data não disponível'
+      const daysCount = (trip.startDate && trip.endDate) ? this.calculateDays(trip.startDate, trip.endDate) : '0'
+
+      // Informações principais em grid 2x2
+      const infoData = [
+        {
+          label: '📅 DATAS',
+          value: `${startDateFormatted} até ${endDateFormatted}`
+        },
+        {
+          label: '🗓️ DURAÇÃO',
+          value: `${daysCount} dias`
+        },
+        {
+          label: '💰 ORÇAMENTO',
+          value: this.getBudgetLabel(trip.budgetPerDay || trip.budget)
+        },
+        {
+          label: '👥 TIPO',
+          value: this.getGroupTypeLabel(trip.groupType)
+        },
+      ]
+
+      const boxWidth = (width - 8) / 2
+      const boxHeight = 18
+      const boxPadding = 2
+
+      for (let i = 0; i < infoData.length; i++) {
+        const row = Math.floor(i / 2)
+        const col = i % 2
+        const boxX = x + col * (boxWidth + 4)
+        const boxY = yPos + row * (boxHeight + 6)
+
+        // Box background com borda
+        pdf.setFillColor(...this.BG_LIGHT)
+        pdf.setDrawColor(...this.PRIMARY_COLOR)
+        pdf.setLineWidth(0.8)
+        pdf.rect(boxX, boxY, boxWidth, boxHeight, 'FD')
+
+        // Label - MAIÚSCULO
+        pdf.setFontSize(9)
+        pdf.setTextColor(...this.PRIMARY_COLOR)
+        pdf.setFont('helvetica', 'bold')
+        pdf.text(infoData[i].label, boxX + boxPadding + 1, boxY + 5)
+
+        // Value - destaque
+        pdf.setFontSize(11)
+        pdf.setTextColor(...this.DEFAULT_COLOR)
+        pdf.setFont('helvetica', 'bold')
+        const splitValue = pdf.splitTextToSize(infoData[i].value, boxWidth - 4)
+        pdf.text(splitValue, boxX + boxPadding + 1, boxY + 11)
+      }
+
+      yPos += 50
+
+      // Descrição da viagem (se existir)
+      if (trip.description) {
+        pdf.setFontSize(10)
+        pdf.setTextColor(...this.TEXT_LIGHT)
+        pdf.setFont('helvetica', 'normal')
+        
+        pdf.setFillColor(245, 247, 250)
+        pdf.rect(x, yPos - 2, width, 1, 'F')
+        
+        yPos += 3
+        
+        const splitDesc = pdf.splitTextToSize(trip.description, width - 4)
+        pdf.text(splitDesc, x + 2, yPos)
+        yPos += splitDesc.length * 4 + 3
+        
+        pdf.rect(x, yPos + 1, width, 1, 'F')
+      }
+
+      // Rodapé da capa
+      yPos = pageHeight - 20
+      pdf.setFontSize(8)
       pdf.setTextColor(...this.TEXT_LIGHT)
-      pdf.setFont('helvetica', 'normal')
-      
-      pdf.setFillColor(245, 247, 250)
-      pdf.rect(x, yPos - 2, width, 1, 'F')
-      
-      yPos += 3
-      
-      const splitDesc = pdf.splitTextToSize(trip.description, width - 4)
-      pdf.text(splitDesc, x + 2, yPos)
-      yPos += splitDesc.length * 4 + 3
-      
-      pdf.rect(x, yPos + 1, width, 1, 'F')
+      pdf.setFont('helvetica', 'italic')
+      pdf.text('Seu guia de viagem personalizado pelo Pocket Guide', pageWidth / 2, yPos, { align: 'center' })
+      pdf.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, yPos + 5, { align: 'center' })
+    } catch (error) {
+      console.error('❌ Erro ao adicionar capa:', error)
+      throw error
     }
-
-    // Rodapé da capa
-    yPos = pageHeight - 20
-    pdf.setFontSize(8)
-    pdf.setTextColor(...this.TEXT_LIGHT)
-    pdf.setFont('helvetica', 'italic')
-    pdf.text('Seu guia de viagem personalizado pelo Pocket Guide', pageWidth / 2, yPos, { align: 'center' })
-    pdf.text(new Date().toLocaleDateString('pt-BR'), pageWidth / 2, yPos + 5, { align: 'center' })
   }
 
   /**
@@ -477,9 +503,17 @@ class PDFService {
     // Extrair atrações de várias possíveis localizações
     let attractions: Attraction[] = []
 
+    console.log('🔍 Procurando atrações no trip:', {
+      hasAttractions: !!trip.attractions,
+      attractionsLength: trip.attractions?.length || 0,
+      hasItinerary: !!trip.itinerary,
+      itineraryType: typeof trip.itinerary,
+      itineraryKeys: trip.itinerary ? Object.keys(trip.itinerary).slice(0, 5) : 'N/A',
+    })
+
     // 1. Verificar trip.attractions direto
     if (trip.attractions && trip.attractions.length > 0) {
-      console.log('📌 Atrações encontradas em trip.attractions')
+      console.log('📌 Atrações encontradas em trip.attractions:', trip.attractions.length)
       attractions = trip.attractions
     }
     // 2. Verificar trip.itinerary
@@ -492,16 +526,24 @@ class PDFService {
       if (typeof itinerary === 'string') {
         try {
           itinerary = JSON.parse(itinerary)
+          console.log('✅ Itinerário parseado com sucesso')
         } catch (error) {
           console.error('❌ Erro ao fazer parse do itinerary:', error)
           itinerary = {}
         }
       }
 
+      console.log('🔍 Estrutura do itinerário:', {
+        hasItineraryField: !!itinerary.itinerary,
+        hasDays: !!itinerary.days,
+        hasAttractions: !!itinerary.attractions,
+        keys: Object.keys(itinerary).slice(0, 10),
+      })
+
       // 🔧 SUPORTE A DUPLA ENCAPSULAÇÃO: { itinerary: { itinerary: [...] } }
       // Quando vem do CreateTripScreen, pode estar encapsulado duas vezes
       if (itinerary.itinerary && Array.isArray(itinerary.itinerary)) {
-        console.log(`📌 Detectada DUPLA ENCAPSULAÇÃO: itinerary.itinerary`)
+        console.log(`📌 Detectada DUPLA ENCAPSULAÇÃO: itinerary.itinerary com ${itinerary.itinerary.length} items`)
         attractions = itinerary.itinerary
       }
       // Extrair atrações do itinerário
@@ -511,6 +553,7 @@ class PDFService {
         
         itinerary.days.forEach((day: any, dayIndex: number) => {
           if (day.attractions && Array.isArray(day.attractions)) {
+            console.log(`   Dia ${dayIndex + 1}: ${day.attractions.length} atrações`)
             day.attractions.forEach((attr: any) => {
               attractions.push({
                 ...attr,
@@ -521,8 +564,33 @@ class PDFService {
         })
       } else if (itinerary.attractions && Array.isArray(itinerary.attractions)) {
         // Formato: { attractions: [...] }
-        console.log(`📌 Itinerário com array flat de atrações`)
+        console.log(`📌 Itinerário com array flat de ${itinerary.attractions.length} atrações`)
         attractions = itinerary.attractions
+      } else if (Array.isArray(itinerary)) {
+        // Formato direto: array de ItineraryItem (vindo de generateItinerary)
+        console.log(`📌 Itinerário é um array direto com ${itinerary.length} items (ItineraryItem format)`)
+        // Converter ItineraryItem para Attraction
+        attractions = itinerary.map((item: any) => ({
+          id: item.id,
+          name: item.name,
+          reason: item.reason,
+          time: item.time,
+          duration: item.duration,
+          tip: item.tip,
+          day: item.day || 1,
+          location: item.location,
+          category: item.category,
+        } as Attraction))
+      } else {
+        // Último recurso: procurar por qualquer campo que possa ter atrações
+        console.log('🔍 Procurando em campos alternativos...')
+        for (const [key, value] of Object.entries(itinerary)) {
+          if (Array.isArray(value) && value.length > 0 && value[0]?.name) {
+            console.log(`   Encontrado em itinerary.${key}: ${value.length} items`)
+            attractions = value as Attraction[]
+            break
+          }
+        }
       }
     }
 
@@ -570,23 +638,43 @@ class PDFService {
    * Calcula data para um dia específico
    */
   private calculateDateForDay(startDate: Date | string, dayNumber: number): string {
-    const start = new Date(startDate)
-    const date = new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000)
-    return date.toLocaleDateString('pt-BR', { 
-      weekday: 'short', 
-      day: '2-digit', 
-      month: '2-digit' 
-    })
+    try {
+      const start = new Date(startDate)
+      if (isNaN(start.getTime())) {
+        console.warn('⚠️ Start date inválida:', startDate)
+        return `Dia ${dayNumber}`
+      }
+      const date = new Date(start.getTime() + (dayNumber - 1) * 24 * 60 * 60 * 1000)
+      return date.toLocaleDateString('pt-BR', { 
+        weekday: 'short', 
+        day: '2-digit', 
+        month: '2-digit' 
+      })
+    } catch (error) {
+      console.error('❌ Erro ao calcular data do dia:', error)
+      return `Dia ${dayNumber}`
+    }
   }
 
   /**
    * Calcula quantidade de dias
    */
   private calculateDays(startDate: Date | string, endDate: Date | string): string {
-    const start = new Date(startDate)
-    const end = new Date(endDate)
-    const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
-    return days.toString()
+    try {
+      const start = new Date(startDate)
+      const end = new Date(endDate)
+      
+      if (isNaN(start.getTime()) || isNaN(end.getTime())) {
+        console.warn('⚠️ Datas inválidas:', { startDate, endDate })
+        return '0'
+      }
+      
+      const days = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24)) + 1
+      return days.toString()
+    } catch (error) {
+      console.error('❌ Erro ao calcular dias:', error)
+      return '0'
+    }
   }
 
   /**
@@ -597,6 +685,9 @@ class PDFService {
       'econômico': '💰 Econômico',
       'médio': '💰💰 Médio',
       'luxo': '💰💰💰 Luxo',
+      'ultra-economico': '💰 Ultra Econômico',
+      'medio': '💰💰 Médio',
+      'premium': '💰💰💰 Premium',
     }
     return labels[budget || ''] || 'Não definido'
   }

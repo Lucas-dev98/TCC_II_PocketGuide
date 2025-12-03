@@ -53,14 +53,19 @@ export const ExportButton = ({
     setError(null)
 
     try {
+      console.log('🚀 Iniciando exportação de PDF...')
+      console.log('📊 Trip:', trip)
+      console.log('📋 Itinerário:', trip.itinerary)
+      
       await pdfService.exportTripToPDF(trip, {
         format: 'A4',
         orientation: 'portrait',
       })
       onExport?.()
     } catch (err) {
-      setError(t('components.exportButton.exportError'))
-      console.error(err)
+      const errorMessage = err instanceof Error ? err.message : 'erro desconhecido'
+      setError(t('components.exportButton.exportError') + `: ${errorMessage}`)
+      console.error('❌ Erro na exportação:', err)
     } finally {
       setLoading(false)
     }
