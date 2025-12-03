@@ -645,8 +645,8 @@ class PDFService {
   /**
    * Página de capa com informações gerais - REDESIGN MELHORADO
    */
-  // @ts-ignore - Métodos legados mantidos para compatibilidade futura
-  // @ts-ignore
+  // @ts-expect-error - Métodos legados mantidos para compatibilidade futura
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   private _addCoverPage(
     pdf: jsPDF,
     trip: Trip,
@@ -839,7 +839,7 @@ class PDFService {
    * Página de índice/sumário
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @ts-ignore
+  // @ts-expect-error Legacy method kept for compatibility
   private _addTableOfContents(
     pdf: jsPDF,
     daySchedules: DaySchedule[],
@@ -956,7 +956,7 @@ class PDFService {
    * Header do dia com resumo - MELHORADO
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @ts-ignore
+  // @ts-expect-error Legacy method kept for compatibility
   private _addDayHeader(
     pdf: jsPDF,
     daySchedule: DaySchedule,
@@ -997,7 +997,7 @@ class PDFService {
    * Atrações do dia com formatação melhorada
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @ts-ignore
+  // @ts-expect-error Legacy method kept for compatibility
   private _addDayAttractions(
     pdf: jsPDF,
     daySchedule: DaySchedule,
@@ -1158,7 +1158,7 @@ class PDFService {
    * Footer da página
    */
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  // @ts-ignore
+  // @ts-expect-error Legacy method kept for compatibility
   private _addPageFooter(
     pdf: jsPDF,
     pageNumber: number,
