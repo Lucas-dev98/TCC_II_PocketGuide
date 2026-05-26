@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { TripType, BudgetPerDay, GroupType, Location } from '../types';
 import {
@@ -9,6 +9,10 @@ import {
 import {
   getHybridDestinationRecommendations,
 } from '../services/destinationRecommendationService';
+import {
+  trackRecommendationImpression,
+  trackRecommendationClick,
+} from '../services/recommendationTelemetryService';
 import { CityAutocomplete } from './CityAutocomplete';
 import logger from '../services/logger';
 
@@ -53,6 +57,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   const [showSearch, setShowSearch] = useState(false);
   const [recommendations, setRecommendations] = useState<DestinationScore[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const lastTrackedImpressionRef = useRef<string>('');
 
   // Generate recommendations using Gemini (with fallback to rule-based)
   // Note: removed selectedDestination from dependencies to prevent re-generating
@@ -110,7 +115,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
             startDate,
             endDate,
             selectedMonth || '',
-            '' // Don't filter by selected destination during recommendations
+            '', // Don't filter by selected destination during recommendations
+            tripScope
           ),
           i18n?.language || 'en-US'
         );
@@ -128,7 +134,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           startDate,
           endDate,
           selectedMonth || '',
-          '' // Don't filter by selected destination during recommendations
+          '', // Don't filter by selected destination during recommendations
+          tripScope
         );
         setRecommendations(fallbackRecs);
       } finally {
@@ -159,7 +166,74 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     [selectedDestination]
   );
 
-  const handleSelectRecommendation = (destination: string) => {
+  const telemetryContext = useMemo(
+    () => ({
+      tripTypes,
+      interests: interests || [],
+      budget,
+      groupType,
+      tripScope,
+      season,
+      language: i18n?.language || 'en-US',
+    }),
+    [tripTypes, interests, budget, groupType, tripScope, season, i18n?.language]
+  );
+
+  const recommendationSignature = useMemo(
+    () => recommendations.map((rec) => `${rec.name}:${rec.matchPercentage}`).join('|'),
+    [recommendations]
+  );
+
+  useEffect(() => {
+    if (isLoading || recommendations.length === 0 || showSearch) {
+      return;
+    }
+
+    if (lastTrackedImpressionRef.current === recommendationSignature) {
+      return;
+    }
+
+    const summary = trackRecommendationImpression(
+      'destination_selector',
+      recommendations.map((rec, index) => ({
+        destination: rec.name,
+        score: rec.matchPercentage,
+        rank: index + 1,
+      })),
+      telemetryContext
+    );
+
+    lastTrackedImpressionRef.current = recommendationSignature;
+
+    logger.logEvent('recommendation_summary_after_impression', {
+      impressions: summary.impressions,
+      displayedRecommendations: summary.displayedRecommendations,
+      averageDisplayedScore: summary.averageDisplayedScore,
+      averageClickedScore: summary.averageClickedScore,
+      clickThroughRate: summary.clickThroughRate,
+    });
+  }, [isLoading, recommendations, showSearch, recommendationSignature, telemetryContext]);
+
+  const handleSelectRecommendation = (recommendation: DestinationScore, rank: number) => {
+    const summary = trackRecommendationClick(
+      'destination_selector',
+      {
+        destination: recommendation.name,
+        score: recommendation.matchPercentage,
+        rank,
+      },
+      telemetryContext
+    );
+
+    logger.logEvent('recommendation_summary_after_click', {
+      destination: recommendation.name,
+      selectedScore: recommendation.matchPercentage,
+      averageDisplayedScore: summary.averageDisplayedScore,
+      averageClickedScore: summary.averageClickedScore,
+      clickThroughRate: summary.clickThroughRate,
+    });
+
+    const destination = recommendation.name;
     onDestinationChange(destination);
     setShowSearch(false);
     // Auto-advance to next step after selection
@@ -262,7 +336,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
                       recommendation={rec}
                       rank={idx + 1}
                       isSelected={selectedDestination === rec.name}
-                      onSelect={() => handleSelectRecommendation(rec.name)}
+                      onSelect={() => handleSelectRecommendation(rec, idx + 1)}
                       disabled={disabled}
                     />
                   ))}

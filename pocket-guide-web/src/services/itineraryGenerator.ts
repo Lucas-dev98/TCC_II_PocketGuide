@@ -10,6 +10,7 @@ import { withRetry } from '../utils/retryService';
 import logger from './logger';
 import type { LanguageCode } from './promptTranslator';
 import type { Location } from '../types';
+import { generateItineraryInBackend, isBackendApiEnabled, isBackendRequired } from './backendApi';
 
 export interface ItineraryItem {
   day: number;
@@ -162,6 +163,45 @@ export const generateItinerary = async (
   userLocation?: Location | null
 ): Promise<ItineraryItem[]> => {
   try {
+    if (isBackendRequired() && !isBackendApiEnabled()) {
+      throw new Error('Backend API is required in production. Configure VITE_BACKEND_URL.');
+    }
+
+    if (isBackendApiEnabled()) {
+      const backendItems = await withRetry(
+        () => generateItineraryInBackend({
+          destination,
+          days,
+          tags,
+          budget,
+          groupType,
+          language,
+          season,
+          tripScope,
+          async: false,
+        }),
+        {
+          maxRetries: 2,
+          baseDelayMs: 500,
+          maxDelayMs: 3000,
+          multiplier: 2,
+          onRetry: (attempt, delay, error) => {
+            logger.warn(`Backend itinerary retry ${attempt}`, {
+              delay,
+              error: error?.message,
+            });
+          },
+        }
+      );
+
+      if (backendItems && backendItems.length > 0) {
+        logger.info('Itinerary generated from backend API', {
+          itemCount: backendItems.length,
+        });
+        return backendItems;
+      }
+    }
+
     // DEBUG: Log ALL parameters received
     console.log('════════════════════════════════════════════════════════');
     console.log('🎯 ITINERARY GENERATOR - PARAMETERS RECEIVED:');
@@ -251,8 +291,43 @@ export const generateItinerary = async (
   return genericResult;
 };
 
+type FallbackPOI = {
+  name: string;
+  category: 'Culture' | 'Nature' | 'Food & Beverage' | 'Exploration' | 'Historical' | 'Viewpoint';
+  reason: string;
+  tip: string;
+  location: { lat: number; lng: number };
+};
+
+const smartFallbackCatalog: Record<string, FallbackPOI[]> = {
+  'rio de janeiro': [
+    { name: 'Cristo Redentor', category: 'Viewpoint', reason: 'Ícone da cidade com vista panorâmica completa', tip: 'Chegue cedo para evitar filas e neblina', location: { lat: -22.9519, lng: -43.2105 } },
+    { name: 'Pão de Açúcar', category: 'Viewpoint', reason: 'Um dos mirantes mais famosos do Rio', tip: 'Prefira horário de pôr do sol', location: { lat: -22.9486, lng: -43.1566 } },
+    { name: 'Copacabana', category: 'Nature', reason: 'Praia clássica com grande infraestrutura', tip: 'Evite horários de pico na orla', location: { lat: -22.9711, lng: -43.1822 } },
+    { name: 'Ipanema', category: 'Nature', reason: 'Praia vibrante com excelente ambiente urbano', tip: 'No fim da tarde, siga para o Arpoador', location: { lat: -22.9847, lng: -43.1986 } },
+    { name: 'Jardim Botânico do Rio', category: 'Nature', reason: 'Área verde histórica com trilhas e estufas', tip: 'Leve água e calçado confortável', location: { lat: -22.9634, lng: -43.2230 } },
+    { name: 'Escadaria Selarón', category: 'Culture', reason: 'Obra artística urbana reconhecida internacionalmente', tip: 'A região é melhor para visita diurna', location: { lat: -22.9153, lng: -43.1790 } },
+    { name: 'Museu do Amanhã', category: 'Culture', reason: 'Museu interativo com foco em ciência e futuro', tip: 'Compre ingresso online', location: { lat: -22.8938, lng: -43.1800 } },
+    { name: 'Real Gabinete Português de Leitura', category: 'Historical', reason: 'Patrimônio histórico e arquitetônico do centro', tip: 'Confira horário de funcionamento antes', location: { lat: -22.9071, lng: -43.1819 } },
+    { name: 'Confeitaria Colombo', category: 'Food & Beverage', reason: 'Experiência gastronômica tradicional do Rio', tip: 'Experimente doces da casa', location: { lat: -22.9034, lng: -43.1779 } },
+    { name: 'Santa Teresa', category: 'Exploration', reason: 'Bairro histórico com ateliês e vista da cidade', tip: 'Use transporte por app para maior conforto', location: { lat: -22.9240, lng: -43.1850 } },
+    { name: 'Lapa', category: 'Exploration', reason: 'Região cultural com arquitetura e vida noturna', tip: 'Visite os Arcos e os arredores com movimento', location: { lat: -22.9135, lng: -43.1823 } },
+    { name: 'Parque Lage', category: 'Nature', reason: 'Parque com trilhas e vista para o Corcovado', tip: 'Ideal para manhã de clima ameno', location: { lat: -22.9606, lng: -43.2118 } },
+  ],
+};
+
+const normalizeCategoryFromTag = (tag: string): FallbackPOI['category'] => {
+  const t = tag.toLowerCase();
+  if (t.includes('gastr') || t.includes('culin') || t.includes('food')) return 'Food & Beverage';
+  if (t.includes('natur') || t.includes('praia') || t.includes('beach') || t.includes('trilha')) return 'Nature';
+  if (t.includes('hist') || t.includes('muse') || t.includes('cult')) return 'Culture';
+  if (t.includes('vista') || t.includes('mirante')) return 'Viewpoint';
+  return 'Exploration';
+};
+
 /**
- * Generate a generic itinerary when destination is not found
+ * Generate a smart fallback itinerary when backend/gemini are unavailable.
+ * Avoids generic activity names and prioritizes destination POIs.
  */
 const generateGenericItinerary = (
   destination: string,
@@ -260,81 +335,91 @@ const generateGenericItinerary = (
   tags: string[]
 ): ItineraryItem[] => {
   const itinerary: ItineraryItem[] = [];
+  const used = new Set<string>();
+  const normalizedDestination = destination.toLowerCase().trim();
 
-  // Default coordinates for common destinations
-  const defaultCoords: { [key: string]: { lat: number; lng: number } } = {
-    'paris': { lat: 48.8566, lng: 2.3522 },
-    'london': { lat: 51.5074, lng: -0.1278 },
-    'new york': { lat: 40.7128, lng: -74.0060 },
-    'tokyo': { lat: 35.6762, lng: 139.6503 },
-    'rio de janeiro': { lat: -22.9068, lng: -43.1729 },
-    'barcelona': { lat: 41.3851, lng: 2.1734 },
-    'rome': { lat: 41.9028, lng: 12.4964 },
-    'dubai': { lat: 25.2048, lng: 55.2708 },
-    'singapore': { lat: 1.3521, lng: 103.8198 },
-    'bangkok': { lat: 13.7563, lng: 100.5018 },
-    'lisbon': { lat: 38.7223, lng: -9.1393 },
-    'amsterdam': { lat: 52.3676, lng: 4.9041 },
-    'berlin': { lat: 52.5200, lng: 13.4050 },
-    'madrid': { lat: 40.4168, lng: -3.7038 },
-    'são paulo': { lat: -23.5505, lng: -46.6333 },
-    'buenos aires': { lat: -34.6037, lng: -58.3816 },
-    'sydney': { lat: -33.8688, lng: 151.2093 },
-    'istanbul': { lat: 41.0082, lng: 28.9784 },
-  };
-
-  const destLower = destination.toLowerCase();
-  const baseCoords = defaultCoords[destLower] || { lat: 0, lng: 0 };
-
-  for (let day = 1; day <= days; day++) {
-    const activities = [
+  const catalog =
+    smartFallbackCatalog[normalizedDestination] ||
+    [
       {
-        time: '09:00',
-        name: `Explore ${destination} - Morning Tour`,
-        category: 'Exploration',
-        reason: 'Discover the main attractions of the city',
-        latOffset: 0,
-        lngOffset: 0,
+        name: `Centro Histórico de ${destination}`,
+        category: 'Historical',
+        reason: `Roteiro histórico para conhecer os principais marcos de ${destination}`,
+        tip: 'Comece cedo para aproveitar melhor os pontos do centro',
+        location: { lat: 0, lng: 0 },
       },
       {
-        time: '12:00',
-        name: `Local Lunch in ${destination}`,
+        name: `Mercado Municipal de ${destination}`,
         category: 'Food & Beverage',
-        reason: 'Experience authentic local cuisine',
-        latOffset: 0.01,
-        lngOffset: 0.01,
+        reason: 'Excelente ponto para provar sabores locais',
+        tip: 'Prefira horários fora do almoço para menos filas',
+        location: { lat: 0.01, lng: 0.01 },
       },
       {
-        time: '15:00',
-        name: `Cultural Site Visit`,
+        name: `Parque Central de ${destination}`,
+        category: 'Nature',
+        reason: 'Área verde ideal para pausa e passeio ao ar livre',
+        tip: 'Leve água e protetor solar',
+        location: { lat: -0.01, lng: 0.01 },
+      },
+      {
+        name: `Rota Cultural de ${destination}`,
         category: 'Culture',
-        reason: 'Learn about local history and culture',
-        latOffset: -0.01,
-        lngOffset: 0.01,
-      },
-      {
-        time: '19:00',
-        name: `Dinner and Evening Entertainment`,
-        category: 'Food & Beverage',
-        reason: 'Enjoy local nightlife and restaurants',
-        latOffset: -0.01,
-        lngOffset: -0.01,
+        reason: 'Combina arte, história e arquitetura local',
+        tip: 'Verifique horários de museus e centros culturais',
+        location: { lat: -0.01, lng: -0.01 },
       },
     ];
 
-    activities.forEach((activity, index) => {
+  const preferredCategories: FallbackPOI['category'][] =
+    tags.length > 0
+      ? tags.map(normalizeCategoryFromTag)
+      : ['Exploration', 'Food & Beverage', 'Culture', 'Nature'];
+
+  const slots = [
+    { time: '09:00', duration: 150 },
+    { time: '12:00', duration: 90 },
+    { time: '15:00', duration: 120 },
+    { time: '19:00', duration: 120 },
+  ];
+
+  const pickNextPOI = (preferredCategory: FallbackPOI['category'], seed: number): FallbackPOI => {
+    const prioritized = catalog.filter((poi) => poi.category === preferredCategory);
+    const pool = prioritized.length > 0 ? prioritized : catalog;
+
+    for (let i = 0; i < pool.length; i++) {
+      const candidate = pool[(seed + i) % pool.length];
+      if (!used.has(candidate.name.toLowerCase())) {
+        used.add(candidate.name.toLowerCase());
+        return candidate;
+      }
+    }
+
+    const fallback = pool[seed % pool.length];
+    return {
+      ...fallback,
+      name: `${fallback.name} (roteiro ${seed + 1})`,
+    };
+  };
+
+  for (let day = 1; day <= days; day++) {
+    slots.forEach((slot, slotIndex) => {
+      const seed = (day - 1) * slots.length + slotIndex;
+      const preferredCategory = preferredCategories[seed % preferredCategories.length];
+      const poi = pickNextPOI(preferredCategory, seed);
+
       itinerary.push({
-        id: `generic-${day}-${index}`,
+        id: `smart-fallback-${day}-${slotIndex}`,
         day,
-        time: activity.time,
-        name: activity.name,
-        duration: index === 0 ? 180 : index === 1 ? 120 : index === 2 ? 120 : 180,
-        reason: activity.reason,
-        tip: `${tags[index % tags.length] || 'Enjoy'} this experience`,
-        category: activity.category,
+        time: slot.time,
+        name: poi.name,
+        duration: slot.duration,
+        reason: poi.reason,
+        tip: poi.tip,
+        category: poi.category,
         location: {
-          lat: baseCoords.lat + (activity.latOffset || 0),
-          lng: baseCoords.lng + (activity.lngOffset || 0),
+          lat: poi.location.lat,
+          lng: poi.location.lng,
         },
       });
     });

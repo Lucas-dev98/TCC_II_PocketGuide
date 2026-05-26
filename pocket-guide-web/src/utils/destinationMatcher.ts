@@ -248,7 +248,8 @@ export function matchDestinations(
   _startDate?: string,
   _endDate?: string,
   month?: number | '',
-  destination?: string
+  destination?: string,
+  tripScope?: 'nacional' | 'internacional' | ''
 ): DestinationScore[] {
   // If user manually selected a destination, return it with high score
   if (destination) {
@@ -264,7 +265,17 @@ export function matchDestinations(
     ];
   }
 
-  const scores: DestinationScore[] = DESTINATIONS_DB.map((dest) => {
+  const scopedDestinations = DESTINATIONS_DB.filter((dest) => {
+    if (tripScope === 'nacional') {
+      return dest.country.toLowerCase() === 'brazil' || dest.country.toLowerCase() === 'brasil';
+    }
+    if (tripScope === 'internacional') {
+      return dest.country.toLowerCase() !== 'brazil' && dest.country.toLowerCase() !== 'brasil';
+    }
+    return true;
+  });
+
+  const scores: DestinationScore[] = scopedDestinations.map((dest) => {
     let score = 0;
     const reasons: string[] = [];
 

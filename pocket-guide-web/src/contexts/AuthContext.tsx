@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth, signInWithGoogle, signOut as firebaseSignOut } from '../services/firebase'
-import { onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import { auth, handleAuthError, isFirebaseConfigured, signInWithGoogle, signOut as firebaseSignOut } from '../services/firebase'
+import { getRedirectResult, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
 import * as tokenStorage from '../services/tokenStorage'
 import { debug } from '../utils/debug'
 
@@ -15,10 +15,28 @@ interface AuthContextType {
 
 export const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+const fallbackAuthContext: AuthContextType = {
+  user: null,
+  isLoading: false,
+  error: null,
+  signInWithGoogle: async () => {
+    throw new Error('AuthProvider não está disponível no momento')
+  },
+  signOut: async () => {},
+  isAuthenticated: false,
+}
+
+let warnedAboutMissingAuthProvider = false
+
 export const useAuth = () => {
   const context = useContext(AuthContext)
   if (!context) {
-    throw new Error('useAuth must be used within AuthProvider')
+    if (typeof window !== 'undefined' && !warnedAboutMissingAuthProvider) {
+      console.warn('⚠️ useAuth used outside AuthProvider, falling back to local safe state')
+      warnedAboutMissingAuthProvider = true
+    }
+
+    return fallbackAuthContext
   }
   return context
 }
@@ -33,6 +51,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
+    if (!isFirebaseConfigured) {
+      tokenStorage.clearToken()
+      setUser(null)
+      setIsLoading(false)
+      return undefined
+    }
+
     // Tenta recuperar sessão persistida
     const recoverSession = async () => {
       try {
@@ -48,6 +73,15 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     }
     
     recoverSession()
+
+    let authStateResolved = false
+    let redirectResolved = false
+
+    const syncLoadingState = () => {
+      if (authStateResolved && redirectResolved) {
+        setIsLoading(false)
+      }
+    }
 
     // Monitora mudanças de autenticação do Firebase
     const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -67,12 +101,45 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           debug.log('Token salvo no localStorage')
         })
       } else {
-        // Se usuário fez logout, limpa localStorage
-        tokenStorage.clearToken()
+        // Evita limpar sessão cedo demais durante o retorno do redirect.
+        if (redirectResolved) {
+          tokenStorage.clearToken()
+        }
       }
-      
-      setIsLoading(false)
+
+      authStateResolved = true
+      syncLoadingState()
     })
+
+    getRedirectResult(auth)
+      .then((result) => {
+        if (result?.user) {
+          setUser(result.user)
+          result.user.getIdToken().then((token) => {
+            tokenStorage.saveToken(token)
+            tokenStorage.saveUser({
+              uid: result.user.uid,
+              email: result.user.email,
+              displayName: result.user.displayName,
+              photoURL: result.user.photoURL,
+            })
+          })
+        }
+      })
+      .catch((err) => {
+        const message = handleAuthError(err)
+        setError(message)
+      })
+      .finally(() => {
+        redirectResolved = true
+
+        if (!authStateResolved && auth.currentUser) {
+          setUser(auth.currentUser)
+          authStateResolved = true
+        }
+
+        syncLoadingState()
+      })
 
     return unsubscribe
   }, [])
@@ -81,15 +148,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     try {
       setError(null)
       setIsLoading(true)
-      await signInWithGoogle()
-      // Token será salvo no onAuthStateChanged acima
+      const signedInUser = await signInWithGoogle()
+
+      // Quando popup retorna usuário imediatamente, persistimos já aqui
+      // para não depender apenas do callback assíncrono do observer.
+      if (signedInUser) {
+        setUser(signedInUser)
+        const token = await signedInUser.getIdToken()
+        tokenStorage.saveToken(token)
+        tokenStorage.saveUser({
+          uid: signedInUser.uid,
+          email: signedInUser.email,
+          displayName: signedInUser.displayName,
+          photoURL: signedInUser.photoURL,
+        })
+        setIsLoading(false)
+      }
+
+      // No fluxo por redirect, o estado final será concluído no useEffect.
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha ao fazer login'
       setError(message)
+      setIsLoading(false)
       debug.error('Erro no login:', err)
       throw err
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -115,7 +197,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     error,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
-    isAuthenticated: !!user,
+    isAuthenticated: !!user || tokenStorage.hasValidSession(),
   }
 
   return (

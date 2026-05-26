@@ -26,6 +26,12 @@ export interface PhotoContext {
   tip?: string; // e.g., "Fotografar ao pôr do sol"
   season?: 'primavera' | 'verão' | 'outono' | 'inverno';
   dayOfWeek?: string; // e.g., "Monday", "segunda"
+  language?: string; // e.g., "pt-BR", "en-US", "es-ES"
+}
+
+interface PhotoCacheEntry {
+  photo: PhotoSource;
+  expiresAt: number;
 }
 
 interface UnsplashImage {
@@ -425,38 +431,97 @@ const FALLBACK_GRADIENTS: { [key: string]: { gradient: string; emoji: string } }
   'default': { gradient: 'from-blue-600 to-indigo-700', emoji: '📍' },
 };
 
+const DESTINATION_PALETTES: { [key: string]: string } = {
+  'lisboa': 'from-amber-500 to-orange-600',
+  'lisbon': 'from-amber-500 to-orange-600',
+  'porto': 'from-indigo-600 to-blue-700',
+  'barcelona': 'from-orange-500 to-rose-600',
+  'madrid': 'from-red-600 to-amber-600',
+  'sevilha': 'from-orange-600 to-red-700',
+  'sevilla': 'from-orange-600 to-red-700',
+  'roma': 'from-amber-600 to-yellow-700',
+  'rome': 'from-amber-600 to-yellow-700',
+  'paris': 'from-slate-600 to-indigo-700',
+  'amsterdam': 'from-indigo-500 to-cyan-600',
+  'berlin': 'from-slate-700 to-gray-800',
+  'istanbul': 'from-teal-600 to-cyan-700',
+  'rio de janeiro': 'from-cyan-500 to-blue-700',
+  'rio': 'from-cyan-500 to-blue-700',
+  'sao paulo': 'from-emerald-600 to-teal-700',
+  'são paulo': 'from-emerald-600 to-teal-700',
+  'tokyo': 'from-pink-500 to-purple-700',
+  'toquio': 'from-pink-500 to-purple-700',
+  'tóquio': 'from-pink-500 to-purple-700',
+  'new york': 'from-blue-600 to-slate-700',
+  'london': 'from-slate-600 to-blue-700',
+};
+
 export class PhotoService {
   private static readonly UNSPLASH_API_KEY = import.meta.env.VITE_UNSPLASH_API_KEY || '';
   private static readonly UNSPLASH_BASE_URL = 'https://api.unsplash.com';
-  private static readonly CACHE = new Map<string, PhotoSource>();
+  private static readonly WIKIPEDIA_BASE_URL = 'https://en.wikipedia.org/w/api.php';
+  private static readonly CACHE_VERSION = 'v2';
+  private static readonly CACHE_TTL_MS = 6 * 60 * 60 * 1000;
+  private static readonly CACHE = new Map<string, PhotoCacheEntry>();
   private static downloadedPhotos = new Map<string, any>(); // Track photos with metadata
 
   static async generatePhotoUrl(attractionName: string, context?: PhotoContext): Promise<PhotoSource> {
     try {
       // Create cache key that includes destination for context-aware caching
-      const cacheKey = `${attractionName.toLowerCase()}_${context?.destination || 'default'}`;
-      if (this.CACHE.has(cacheKey)) {
+      const cacheKey = this.buildCacheKey(attractionName, context);
+      const now = Date.now();
+      const cached = this.CACHE.get(cacheKey);
+
+      if (cached && cached.expiresAt > now) {
         debug.log(`♻️ Usando foto em cache para: "${attractionName}" em ${context?.destination || 'local desconhecido'}`);
-        return this.CACHE.get(cacheKey)!;
+        return cached.photo;
+      }
+
+      if (cached && cached.expiresAt <= now) {
+        this.CACHE.delete(cacheKey);
       }
 
       if (this.UNSPLASH_API_KEY) {
         debug.log(`🔍 Buscando imagem Unsplash para: "${attractionName}"${context?.destination ? ` em ${context.destination}` : ''}`);
         const photo = await this.fetchFromUnsplash(attractionName, context);
         if (photo) {
-          this.CACHE.set(cacheKey, photo);
+          this.CACHE.set(cacheKey, {
+            photo,
+            expiresAt: now + this.CACHE_TTL_MS,
+          });
           return photo;
         }
       } else {
-        debug.log(`⚠️ Sem chave Unsplash API - usando fallback para: "${attractionName}"`);
+        debug.log(`⚠️ Sem chave Unsplash API - tentando Wikipedia/Wikimedia para: "${attractionName}"`);
+      }
+
+      const wikipediaPhoto = await this.fetchFromWikipedia(attractionName, context);
+      if (wikipediaPhoto) {
+        this.CACHE.set(cacheKey, {
+          photo: wikipediaPhoto,
+          expiresAt: now + this.CACHE_TTL_MS,
+        });
+        return wikipediaPhoto;
       }
 
       debug.log(`📸 Usando fallback gradient para: "${attractionName}"`);
-      return this.getFallbackPhoto(attractionName);
+      const fallbackPhoto = this.getFallbackPhoto(attractionName, context);
+      this.CACHE.set(cacheKey, {
+        photo: fallbackPhoto,
+        expiresAt: now + this.CACHE_TTL_MS,
+      });
+      return fallbackPhoto;
     } catch (error) {
       debug.error(`❌ Erro gerando foto para "${attractionName}":`, error);
-      return this.getFallbackPhoto(attractionName);
+      return this.getFallbackPhoto(attractionName, context);
     }
+  }
+
+  private static buildCacheKey(attractionName: string, context?: PhotoContext): string {
+    const destination = (context?.destination || 'default').toLowerCase().trim();
+    const language = (context?.language || 'default').toLowerCase().trim();
+    const category = (context?.category || 'outro').toLowerCase().trim();
+    return `${this.CACHE_VERSION}_${attractionName.toLowerCase().trim()}_${destination}_${language}_${category}`;
   }
 
   /**
@@ -576,7 +641,7 @@ export class PhotoService {
 
   private static async fetchFromUnsplash(attractionName: string, context?: PhotoContext): Promise<PhotoSource | null> {
     try {
-      let query = this.getSearchQuery(attractionName);
+      let query = this.getSearchQuery(attractionName, context);
       debug.log(`   📝 Query base: "${query}"`);
       
       // Enhance query with context if provided
@@ -637,6 +702,83 @@ export class PhotoService {
     }
   }
 
+  private static async fetchFromWikipedia(attractionName: string, context?: PhotoContext): Promise<PhotoSource | null> {
+    try {
+      const normalizedAttractionName = this.normalizeAttractionName(attractionName);
+      const searchTerms = [
+        normalizedAttractionName,
+        context?.destination || '',
+        context?.category === 'natureza' ? 'landscape' : 'travel landmark',
+      ]
+        .join(' ')
+        .trim();
+
+      const url = new URL(this.WIKIPEDIA_BASE_URL);
+      url.searchParams.set('action', 'query');
+      url.searchParams.set('generator', 'search');
+      url.searchParams.set('gsrsearch', searchTerms);
+      url.searchParams.set('gsrlimit', '6');
+      url.searchParams.set('prop', 'pageimages|info');
+      url.searchParams.set('piprop', 'thumbnail');
+      url.searchParams.set('pithumbsize', '1200');
+      url.searchParams.set('inprop', 'url');
+      url.searchParams.set('format', 'json');
+      url.searchParams.set('origin', '*');
+
+      const response = await retryService.fetchWithRetry(url.toString(), {
+        headers: {
+          'User-Agent': 'PocketGuide/1.0',
+        },
+      });
+
+      if (!response.ok) {
+        return null;
+      }
+
+      const data = await response.json() as {
+        query?: {
+          pages?: Record<string, {
+            title?: string;
+            fullurl?: string;
+            thumbnail?: {
+              source?: string;
+              width?: number;
+              height?: number;
+            };
+          }>;
+        };
+      };
+
+      const pages = Object.values(data.query?.pages || {});
+      const withThumbnail = pages
+        .filter((page) => page.thumbnail?.source)
+        .sort((a, b) => {
+          const aTitle = (a.title || '').toLowerCase();
+          const bTitle = (b.title || '').toLowerCase();
+          const destination = (context?.destination || '').toLowerCase();
+          const aScore = destination && aTitle.includes(destination) ? 2 : 0;
+          const bScore = destination && bTitle.includes(destination) ? 2 : 0;
+          return bScore - aScore;
+        })[0];
+
+      if (!withThumbnail || !withThumbnail.thumbnail?.source) {
+        return null;
+      }
+
+      return {
+        url: withThumbnail.thumbnail.source,
+        source: 'fallback',
+        width: withThumbnail.thumbnail.width || 1200,
+        height: withThumbnail.thumbnail.height || 600,
+        photographer: 'Wikipedia Commons',
+        photographerUrl: withThumbnail.fullurl,
+      };
+    } catch (error) {
+      debug.warn(`⚠️ Wikipedia fallback falhou para "${attractionName}"`, error);
+      return null;
+    }
+  }
+
   private static selectBestImage(images: UnsplashImage[]): UnsplashImage {
     // Improved scoring algorithm considering multiple quality metrics
     // Formula: likes * 0.5 + downloads * 0.3 + views * 0.15 + color diversity * 0.05
@@ -677,8 +819,18 @@ export class PhotoService {
     return bestImage;
   }
 
-  private static getSearchQuery(attractionName: string): string {
-    const lowerName = attractionName.toLowerCase().trim();
+  private static normalizeAttractionName(attractionName: string): string {
+    return attractionName
+      .replace(/\s*-\s*day\s*\d+/gi, '')
+      .replace(/\s*dia\s*\d+/gi, '')
+      .replace(/\d+/g, ' ')
+      .replace(/\s+/g, ' ')
+      .trim();
+  }
+
+  private static getSearchQuery(attractionName: string, context?: PhotoContext): string {
+    const normalizedName = this.normalizeAttractionName(attractionName);
+    const lowerName = normalizedName.toLowerCase().trim();
 
     if (ATTRACTION_SEARCH_QUERIES[lowerName]) {
       return ATTRACTION_SEARCH_QUERIES[lowerName];
@@ -690,15 +842,40 @@ export class PhotoService {
       }
     }
 
-    return attractionName;
+    const genericActivityNames = [
+      'city discovery walk',
+      'local experience',
+      'morning tour',
+      'cultural site visit',
+      'dinner and evening entertainment',
+      'explore',
+    ];
+
+    const isGeneric = genericActivityNames.some((genericName) => lowerName.includes(genericName));
+    if (isGeneric) {
+      const destination = context?.destination || '';
+      const categoryHint = context?.category === 'natureza'
+        ? 'landscape viewpoints'
+        : context?.category === 'restaurante'
+          ? 'local cuisine restaurant'
+          : context?.category === 'museu'
+            ? 'museum architecture'
+            : 'historic center attractions';
+
+      return `${destination} ${categoryHint}`.trim();
+    }
+
+    return normalizedName;
   }
 
-  private static getFallbackPhoto(attractionName: string): PhotoSource {
+  private static getFallbackPhoto(attractionName: string, context?: PhotoContext): PhotoSource {
     const lowerName = attractionName.toLowerCase();
-    
-    const fallback = FALLBACK_GRADIENTS[lowerName] || FALLBACK_GRADIENTS['landmark'];
-    const svg = this.generateGradientSvg(fallback.gradient, fallback.emoji, 1200, 600);
-    const dataUrl = `data:image/svg+xml;base64,${btoa(svg)}`;
+
+    const gradient = this.resolveFallbackGradient(lowerName, context?.destination);
+    const label = context?.destination || this.normalizeAttractionName(attractionName) || 'Travel Spot';
+    const subtitle = context?.category ? `Roteiro ${context.category}` : 'Pocket Guide';
+    const svg = this.generateGradientSvg(gradient, label, subtitle, 1200, 600);
+    const dataUrl = `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 
     return {
       url: dataUrl,
@@ -708,16 +885,47 @@ export class PhotoService {
     };
   }
 
+  private static normalizeDestinationKey(destination: string): string {
+    return destination
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .trim();
+  }
+
+  private static resolveFallbackGradient(attractionKey: string, destination?: string): string {
+    if (destination) {
+      const normalizedDestination = this.normalizeDestinationKey(destination);
+      const directPalette = DESTINATION_PALETTES[normalizedDestination];
+      if (directPalette) {
+        return directPalette;
+      }
+
+      const matchedDestination = Object.keys(DESTINATION_PALETTES).find((key) =>
+        normalizedDestination.includes(key)
+      );
+      if (matchedDestination) {
+        return DESTINATION_PALETTES[matchedDestination];
+      }
+    }
+
+    const fallback = FALLBACK_GRADIENTS[attractionKey] || FALLBACK_GRADIENTS['landmark'];
+    return fallback.gradient;
+  }
+
   private static generateGradientSvg(
     gradient: string,
-    emoji: string,
+    title: string,
+    subtitle: string,
     width: number,
     height: number
   ): string {
     const colors = this.getGradientColors(gradient);
     const [fromColor, toColor] = colors;
+    const safeTitle = title.replace(/[<>&"']/g, '');
+    const safeSubtitle = subtitle.replace(/[<>&"']/g, '');
 
-    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${fromColor};stop-opacity:1" /><stop offset="100%" style="stop-color:${toColor};stop-opacity:1" /></linearGradient></defs><rect width="${width}" height="${height}" fill="url(#grad)"/><text x="50%" y="50%" font-size="120" text-anchor="middle" dominant-baseline="central" font-family="Arial">${emoji}</text></svg>`;
+    return `<svg width="${width}" height="${height}" xmlns="http://www.w3.org/2000/svg"><defs><linearGradient id="grad" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" style="stop-color:${fromColor};stop-opacity:1" /><stop offset="100%" style="stop-color:${toColor};stop-opacity:1" /></linearGradient><radialGradient id="light" cx="18%" cy="22%" r="65%"><stop offset="0%" stop-color="rgba(255,255,255,0.34)"/><stop offset="100%" stop-color="rgba(255,255,255,0)"/></radialGradient><radialGradient id="vignette" cx="50%" cy="50%" r="70%"><stop offset="65%" stop-color="rgba(0,0,0,0)"/><stop offset="100%" stop-color="rgba(0,0,0,0.36)"/></radialGradient><filter id="grain"><feTurbulence type="fractalNoise" baseFrequency="0.75" numOctaves="2" stitchTiles="stitch"/><feColorMatrix type="saturate" values="0"/></filter></defs><rect width="${width}" height="${height}" fill="url(#grad)"/><rect width="${width}" height="${height}" fill="url(#light)"/><rect width="${width}" height="${height}" fill="url(#vignette)"/><rect width="${width}" height="${height}" opacity="0.06" filter="url(#grain)"/><rect x="70" y="376" width="1060" height="170" rx="20" fill="rgba(15,23,42,0.42)" stroke="rgba(255,255,255,0.16)"/><text x="100" y="454" font-size="58" font-weight="700" fill="#FFFFFF" font-family="Arial, sans-serif">${safeTitle}</text><text x="100" y="506" font-size="30" fill="#e2e8f0" font-family="Arial, sans-serif">${safeSubtitle}</text></svg>`;
   }
 
   private static getGradientColors(gradient: string): [string, string] {

@@ -14,6 +14,7 @@ import { FavoriteButton } from '../components/FavoriteButton';
 import { MainLayout } from '../components/Layout';
 import { debug } from '../utils/debug';
 import { BudgetPerDay } from '../types';
+import PhotoService from '../services/photoService';
 import {
   ArrowLeft,
   Calendar,
@@ -23,133 +24,35 @@ import {
   AlertCircle,
 } from 'lucide-react';
 import { formatDate } from '../utils/formatDate';
+import { searchCities } from '../services/mapboxGeocoding';
 
-/**
- * Gera URL de imagem do Unsplash baseado no nome da atração
- * Usa a API do Unsplash com fallback para cores
- */
-const getAttractionImage = async (attractionName: string): Promise<string> => {
-  // Mapeamento de queries otimizadas por tipo de atração
-  const queries: { [key: string]: string } = {
-    colosseum: 'colosseum rome',
-    'roman forum': 'roman forum rome',
-    'palatine hill': 'palatine hill rome',
-    monti: 'monti rome neighborhood',
-    'trevi fountain': 'trevi fountain rome',
-    vatican: 'vatican city basilica',
-    restaurante: 'restaurant italy',
-    restaurant: 'restaurant italy',
-    pizza: 'pizza italian traditional',
-    pasta: 'pasta italian food',
-    café: 'coffee cafe italian',
-    coffee: 'coffee shop italy',
-    lunch: 'lunch italian food',
-    dinner: 'dinner restaurant',
-    breakfast: 'breakfast food',
-    museu: 'museum rome gallery',
-    museo: 'museum rome',
-    museum: 'museum rome',
-    gallery: 'art gallery exhibition',
-    art: 'art museum paintings',
-    natureza: 'nature landscape',
-    nature: 'nature landscape',
-    park: 'park garden nature',
-    garden: 'garden flowers botanical',
-    beach: 'beach seaside coast',
-    ocean: 'ocean seascape marine',
-    mountain: 'mountain landscape alpine',
-    hiking: 'hiking trail mountain',
-    shopping: 'shopping mall retail',
-    market: 'market street marketplace',
-    compras: 'shopping commercial',
-    leisure: 'leisure activity tourism',
-    entertainment: 'entertainment venue fun',
-    relax: 'relaxation spa wellness',
-    spa: 'spa massage wellness',
-    landmark: 'landmark historic famous',
-    travel: 'travel destination sightseeing',
-    trip: 'travel adventure tourism',
-    attraction: 'tourist attraction landmark',
-    tour: 'guided tour sightseeing',
-    walk: 'walking tour city',
-  };
+const mapCategoryForPhotoContext = (attraction: any): 'restaurante' | 'museu' | 'natureza' | 'compras' | 'cultura' | 'outro' => {
+  const categoryValue = String(attraction?.category || '').toLowerCase();
+  const descriptionValue = String(attraction?.description || attraction?.reason || '').toLowerCase();
 
-  const lowerName = attractionName.toLowerCase().trim();
-  let query = 'attraction landmark tourist';
-
-  // Buscar query exata
-  if (queries[lowerName]) {
-    query = queries[lowerName];
-  } else {
-    // Buscar por substring
-    for (const [key, value] of Object.entries(queries)) {
-      if (lowerName.includes(key) || key.includes(lowerName.split(' ')[0])) {
-        query = value;
-        break;
-      }
-    }
+  if (categoryValue.includes('food') || categoryValue.includes('restaurant') || descriptionValue.includes('restaurante')) {
+    return 'restaurante';
+  }
+  if (categoryValue.includes('museum') || descriptionValue.includes('museu')) {
+    return 'museu';
+  }
+  if (categoryValue.includes('nature') || descriptionValue.includes('parque')) {
+    return 'natureza';
+  }
+  if (categoryValue.includes('shop') || descriptionValue.includes('compra')) {
+    return 'compras';
+  }
+  if (categoryValue.includes('culture') || descriptionValue.includes('cultura')) {
+    return 'cultura';
   }
 
-  try {
-    // Usar API do Unsplash diretamente
-    const apiKey = import.meta.env.VITE_UNSPLASH_API_KEY;
-    if (!apiKey) {
-      debug.warn('⚠️ VITE_UNSPLASH_API_KEY não configurada');
-      return getPlaceholderImage(query);
-    }
-
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${apiKey}`
-    );
-
-    if (!response.ok) {
-      debug.warn(`⚠️ API Unsplash retornou ${response.status}`);
-      return getPlaceholderImage(query);
-    }
-
-    const data = await response.json();
-    if (data.results && data.results.length > 0) {
-      const imageUrl = data.results[0].urls.small;
-      debug.log(`✅ Imagem encontrada para "${query}": ${imageUrl.substring(0, 60)}...`);
-      return imageUrl;
-    }
-
-    debug.warn(`⚠️ Nenhuma imagem encontrada para "${query}"`);
-    return getPlaceholderImage(query);
-  } catch (error) {
-    debug.error(`❌ Erro ao buscar imagem para "${query}":`, error);
-    return getPlaceholderImage(query);
-  }
+  return 'outro';
 };
 
-/**
- * Retorna URL de imagem placeholder com cor baseada no query
- */
-const getPlaceholderImage = (query: string): string => {
-  // Cores para diferentes tipos de queries
-  const colors: { [key: string]: string } = {
-    rome: '8B4513', // Brown
-    restaurant: 'FF6B6B', // Red
-    coffee: '6F4E37', // Brown
-    museum: '4169E1', // Royal Blue
-    park: '228B22', // Forest Green
-    beach: 'FFD700', // Gold
-    mountain: '696969', // Dim Gray
-    shop: 'FF1493', // Deep Pink
-    spa: 'DDA0DD', // Plum
-    landmark: 'DC143C', // Crimson
-  };
-
-  // Encontrar cor baseada na query
-  let color = 'A9A9A9'; // Default gray
-  for (const [key, colorCode] of Object.entries(colors)) {
-    if (query.toLowerCase().includes(key)) {
-      color = colorCode;
-      break;
-    }
-  }
-
-  return `https://via.placeholder.com/400x300/${color}/FFFFFF?text=${encodeURIComponent(query.substring(0, 20))}`;
+const buildCardFallbackImage = (name: string): string => {
+  const safeName = (name || 'Atração').replace(/[<>&"']/g, '').slice(0, 26);
+  const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300"><defs><linearGradient id="g" x1="0%" y1="0%" x2="100%" y2="100%"><stop offset="0%" stop-color="#334155"/><stop offset="100%" stop-color="#1e293b"/></linearGradient></defs><rect width="400" height="300" fill="url(#g)"/><rect x="20" y="200" width="360" height="72" rx="10" fill="rgba(15,23,42,0.45)"/><text x="200" y="242" fill="#f8fafc" font-size="18" font-family="Arial,sans-serif" text-anchor="middle">${safeName}</text></svg>`;
+  return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(svg)}`;
 };
 
 /**
@@ -170,6 +73,43 @@ const getBudgetLabel = (budget?: BudgetPerDay | string): string => {
   };
 
   return labels[budget] || 'N/A';
+};
+
+const parseCoordinate = (value: unknown): number | undefined => {
+  if (value === null || value === undefined || value === '') {
+    return undefined;
+  }
+
+  const normalized = typeof value === 'string' ? value.replace(',', '.').trim() : value;
+  const parsed = typeof normalized === 'number' ? normalized : Number.parseFloat(String(normalized));
+
+  return Number.isFinite(parsed) ? parsed : undefined;
+};
+
+const normalizeAttractionCoordinates = (attraction: any) => {
+  const locationLat = parseCoordinate(attraction?.location?.lat);
+  const locationLng = parseCoordinate(attraction?.location?.lng);
+  const directLat = parseCoordinate(attraction?.lat);
+  const directLng = parseCoordinate(attraction?.lng);
+
+  // Prefer nested location coordinates because they come from the structured geocoding payload.
+  const lat = locationLat ?? directLat;
+  const lng = locationLng ?? directLng;
+
+  const normalizedLocation =
+    lat !== undefined && lng !== undefined
+      ? {
+          ...(attraction?.location || {}),
+          lat,
+          lng,
+        }
+      : attraction?.location;
+
+  return {
+    lat,
+    lng,
+    location: normalizedLocation,
+  };
 };
 
 /**
@@ -217,9 +157,7 @@ const transformItinerary = (itinerary: any) => {
       return {
         title: `Dia ${dayNum}`,
         attractions: dayActivities.map((activity: any) => {
-          // Extract lat/lng from either direct properties or location object
-          const lat = activity.lat || activity.location?.lat;
-          const lng = activity.lng || activity.location?.lng;
+          const coords = normalizeAttractionCoordinates(activity);
           
           const transformed = {
             name: activity.name,
@@ -228,9 +166,9 @@ const transformItinerary = (itinerary: any) => {
             emoji: '📍',
             duration: activity.duration,
             category: activity.category,
-            location: activity.location,
-            lat: lat,
-            lng: lng,
+            location: coords.location,
+            lat: coords.lat,
+            lng: coords.lng,
           };
           
           return transformed;
@@ -275,9 +213,7 @@ const transformItinerary = (itinerary: any) => {
       return {
         title: `Dia ${dayNum}`,
         attractions: dayActivities.map((activity: any) => {
-          // Extract lat/lng from either direct properties or location object
-          const lat = activity.lat || activity.location?.lat;
-          const lng = activity.lng || activity.location?.lng;
+          const coords = normalizeAttractionCoordinates(activity);
           
           const transformed = {
             name: activity.name,
@@ -286,9 +222,9 @@ const transformItinerary = (itinerary: any) => {
             emoji: '📍',
             duration: activity.duration,
             category: activity.category,
-            location: activity.location,
-            lat: lat,
-            lng: lng,
+            location: coords.location,
+            lat: coords.lat,
+            lng: coords.lng,
           };
           
           return transformed;
@@ -323,13 +259,14 @@ const transformItinerary = (itinerary: any) => {
 export default function TripDetailScreen() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
   const { user } = useAuth();
   const { trips, loadTrips, isLoading: isStoreLoading } = useTripsStore();
   const [isLoadingScreen, setIsLoadingScreen] = useState(true);
   const [_selectedAttractionIndex, setSelectedAttractionIndex] = useState<number>(0);
   const [attractionImages, setAttractionImages] = useState<Map<string, string>>(new Map());
   const [hasTriedLoadingTrips, setHasTriedLoadingTrips] = useState(false);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
 
   const trip = id ? trips.find((t) => t.id === id) : null;
 
@@ -361,6 +298,38 @@ export default function TripDetailScreen() {
       });
     }
   }, [id, user?.uid, hasTriedLoadingTrips]);
+
+  useEffect(() => {
+    let isMounted = true;
+
+    const resolveMapCenter = async () => {
+      if (!trip?.destination) {
+        setMapCenter([0, 0]);
+        return;
+      }
+
+      try {
+        const locale = language?.startsWith('pt') ? 'pt' : language?.startsWith('es') ? 'es' : 'en';
+        const suggestions = await searchCities(trip.destination, locale);
+        const best = suggestions.find((item) => {
+          const coords = item.coordinates;
+          return Array.isArray(coords) && coords.length === 2 && Number.isFinite(coords[0]) && Number.isFinite(coords[1]);
+        });
+
+        if (isMounted && best?.coordinates) {
+          setMapCenter(best.coordinates);
+        }
+      } catch (error) {
+        debug.warn('⚠️ TripDetailScreen: failed to resolve destination center', error);
+      }
+    };
+
+    resolveMapCenter();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [trip?.destination, language]);
 
   // This effect runs whenever trips changes to check if we found our trip
   useEffect(() => {
@@ -443,8 +412,14 @@ export default function TripDetailScreen() {
           }
           
           try {
-            const imageUrl = await getAttractionImage(attraction.name);
-            imageMap.set(cacheKey, imageUrl);
+            const photoSource = await PhotoService.generatePhotoUrl(attraction.name, {
+              destination: trip.destination,
+              category: mapCategoryForPhotoContext(attraction),
+              reason: attraction.description,
+              time: attraction.time,
+              language,
+            });
+            imageMap.set(cacheKey, photoSource.url);
             debug.log(`  ✅ URL obtida para: ${attraction.name}`);
           } catch (error) {
             debug.warn(`  ❌ Erro ao obter imagem para: ${attraction.name}`, error);
@@ -457,7 +432,7 @@ export default function TripDetailScreen() {
     };
 
     loadImages();
-  }, [trip?.id, trip?.itinerary]);
+  }, [trip?.id, trip?.itinerary, trip?.destination, language]);
 
   useEffect(() => {
     // Simular carregamento
@@ -708,13 +683,19 @@ export default function TripDetailScreen() {
                   return null;
                 })()}
                 <MapboxMap
+                  center={mapCenter}
                   attractions={itinerary.days.flatMap((day: any) => 
-                    (day.attractions || []).map((attr: any) => ({
-                      name: attr.name,
-                      reason: attr.description,
-                      lat: attr.lat !== undefined ? attr.lat : attr.location?.lat,
-                      lng: attr.lng !== undefined ? attr.lng : attr.location?.lng,
-                    }))
+                    (day.attractions || []).map((attr: any) => {
+                      const coords = normalizeAttractionCoordinates(attr);
+
+                      return {
+                        name: attr.name,
+                        reason: attr.description,
+                        location: coords.location,
+                        lat: coords.lat,
+                        lng: coords.lng,
+                      };
+                    })
                   )}
                   onAttractionSelect={(attraction, index) => {
                     setSelectedAttractionIndex(index);
@@ -796,8 +777,7 @@ export default function TripDetailScreen() {
                               // Obter URL do mapa de cache carregado
                               const cachedImageUrl = attractionImages.get(attraction.name.toLowerCase());
                               
-                              // Usar fallback com placeholder
-                              const imageUrl = cachedImageUrl || `https://via.placeholder.com/400x300/A9A9A9/FFFFFF?text=${encodeURIComponent(attraction.name.substring(0, 20))}`;
+                              const imageUrl = cachedImageUrl || buildCardFallbackImage(attraction.name);
                               
                               return (
                                 <div
@@ -815,8 +795,7 @@ export default function TripDetailScreen() {
                                     }}
                                     onError={(e) => {
                                       debug.warn(`❌ Erro ao carregar: ${attraction.name}`);
-                                      // Fallback com SVG
-                                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="400" height="300"%3E%3Crect fill="%23e2e8f0" width="400" height="300"/%3E%3Ctext x="50%25" y="50%25" font-size="14" fill="%2364748b" text-anchor="middle" dominant-baseline="middle"%3E📸 Sem imagem%3C/text%3E%3C/svg%3E';
+                                      (e.target as HTMLImageElement).src = buildCardFallbackImage(attraction.name);
                                     }}
                                   />
                                   

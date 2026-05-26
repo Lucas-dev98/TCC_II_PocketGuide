@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useAuth } from '../hooks/useAuth'
 import { useToast } from '../components/Toast'
@@ -19,21 +20,23 @@ import { Compass, MapPin, Zap, Globe, ArrowRight, Sparkles } from 'lucide-react'
  */
 export default function LoginScreen() {
   const navigate = useNavigate()
-  const { user, signInWithGoogle, isLoading, error } = useAuth()
+  const { isAuthenticated, signInWithGoogle, isLoading, error } = useAuth()
   const { showError } = useToast()
   const { t } = useI18n()
   const [isAnimating, setIsAnimating] = useState(false)
+  const lastErrorRef = useRef<string | null>(null)
 
   // Se já autenticado, redireciona para home
   useEffect(() => {
-    if (user) {
+    if (isAuthenticated) {
       navigate('/home', { replace: true })
     }
-  }, [user, navigate])
+  }, [isAuthenticated, navigate])
 
   // Mostrar erro via Toast
   useEffect(() => {
-    if (error) {
+    if (error && error !== lastErrorRef.current) {
+      lastErrorRef.current = error
       showError(typeof error === 'string' ? error : t('auth.errors.signInError'))
     }
   }, [error, showError, t])

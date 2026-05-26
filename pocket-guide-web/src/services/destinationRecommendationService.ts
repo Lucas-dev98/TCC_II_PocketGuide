@@ -11,7 +11,7 @@
  */
 
 import { TripType, BudgetPerDay, GroupType } from '../types';
-import { DestinationScore } from '../utils/destinationMatcher';
+import { DestinationScore, DESTINATIONS_DB } from '../utils/destinationMatcher';
 import logger from './logger';
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
@@ -120,6 +120,103 @@ interface GeminiResponse {
       parts: Array<{ text: string }>;
     };
   }>;
+}
+
+const DESTINATION_NAME_ALIASES: Record<string, string> = {
+  rome: 'Roma',
+  lisbon: 'Lisboa',
+  seville: 'Sevilla',
+  florence: 'Florença',
+  nice: 'Niza',
+  rio: 'Rio de Janeiro',
+};
+
+function normalizeText(value: string): string {
+  return value
+    .toLowerCase()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .trim();
+}
+
+function canonicalizeDestinationName(name: string): string {
+  const normalizedName = normalizeText(name);
+
+  if (DESTINATION_NAME_ALIASES[normalizedName]) {
+    return DESTINATION_NAME_ALIASES[normalizedName];
+  }
+
+  const directMatch = DESTINATIONS_DB.find((dest) => normalizeText(dest.name) === normalizedName);
+  if (directMatch) {
+    return directMatch.name;
+  }
+
+  const partialMatch = DESTINATIONS_DB.find((dest) => {
+    const normalizedDestination = normalizeText(dest.name);
+    return normalizedDestination.includes(normalizedName) || normalizedName.includes(normalizedDestination);
+  });
+
+  return partialMatch?.name || name;
+}
+
+function mergeRecommendations(
+  aiRecommendations: DestinationScore[],
+  fallbackRecommendations: DestinationScore[]
+): DestinationScore[] {
+  if (fallbackRecommendations.length === 0) {
+    return aiRecommendations;
+  }
+
+  const fallbackMap = new Map<string, DestinationScore>();
+  fallbackRecommendations.forEach((item) => {
+    fallbackMap.set(normalizeText(item.name), item);
+  });
+
+  const merged = new Map<string, DestinationScore>();
+
+  // Start with fallback as deterministic base.
+  fallbackRecommendations.forEach((item) => {
+    merged.set(normalizeText(item.name), { ...item });
+  });
+
+  aiRecommendations.forEach((item) => {
+    const canonicalName = canonicalizeDestinationName(item.name);
+    const normalizedKey = normalizeText(canonicalName);
+    const fallbackItem = fallbackMap.get(normalizedKey);
+
+    if (fallbackItem) {
+      const blendedScore = Math.round((fallbackItem.score * 0.65) + (item.score * 0.35));
+      const mergedReasons = [...fallbackItem.reasons.slice(0, 2), ...item.reasons.slice(0, 1)];
+
+      merged.set(normalizedKey, {
+        ...fallbackItem,
+        name: fallbackItem.name,
+        score: blendedScore,
+        matchPercentage: blendedScore,
+        reasons: Array.from(new Set(mergedReasons)),
+      });
+      return;
+    }
+
+    const fallbackByCountry = fallbackRecommendations.find(
+      (fallback) => normalizeText(fallback.country) === normalizeText(item.country)
+    );
+
+    const adjustedScore = fallbackByCountry
+      ? Math.round((fallbackByCountry.score * 0.5) + (item.score * 0.5))
+      : Math.round(item.score * 0.8);
+
+    merged.set(normalizedKey, {
+      ...item,
+      name: canonicalName,
+      score: adjustedScore,
+      matchPercentage: adjustedScore,
+    });
+  });
+
+  return Array.from(merged.values())
+    .sort((a, b) => b.score - a.score)
+    .slice(0, 5);
 }
 
 /**
@@ -583,6 +680,21 @@ export async function getHybridDestinationRecommendations(
   fallbackFunction: () => DestinationScore[],
   language: string = 'pt-BR'
 ): Promise<DestinationScore[]> {
+  const filterByTripScope = (items: DestinationScore[]): DestinationScore[] => {
+    if (!tripScope) return items;
+
+    return items.filter((item) => {
+      const country = (item.country || '').toLowerCase();
+      const isBrazil = country === 'brazil' || country === 'brasil';
+
+      if (tripScope === 'nacional') return isBrazil;
+      if (tripScope === 'internacional') return !isBrazil;
+      return true;
+    });
+  };
+
+  const fallbackRecommendations = filterByTripScope(fallbackFunction());
+
   // Try Gemini first
   if (GEMINI_API_KEY) {
     const geminiRecommendations = await getGeminiDestinationRecommendations(
@@ -601,12 +713,21 @@ export async function getHybridDestinationRecommendations(
       language
     );
 
-    if (geminiRecommendations.length > 0) {
-      return geminiRecommendations;
+    const filteredGemini = filterByTripScope(geminiRecommendations)
+      .map((item) => ({
+        ...item,
+        name: canonicalizeDestinationName(item.name),
+      }));
+
+    if (filteredGemini.length > 0) {
+      const mergedRecommendations = mergeRecommendations(filteredGemini, fallbackRecommendations);
+      if (mergedRecommendations.length > 0 && mergedRecommendations[0].score >= 55) {
+        return mergedRecommendations;
+      }
     }
   }
 
   // Fallback to rule-based matching
   logger.info('📊 Using fallback rule-based matching');
-  return fallbackFunction();
+  return fallbackRecommendations;
 }

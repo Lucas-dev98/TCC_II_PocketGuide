@@ -139,7 +139,7 @@ export async function searchCities(
     const localSuggestions: CitySuggestion[] = localResults.map(city => ({
       city: city.name,
       country: city.country,
-      coordinates: [0, 0] as [number, number],
+      coordinates: city.coordinates || [0, 0] as [number, number],
       type: 'city',
       population: 0,
       description: 'Cidade',
@@ -166,7 +166,7 @@ export async function searchCities(
       const fallbackSuggestions: CitySuggestion[] = fallbackResults.map(city => ({
         city: city.name,
         country: city.country,
-        coordinates: [0, 0] as [number, number],
+        coordinates: city.coordinates || [0, 0] as [number, number],
         type: 'city',
         population: 0,
         description: 'Cidade',
@@ -238,7 +238,7 @@ export async function searchCities(
         const localSuggestions: CitySuggestion[] = localFallback.map(city => ({
           city: city.name,
           country: city.country,
-          coordinates: [0, 0] as [number, number],
+          coordinates: city.coordinates || [0, 0] as [number, number],
           type: 'city',
           population: 0,
           description: 'Cidade',
@@ -290,7 +290,7 @@ export async function searchCities(
     const localSuggestions: CitySuggestion[] = localResults.map(city => ({
       city: city.name,
       country: city.country,
-      coordinates: [0, 0] as [number, number],
+      coordinates: city.coordinates || [0, 0] as [number, number],
       type: 'city',
       population: 0,
       description: 'Cidade',

@@ -7,6 +7,7 @@ export interface City {
   name: string;
   country: string;
   aliases?: string[]; // Variações do nome da cidade
+  coordinates?: [number, number];
 }
 
 export const CITIES_DATABASE: City[] = [
@@ -70,8 +71,8 @@ export const CITIES_DATABASE: City[] = [
   { name: 'Vitória', country: 'Brasil', aliases: ['Vitoria'] },
 
   // Portugal
-  { name: 'Lisboa', country: 'Portugal', aliases: ['Lisbon', 'Lisbora'] },
-  { name: 'Porto', country: 'Portugal' },
+  { name: 'Lisboa', country: 'Portugal', aliases: ['Lisbon', 'Lisbora'], coordinates: [-9.1393, 38.7223] },
+  { name: 'Porto', country: 'Portugal', coordinates: [-8.6291, 41.1579] },
   { name: 'Covilhã', country: 'Portugal', aliases: ['Covilha'] },
   { name: 'Aveiro', country: 'Portugal' },
   { name: 'Évora', country: 'Portugal', aliases: ['Evora'] },
@@ -81,9 +82,9 @@ export const CITIES_DATABASE: City[] = [
   { name: 'Sintra', country: 'Portugal' },
 
   // Espanha
-  { name: 'Barcelona', country: 'Espanha', aliases: ['Spain'] },
-  { name: 'Madrid', country: 'Espanha' },
-  { name: 'Sevilha', country: 'Espanha', aliases: ['Seville'] },
+  { name: 'Barcelona', country: 'Espanha', aliases: ['Spain'], coordinates: [2.1734, 41.3851] },
+  { name: 'Madrid', country: 'Espanha', coordinates: [-3.7038, 40.4168] },
+  { name: 'Sevilha', country: 'Espanha', aliases: ['Seville', 'Sevilla'], coordinates: [-5.9845, 37.3891] },
   { name: 'Valência', country: 'Espanha', aliases: ['Valencia'] },
   { name: 'Bilbao', country: 'Espanha' },
   { name: 'Palma de Maiorca', country: 'Espanha', aliases: ['Palma'] },

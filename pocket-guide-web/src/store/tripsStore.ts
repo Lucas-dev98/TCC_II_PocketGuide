@@ -19,6 +19,18 @@ import {
   Timestamp,
 } from 'firebase/firestore';
 import { db } from '../services/firebase';
+import {
+  createTripInBackend,
+  isBackendRequired,
+  deleteTripInBackend,
+  isBackendApiEnabled,
+  listTripsFromBackend,
+  mapBackendErrorToUserMessage,
+} from '../services/backendApi';
+import { debug } from '../utils/debug';
+
+const USE_BACKEND_API = isBackendApiEnabled();
+const BACKEND_REQUIRED = isBackendRequired();
 
 interface TripsStoreState {
   trips: Trip[];
@@ -53,7 +65,7 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
   setError: (error) => set({ error }),
   
   clearAllTrips: () => {
-    console.log('🗑️ Clearing all trips from store');
+    debug.log('🗑️ Clearing all trips from store');
     set({ trips: [], error: null });
   },
 
@@ -64,7 +76,28 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      console.log('📚 tripsStore.loadTrips: Starting load for user:', userId);
+      if (BACKEND_REQUIRED && !USE_BACKEND_API) {
+        throw new Error('Backend API is required in production. Configure VITE_BACKEND_URL.');
+      }
+
+      if (USE_BACKEND_API) {
+        try {
+          const trips = await listTripsFromBackend();
+          set({
+            trips,
+            lastLoadTime: Date.now(),
+            error: null,
+          });
+          return;
+        } catch (backendError) {
+          if (BACKEND_REQUIRED) {
+            throw backendError;
+          }
+          console.warn('⚠️ Backend indisponível ao carregar viagens. Usando fallback Firestore.', backendError);
+        }
+      }
+
+      debug.log('📚 tripsStore.loadTrips: Starting load for user:', userId);
 
       const q = query(
         collection(db, 'trips'),
@@ -72,7 +105,7 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
       );
 
       // Enable verbose logging for debugging
-      console.log('📚 Querying Firestore: collection("trips").where("userId", "==", "' + userId + '")');
+      debug.log('📚 Querying Firestore: collection("trips").where("userId", "==", "' + userId + '")');
 
   const snapshot = await getDocs(q);
   const trips: Trip[] = [];
@@ -83,8 +116,8 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
   // We'll no longer auto-delete any documents here; instead we only log
   // unusual IDs for manual inspection.
 
-      console.log('📚 tripsStore.loadTrips: Query returned', snapshot.size, 'documents');
-      console.log('📚 tripsStore.loadTrips: Empty?', snapshot.empty);
+      debug.log('📚 tripsStore.loadTrips: Query returned', snapshot.size, 'documents');
+      debug.log('📚 tripsStore.loadTrips: Empty?', snapshot.empty);
 
       snapshot.forEach((doc) => {
         const docData = doc.data();
@@ -95,7 +128,7 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         } as Trip;
         
         // Log ALL trips, regardless of ID format
-        console.log('📚 Document loaded:', {
+        debug.log('📚 Document loaded:', {
           id: doc.id,
           idHasDashes: doc.id.includes('-'),
           userId: tripData.userId,
@@ -105,14 +138,14 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
 
         // Log document metadata for debugging - do NOT delete automatically
         if (!doc.id.includes('-')) {
-          console.log('ℹ️ Document ID does not include dash (expected for Firestore addDoc IDs):', doc.id);
+          debug.log('ℹ️ Document ID does not include dash (expected for Firestore addDoc IDs):', doc.id);
         }
 
         // Add to trips array
         trips.push(tripData);
       });
 
-      console.log('📚 tripsStore.loadTrips: Final array size:', trips.length);
+      debug.log('📚 tripsStore.loadTrips: Final array size:', trips.length);
       // Note: automatic deletion of documents has been disabled to avoid
       // accidentally removing valid Firestore documents. Review logs if you
       // see unexpected IDs and perform manual cleanup if necessary.
@@ -123,10 +156,10 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         error: null,
       });
       
-      console.log('📚 tripsStore.loadTrips: Final state set with trips:', trips.map(t => ({ id: t.id, destination: t.destination })));
+      debug.log('📚 tripsStore.loadTrips: Final state set with trips:', trips.map(t => ({ id: t.id, destination: t.destination })));
     } catch (error) {
       console.error('❌ Erro ao carregar viagens:', error);
-      const errorMsg = error instanceof Error ? error.message : 'Erro ao carregar viagens';
+      const errorMsg = mapBackendErrorToUserMessage(error);
       console.error('❌ Error details:', {
         message: errorMsg,
         code: (error as any)?.code,
@@ -147,8 +180,25 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      console.log('➕ addTrip: Starting...');
-      console.log('➕ addTrip: Validating trip data:', {
+      if (BACKEND_REQUIRED && !USE_BACKEND_API) {
+        throw new Error('Backend API is required in production. Configure VITE_BACKEND_URL.');
+      }
+
+      if (USE_BACKEND_API) {
+        try {
+          const created = await createTripInBackend(tripData);
+          set((state) => ({ trips: [...state.trips, created] }));
+          return created.id;
+        } catch (backendError) {
+          if (BACKEND_REQUIRED) {
+            throw backendError;
+          }
+          console.warn('⚠️ Backend indisponível ao criar viagem. Usando fallback Firestore.', backendError);
+        }
+      }
+
+      debug.log('➕ addTrip: Starting...');
+      debug.log('➕ addTrip: Validating trip data:', {
         userId: tripData.userId,
         destination: tripData.destination,
         startDate: tripData.startDate,
@@ -167,13 +217,13 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         throw new Error('Missing required field: destination');
       }
 
-      console.log('➕ addTrip: Data validation passed');
-      console.log('➕ addTrip: Preparing to save to Firestore...');
+      debug.log('➕ addTrip: Data validation passed');
+      debug.log('➕ addTrip: Preparing to save to Firestore...');
       
       // Extract only the fields we want to save, excluding the empty id field
       const { id: _ignoreId, ...tripDataWithoutId } = tripData;
       
-      console.log('➕ addTrip: Data being saved to Firestore:', {
+      debug.log('➕ addTrip: Data being saved to Firestore:', {
         ...tripDataWithoutId,
         budgetPerDay: tripDataWithoutId.budgetPerDay,
       });
@@ -184,7 +234,7 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         updatedAt: Timestamp.now(),
       });
 
-      console.log('✅ addTrip: Successfully saved to Firestore with ID:', docRef.id);
+      debug.log('✅ addTrip: Successfully saved to Firestore with ID:', docRef.id);
 
       // CRITICAL: Use the Firestore-generated ID, not any ID from tripData
       const newTrip: Trip = {
@@ -193,20 +243,19 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
         createdAt: new Date().toISOString(),
       } as Trip;
 
-      console.log('✅ addTrip: Adding to local Zustand state with ID:', newTrip.id);
+      debug.log('✅ addTrip: Adding to local Zustand state with ID:', newTrip.id);
 
       set((state) => {
         const updatedTrips = [...state.trips, newTrip];
-        console.log('✅ addTrip: Zustand state updated. Total trips now:', updatedTrips.length);
+        debug.log('✅ addTrip: Zustand state updated. Total trips now:', updatedTrips.length);
         return { trips: updatedTrips };
       });
 
-      console.log('✅ addTrip: Trip creation completed successfully');
+      debug.log('✅ addTrip: Trip creation completed successfully');
       return docRef.id;
     } catch (error) {
       console.error('❌ Erro ao criar viagem:', error);
-      const errorMessage =
-        error instanceof Error ? error.message : 'Erro ao criar viagem';
+      const errorMessage = mapBackendErrorToUserMessage(error);
       console.error('❌ Error message:', errorMessage);
       console.error('❌ Error stack:', error instanceof Error ? error.stack : 'No stack');
       set({ error: errorMessage });
@@ -223,17 +272,38 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
     try {
       set({ isLoading: true, error: null });
 
-      console.log('🗑️ Starting deletion for trip:', tripId);
+      if (BACKEND_REQUIRED && !USE_BACKEND_API) {
+        throw new Error('Backend API is required in production. Configure VITE_BACKEND_URL.');
+      }
+
+      if (USE_BACKEND_API) {
+        try {
+          await deleteTripInBackend(tripId);
+          const updatedTrips = useTripsStore.getState().trips.filter((t: Trip) => t.id !== tripId);
+          set({
+            trips: updatedTrips,
+            lastLoadTime: Date.now(),
+          });
+          return;
+        } catch (backendError) {
+          if (BACKEND_REQUIRED) {
+            throw backendError;
+          }
+          console.warn('⚠️ Backend indisponível ao deletar viagem. Usando fallback Firestore.', backendError);
+        }
+      }
+
+      debug.log('🗑️ Starting deletion for trip:', tripId);
 
       // Step 1: Delete from Firestore
       const docRef = doc(db, 'trips', tripId);
-      console.log('📍 Deleting from path: trips/' + tripId);
+      debug.log('📍 Deleting from path: trips/' + tripId);
       
       await deleteDoc(docRef);
-      console.log('✅ Successfully called deleteDoc for:', tripId);
+      debug.log('✅ Successfully called deleteDoc for:', tripId);
 
       // Step 2: Wait for Firestore to process the deletion
-      console.log('⏳ Waiting for Firestore to process deletion...');
+      debug.log('⏳ Waiting for Firestore to process deletion...');
       await new Promise(resolve => setTimeout(resolve, 500));
 
       // Step 3: Verify the document was actually deleted by fetching it
@@ -246,7 +316,7 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
           console.error('Document data:', deletedDocSnapshot.data());
           throw new Error('Firestore deletion verification failed - document still exists');
         } else {
-          console.log('✅ Verified: Document successfully removed from Firestore');
+          debug.log('✅ Verified: Document successfully removed from Firestore');
         }
       } catch (verifyError) {
         console.warn('⚠️ Verification attempt failed:', verifyError);
@@ -256,8 +326,8 @@ export const useTripsStore = create<TripsStoreState>((set) => ({
       // Step 4: Update local state - REMOVE from array
       const updatedTrips = useTripsStore.getState().trips.filter((t: Trip) => t.id !== tripId);
       
-      console.log('✅ Trip deleted from local state:', tripId);
-      console.log('📊 Remaining trips in state:', updatedTrips.length);
+      debug.log('✅ Trip deleted from local state:', tripId);
+      debug.log('📊 Remaining trips in state:', updatedTrips.length);
       
       set({ 
         trips: updatedTrips,

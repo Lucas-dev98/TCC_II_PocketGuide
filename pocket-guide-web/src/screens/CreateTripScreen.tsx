@@ -8,6 +8,13 @@ import { Button } from '../components/Button'
 import { LoadingOverlay } from '../components/LoadingOverlay'
 import { MainLayout } from '../components/Layout'
 import { generateItinerary } from '../services/itineraryGenerator'
+import {
+  generateItineraryInBackend,
+  generateItineraryJobInBackend,
+  getItineraryJobStatus,
+  isBackendApiEnabled,
+  mapBackendErrorToUserMessage,
+} from '../services/backendApi'
 import { getUserLocation } from '../services/userLocationService'
 import { TripScopeSelector } from '../components/TripScopeSelector'
 import { TravelTypeSelector } from '../components/TravelTypeSelector'
@@ -21,6 +28,7 @@ import { TripType, BudgetPerDay, GroupType, Trip } from '../types'
 import { TRAVEL_TYPES_ARRAY } from '../constants/travelTypes'
 import { ArrowLeft } from 'lucide-react'
 import i18n from 'i18next'
+import { debug } from '../utils/debug'
 
 /**
  * CreateTripScreen - Simplified Trip Creation Flow
@@ -61,6 +69,9 @@ export default function CreateTripScreen() {
 
   const [step, setStep] = useState<StepType>(1)
   const [isLoading, setIsLoading] = useState(false)
+  const [loadingMessage, setLoadingMessage] = useState(
+    t('createTrip.generatingItinerary') || 'Generating itinerary...'
+  )
   const [createdTripId, setCreatedTripId] = useState<string>('')
   const [userLocation, setUserLocation] = useState<any>(null)
 
@@ -80,15 +91,15 @@ export default function CreateTripScreen() {
   // Get user location on component mount
   useEffect(() => {
     const fetchUserLocation = async () => {
-      console.log('📍 Fetching user location...')
+      debug.log('📍 Fetching user location...')
       const location = await getUserLocation()
       if (location) {
-        console.log('✅ User location obtained:', location)
-        console.log('📍 Address:', location.address)
-        console.log('📍 Coordinates:', { lat: location.lat, lng: location.lng })
+        debug.log('✅ User location obtained:', location)
+        debug.log('📍 Address:', location.address)
+        debug.log('📍 Coordinates:', { lat: location.lat, lng: location.lng })
         setUserLocation(location)
       } else {
-        console.warn('⚠️ Could not obtain user location')
+        debug.warn('⚠️ Could not obtain user location')
       }
     }
     fetchUserLocation()
@@ -96,7 +107,7 @@ export default function CreateTripScreen() {
 
   // Monitor userLocation changes
   useEffect(() => {
-    console.log('🔍 userLocation state changed:', {
+    debug.log('🔍 userLocation state changed:', {
       hasLocation: !!userLocation,
       address: userLocation?.address || 'none',
       lat: userLocation?.lat,
@@ -193,6 +204,39 @@ export default function CreateTripScreen() {
     }
   }
 
+  const pollItineraryJob = async (jobId: string) => {
+    const maxPollAttempts = 45
+    const pollIntervalMs = 2000
+
+    for (let attempt = 1; attempt <= maxPollAttempts; attempt++) {
+      const status = await getItineraryJobStatus(jobId)
+
+      if (status.status === 'queued') {
+        setLoadingMessage(t('createTrip.itineraryQueued') || 'Itinerary queued. Preparing generation...')
+      }
+
+      if (status.status === 'running') {
+        setLoadingMessage(
+          t('createTrip.itineraryRunning') ||
+            `Generating itinerary with AI... (${attempt}/${maxPollAttempts})`
+        )
+      }
+
+      if (status.status === 'completed') {
+        setLoadingMessage(t('createTrip.itineraryCompleted') || 'Itinerary generated successfully.')
+        return status.result?.items || []
+      }
+
+      if (status.status === 'failed') {
+        throw new Error(status.error || 'Itinerary generation failed')
+      }
+
+      await new Promise((resolve) => setTimeout(resolve, pollIntervalMs))
+    }
+
+    throw new Error('Timeout while waiting for itinerary job completion')
+  }
+
   const handleSubmit = async () => {
     if (!user?.uid) {
       showError(t('createTrip.userNotFound') || 'User not found')
@@ -201,10 +245,11 @@ export default function CreateTripScreen() {
 
     try {
       setIsLoading(true)
+      setLoadingMessage(t('createTrip.generatingItinerary') || 'Generating itinerary...')
 
-      console.log('🚀 Starting trip creation process...')
-      console.log('📊 Form data:', formData)
-      console.log('👤 User ID:', user.uid)
+      debug.log('🚀 Starting trip creation process...')
+      debug.log('📊 Form data:', formData)
+      debug.log('👤 User ID:', user.uid)
 
       // Calculate duration from dates
       const start = new Date(formData.startDate)
@@ -214,40 +259,94 @@ export default function CreateTripScreen() {
       // Ensure minimum 1 day for same-day trips (nearby destinations)
       if (durationDays <= 0) {
         durationDays = 1
-        console.log('📍 Same-day trip detected, setting to 1 day')
+        debug.log('📍 Same-day trip detected, setting to 1 day')
       }
 
-      console.log('📅 Duration:', durationDays, 'days')
+      debug.log('📅 Duration:', durationDays, 'days')
 
       // Generate AI itinerary with timeout fallback
       let itinerary = []
       try {
-        console.log('⏳ Generating itinerary...')
+        debug.log('⏳ Generating itinerary...')
         const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
-        
-        // Add timeout to prevent hanging
-        const itineraryPromise = generateItinerary(
-          formData.destination,
-          durationDays,
-          formData.interests,
-          formData.budgetPerDay,
-          formData.groupType,
-          currentLanguage,
-          formData.season,
-          formData.tripScope,
-          userLocation
-        )
 
-        const timeoutPromise = new Promise((_, reject) =>
-          setTimeout(() => reject(new Error('Itinerary generation timeout')), 60000)
-        )
+        if (isBackendApiEnabled()) {
+          const basePayload = {
+            destination: formData.destination,
+            days: durationDays,
+            tags: formData.interests,
+            budget: formData.budgetPerDay,
+            language: currentLanguage,
+            groupType: formData.groupType,
+            season: formData.season,
+            tripScope: formData.tripScope,
+          }
 
-        itinerary = (await Promise.race([itineraryPromise, timeoutPromise])) as any
-        console.log('✅ Itinerary generated:', itinerary?.length || 0, 'items')
+          try {
+            const asyncResponse = await generateItineraryJobInBackend(basePayload)
+
+            if (asyncResponse.queued && asyncResponse.jobId) {
+              itinerary = await pollItineraryJob(asyncResponse.jobId)
+            } else {
+              itinerary = asyncResponse.items || []
+            }
+          } catch (asyncError) {
+            console.warn('⚠️ Async itinerary job failed, trying sync backend generation:', asyncError)
+            itinerary = await generateItineraryInBackend(basePayload)
+          }
+        } else {
+          // Add timeout to prevent hanging
+          const itineraryPromise = generateItinerary(
+            formData.destination,
+            durationDays,
+            formData.interests,
+            formData.budgetPerDay,
+            formData.groupType,
+            currentLanguage,
+            formData.season,
+            formData.tripScope,
+            userLocation
+          )
+
+          const timeoutPromise = new Promise((_, reject) =>
+            setTimeout(() => reject(new Error('Itinerary generation timeout')), 60000)
+          )
+
+          itinerary = (await Promise.race([itineraryPromise, timeoutPromise])) as any
+        }
+
+        debug.log('✅ Itinerary generated:', itinerary?.length || 0, 'items')
       } catch (itineraryError) {
-        console.warn('⚠️ Itinerary generation failed, continuing with empty itinerary:', itineraryError)
-        itinerary = [] // Continue with empty itinerary
+        debug.warn('⚠️ Primary itinerary generation failed, trying local fallback:', itineraryError)
+        setLoadingMessage(t('createTrip.itineraryFallback') || 'Primary generation failed. Trying fallback...')
+
+        const currentLanguage = (i18n.language || 'pt-BR') as 'pt-BR' | 'en-US' | 'es-ES'
+        try {
+          const fallbackItinerary = await generateItinerary(
+            formData.destination,
+            durationDays,
+            formData.interests,
+            formData.budgetPerDay,
+            formData.groupType,
+            currentLanguage,
+            formData.season,
+            formData.tripScope,
+            userLocation
+          )
+
+          itinerary = fallbackItinerary || []
+          debug.log('✅ Fallback itinerary generated:', itinerary?.length || 0, 'items')
+        } catch (fallbackError) {
+          debug.error('❌ Fallback itinerary generation also failed:', fallbackError)
+          throw new Error(t('createTrip.errorItineraryRequired') || 'Não foi possível gerar o itinerário. Tente novamente.')
+        }
       }
+
+      if (!Array.isArray(itinerary) || itinerary.length === 0) {
+        throw new Error(t('createTrip.errorItineraryRequired') || 'Não foi possível gerar o itinerário. Tente novamente.')
+      }
+
+      setLoadingMessage(t('createTrip.creatingTrip') || 'Creating trip...')
 
       // Create trip data with itinerary
       // Note: Don't set ID here - Firestore will generate it via addDoc()
@@ -268,7 +367,7 @@ export default function CreateTripScreen() {
         createdAt: new Date().toISOString(),
       } as Trip
 
-      console.log('📝 Final trip data to save:', {
+      debug.log('📝 Final trip data to save:', {
         userId: tripData.userId,
         destination: tripData.destination,
         startDate: tripData.startDate,
@@ -280,30 +379,30 @@ export default function CreateTripScreen() {
       })
 
       // Save trip and get ID
-      console.log('💾 Calling addTrip...')
+      debug.log('💾 Calling addTrip...')
       const tripId = await addTrip(tripData)
-      console.log('✅ Trip saved with ID:', tripId)
+      debug.log('✅ Trip saved with ID:', tripId)
       
       setCreatedTripId(tripId)
 
       showSuccess(t('createTrip.tripCreatedSuccess') || 'Trip created successfully!')
       
       // IMPORTANTE: Recarregar trips imediatamente após criar
-      console.log('🔄 Reloading trips immediately after creation...')
+      debug.log('🔄 Reloading trips immediately after creation...')
       await loadTrips(user.uid)
-      console.log('✅ Trips reloaded')
+      debug.log('✅ Trips reloaded')
       
       setStep(7)
     } catch (err) {
       console.error('❌ Error creating trip:', err)
       console.error('Error details:', err instanceof Error ? err.stack : err)
+      const friendlyError = mapBackendErrorToUserMessage(err)
       showError(
-        err instanceof Error
-          ? err.message
-          : t('createTrip.errorCreating') || 'Error creating trip'
+        friendlyError || t('createTrip.errorCreating') || 'Error creating trip'
       )
     } finally {
       setIsLoading(false)
+      setLoadingMessage(t('createTrip.generatingItinerary') || 'Generating itinerary...')
     }
   }
 
@@ -324,14 +423,14 @@ export default function CreateTripScreen() {
   } : null
 
   // DEBUG: Log budget value for TripPreview
-  console.log('🎯 CreateTripScreen - tripForPreview.budgetPerDay:', tripForPreview?.budgetPerDay);
-  console.log('🎯 CreateTripScreen - formData.budgetPerDay:', formData.budgetPerDay);
+  debug.log('🎯 CreateTripScreen - tripForPreview.budgetPerDay:', tripForPreview?.budgetPerDay);
+  debug.log('🎯 CreateTripScreen - formData.budgetPerDay:', formData.budgetPerDay);
 
   return (
     <MainLayout>
       <LoadingOverlay
         isVisible={isLoading}
-        message={t('createTrip.generatingItinerary') || 'Generating itinerary...'}
+        message={loadingMessage}
       />
 
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 dark:from-slate-900 dark:to-slate-800 p-4 pb-20">

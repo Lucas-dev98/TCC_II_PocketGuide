@@ -14,11 +14,16 @@ import { debug } from '../utils/debug'
 const SENTRY_DSN = import.meta.env.VITE_SENTRY_DSN || ''
 const ENV = import.meta.env.MODE
 const VERSION = '1.0.0'
+let sentryInitialized = false
 
 /**
  * Inicializa Sentry
  */
 export function initSentry(): void {
+  if (sentryInitialized) {
+    return
+  }
+
   if (!SENTRY_DSN) {
     debug.warn('⚠️ Sentry DSN não configurado - crash reporting desativado')
     return
@@ -70,6 +75,8 @@ export function initSentry(): void {
         },
       },
     })
+
+    sentryInitialized = true
 
     debug.log('✅ Sentry inicializado com sucesso')
   } catch (error) {

@@ -9,11 +9,13 @@ import { DayTimeline } from "@/components/DayTimeline";
 import { RouteSummary } from "@/components/RouteSummary";
 import { useDayNavigation } from "@/hooks/useDayNavigation";
 import { useNavigation } from "@/hooks/useNavigation";
+import { useAuth } from "@/hooks/useAuth";
 import useI18n from "@/hooks/useI18n";
 import { useTripsStore } from "@/store/tripsStore";
 import { AttractionDetail, PhotoData, Trip } from "@/types";
 import { debug } from "@/utils/debug";
 import PhotoService from "@/services/photoService";
+import { searchCities } from "@/services/mapboxGeocoding";
 
 // Lazy load MapboxMap to reduce initial bundle size
 const MapboxMap = lazy(() => import("@/components/MapboxMap").then(m => ({ default: m.MapboxMap })));
@@ -33,6 +35,124 @@ function getSeasonFromMonth(month: number): 'primavera' | 'verão' | 'outono' | 
   return undefined;
 }
 
+function normalizeCategory(value?: string): 'restaurante' | 'museu' | 'natureza' | 'compras' | 'cultura' | 'outro' {
+  const lower = String(value || '').toLowerCase();
+  if (lower.includes('restaurant') || lower.includes('restaurante') || lower.includes('food')) return 'restaurante';
+  if (lower.includes('museum') || lower.includes('museu')) return 'museu';
+  if (lower.includes('nature') || lower.includes('parque')) return 'natureza';
+  if (lower.includes('shop') || lower.includes('compra')) return 'compras';
+  if (lower.includes('culture') || lower.includes('cultura')) return 'cultura';
+  return 'outro';
+}
+
+function extractValidLocation(item: any): AttractionDetail['location'] | undefined {
+  const rawLat = item?.location?.lat ?? item?.lat;
+  const rawLng = item?.location?.lng ?? item?.lng;
+
+  const lat =
+    typeof rawLat === 'number'
+      ? rawLat
+      : typeof rawLat === 'string'
+        ? Number.parseFloat(rawLat)
+        : NaN;
+
+  const lng =
+    typeof rawLng === 'number'
+      ? rawLng
+      : typeof rawLng === 'string'
+        ? Number.parseFloat(rawLng)
+        : NaN;
+
+  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+    return undefined;
+  }
+
+  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+    return undefined;
+  }
+
+  return {
+    lat,
+    lng,
+    address: item?.location?.address || item?.address,
+    name: item?.location?.name || item?.name,
+  };
+}
+
+function normalizeItineraryItems(itinerary: any): any[] {
+  if (!itinerary) return [];
+
+  if (Array.isArray(itinerary)) {
+    if (itinerary.some((item) => item?.day !== undefined)) {
+      return itinerary;
+    }
+
+    if (itinerary.some((item) => Array.isArray(item?.attractions))) {
+      return itinerary.flatMap((day, index) => {
+        const dayNumber = day?.day || index + 1;
+        return (day?.attractions || []).map((attraction: any) => ({
+          ...attraction,
+          day: attraction?.day || dayNumber,
+        }));
+      });
+    }
+
+    return [];
+  }
+
+  if (typeof itinerary === 'object') {
+    if (Array.isArray(itinerary.itinerary)) {
+      return normalizeItineraryItems(itinerary.itinerary);
+    }
+
+    if (Array.isArray(itinerary.days)) {
+      return normalizeItineraryItems(itinerary.days);
+    }
+
+    if (Array.isArray(itinerary.attractions)) {
+      return normalizeItineraryItems(itinerary.attractions);
+    }
+
+    const numericKeys = Object.keys(itinerary).filter((key) => /^\d+$/.test(key));
+    if (numericKeys.length > 0) {
+      const normalizedDays = numericKeys
+        .sort((a, b) => Number(a) - Number(b))
+        .map((key) => itinerary[key]);
+      return normalizeItineraryItems(normalizedDays);
+    }
+  }
+
+  return [];
+}
+
+async function resolveAttractionLocation(
+  attraction: AttractionDetail,
+  destination: string,
+  language: string
+): Promise<AttractionDetail['location']> {
+  if (attraction.location?.lat !== undefined && attraction.location?.lng !== undefined) {
+    return attraction.location;
+  }
+
+  const query = `${attraction.name}, ${destination}`;
+  const suggestions = await searchCities(query, language.startsWith('pt') ? 'pt' : language.startsWith('es') ? 'es' : 'en');
+  const best = suggestions.find((suggestion) => {
+    const coords = suggestion.coordinates;
+    return Array.isArray(coords) && coords.length === 2 && !(coords[0] === 0 && coords[1] === 0);
+  });
+
+  if (!best?.coordinates) {
+    return attraction.location;
+  }
+
+  return {
+    lat: best.coordinates[1],
+    lng: best.coordinates[0],
+    address: best.city,
+    name: attraction.name,
+  };
+}
+
 /**
  * Tela de detalhes de um dia específico da viagem
  * Rota: /trip/:tripId/day/:dayNumber
@@ -44,17 +164,20 @@ export const DayDetailScreen: React.FC = () => {
   }>();
   const navigate = useNavigate();
   const { showError } = useToast();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [trip, setTrip] = useState<Trip | null>(null);
   const [attractions, setAttractions] = useState<AttractionDetail[]>([]);
   const [photosLoading, setPhotosLoading] = useState(true);
+  const [mapCenter, setMapCenter] = useState<[number, number]>([0, 0]);
+  const [hasTriedLoadingTrips, setHasTriedLoadingTrips] = useState(false);
   
   // Ref para o mapa (scroll automático)
   const mapRef = useRef<HTMLDivElement>(null);
   
   // Usar Zustand store
-  const { trips } = useTripsStore();
+  const { trips, loadTrips } = useTripsStore();
 
   // Hook de navegação
   const {
@@ -98,16 +221,29 @@ export const DayDetailScreen: React.FC = () => {
         
         setTrip(foundTrip);
         setLoading(false);
+        setHasTriedLoadingTrips(false);
       } else {
-        debug.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
-        setLoading(false);
+        if (user?.uid && !hasTriedLoadingTrips) {
+          debug.warn("⚠️ Trip não encontrada localmente. Carregando trips do backend/store...");
+          setHasTriedLoadingTrips(true);
+          loadTrips(user.uid)
+            .catch((error) => {
+              debug.error("❌ Erro ao sincronizar trips:", error);
+            })
+            .finally(() => {
+              setLoading(false);
+            });
+        } else {
+          debug.warn("⚠️ Trip não encontrada com ID:", tripId, "em", trips.length, "trips");
+          setLoading(false);
+        }
       }
     } catch (error) {
       debug.error("❌ Erro ao buscar viagem:", error);
       showError("Não foi possível carregar a viagem");
       setLoading(false);
     }
-  }, [tripId, trips, showError]);
+  }, [tripId, trips, user?.uid, hasTriedLoadingTrips, loadTrips, showError]);
 
   // Calcular total de dias
   const totalDays = useMemo(() => {
@@ -134,7 +270,6 @@ export const DayDetailScreen: React.FC = () => {
           return;
         }
         
-        // Tentar buscar do itinerary primeiro, depois attractions
         const attractionsData = trip?.attractions || [];
         
         debug.log("🎯 Extraindo atrações do dia", currentDay);
@@ -148,34 +283,31 @@ export const DayDetailScreen: React.FC = () => {
           debug.log("✅ Encontrado trip.attractions direto");
           const baseAttrs = attractionsData
             .filter((a) => a.day === currentDay)
-            .map((a) => ({
+            .map((a, index) => ({
               ...a,
-              category: a.reason
-                ? (a.reason.toLowerCase().includes("restaurante")
-                    ? "restaurante"
-                    : a.reason.toLowerCase().includes("museu")
-                      ? "museu"
-                      : a.reason.toLowerCase().includes("natureza")
-                        ? "natureza"
-                        : a.reason.toLowerCase().includes("compra")
-                          ? "compras"
-                          : "outro")
-                : "outro",
+              id: a.id || `${currentDay}-${index}-${a.name || 'attraction'}`,
+              category: normalizeCategory((a as any).category || a.reason),
+              location: extractValidLocation(a),
             } as AttractionDetail));
           
           // Carregar fotos de forma assíncrona
           const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
           
           filtered = await Promise.all(
-            baseAttrs.map(async (a) => ({
-              ...a,
-              photos: await generatePhotosForAttraction(
-                a,
-                trip.destination,
-                season,
-                currentDay
-              ),
-            }))
+            baseAttrs.map(async (a) => {
+              const location = await resolveAttractionLocation(a, trip.destination, language);
+              return {
+                ...a,
+                location,
+                photos: await generatePhotosForAttraction(
+                  a,
+                  trip.destination,
+                  season,
+                  currentDay,
+                  language
+                ),
+              };
+            })
           );
           
           debug.log("📸 Atrações filtradas da lista:", filtered);
@@ -194,44 +326,7 @@ export const DayDetailScreen: React.FC = () => {
           return;
         }
 
-        let itineraryArray: any[] = [];
-        
-        // Tentar vários formatos
-        if (Array.isArray(trip.itinerary)) {
-          debug.log("📌 Formato 1: itinerary é array direto");
-          itineraryArray = trip.itinerary;
-        } else if (typeof trip.itinerary === 'object') {
-          // Verificar se tem propriedade itinerary (Gemini format)
-          if (Array.isArray(trip.itinerary.itinerary)) {
-            debug.log("📌 Formato 2: itinerary.itinerary é array");
-            itineraryArray = trip.itinerary.itinerary;
-          }
-          // Verificar se tem propriedade days
-          else if (Array.isArray(trip.itinerary.days)) {
-            debug.log("📌 Formato 3: itinerary.days é array");
-            itineraryArray = trip.itinerary.days;
-          }
-          // Verificar se tem propriedade attractions
-          else if (Array.isArray(trip.itinerary.attractions)) {
-            debug.log("📌 Formato 4: itinerary.attractions é array");
-            itineraryArray = trip.itinerary.attractions;
-          }
-          // Se nenhuma propriedade conhecida, talvez seja um mapa de dias
-          else {
-            debug.log("📌 Tentando extrair chaves como dias");
-            const keys = Object.keys(trip.itinerary);
-            debug.log("   Chaves encontradas:", keys);
-            
-            // Se tem chaves como "1", "2", "3" (dias como números string)
-            if (keys.some(k => /^\d+$/.test(k))) {
-              itineraryArray = keys
-                .filter(k => /^\d+$/.test(k))
-                .sort((a, b) => parseInt(a) - parseInt(b))
-                .map(k => trip.itinerary[k]);
-              debug.log("   Extraído como mapa de dias");
-            }
-          }
-        }
+        const itineraryArray = normalizeItineraryItems(trip.itinerary);
         
         debug.log(`📌 itineraryArray tem ${itineraryArray.length} items`);
         
@@ -243,19 +338,7 @@ export const DayDetailScreen: React.FC = () => {
           return;
         }
         
-        // Agora filtrar por dia
-        let dayAttractions: any[] = [];
-        
-        // Tipo 1: Array de atrações com propriedade 'day'
-        dayAttractions = itineraryArray.filter((item: any) => item.day === currentDay);
-        
-        if (dayAttractions.length === 0) {
-          debug.log(`ℹ️ Nenhuma atração com dia=${currentDay}. Tentando índice ${currentDay - 1}...`);
-          // Tipo 2: Array de dias (cada item é um dia)
-          if (currentDay <= itineraryArray.length) {
-            dayAttractions = itineraryArray[currentDay - 1]?.attractions || [];
-          }
-        }
+        const dayAttractions = itineraryArray.filter((item: any) => Number(item.day || 1) === currentDay);
         
         debug.log(`✅ Encontradas ${dayAttractions.length} atrações para dia ${currentDay}`);
         
@@ -269,22 +352,17 @@ export const DayDetailScreen: React.FC = () => {
         
         // Extrair e ordenar atrações
         const baseAttrs = dayAttractions
-          .map((a: any) => ({
-            id: a.id || `${currentDay}-${Math.random()}`,
+          .map((a: any, index: number) => ({
+            id: a.id || `${currentDay}-${index}-${a.name || 'attraction'}`,
             day: currentDay,
             time: a.time || "00:00",
             name: a.name || a.title || "Sem nome",
             duration: a.duration || 60,
             reason: a.description || a.reason || "Atração do dia",
             tip: a.tip || a.suggestions || "",
-            location: a.location || {
-              lat: a.lat || 41.9028 + Math.random() * 0.01,
-              lng: a.lng || 12.4964 + Math.random() * 0.01,
-              address: "Roma, Itália",
-              name: a.name || "Localização",
-            },
+            location: extractValidLocation(a),
             order: a.order || 0,
-            category: a.category || "outro",
+            category: normalizeCategory(a.category || a.reason),
           } as AttractionDetail))
           .sort((a: any, b: any) => a.time.localeCompare(b.time));
         
@@ -292,15 +370,20 @@ export const DayDetailScreen: React.FC = () => {
         const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
         
         filtered = await Promise.all(
-          baseAttrs.map(async (a) => ({
-            ...a,
-            photos: await generatePhotosForAttraction(
-              a,
-              trip.destination,
-              season,
-              currentDay
-            ),
-          }))
+          baseAttrs.map(async (a) => {
+            const location = await resolveAttractionLocation(a, trip.destination, language);
+            return {
+              ...a,
+              location,
+              photos: await generatePhotosForAttraction(
+                a,
+                trip.destination,
+                season,
+                currentDay,
+                language
+              ),
+            };
+          })
         );
         
         debug.log("✅ Atrações finais extraídas e ordenadas:", filtered);
@@ -319,7 +402,44 @@ export const DayDetailScreen: React.FC = () => {
     return () => {
       isMounted = false;
     };
-  }, [trip?.attractions, trip?.itinerary, currentDay]);
+  }, [trip, currentDay, language]);
+
+  useEffect(() => {
+    clearRoute();
+  }, [tripId, currentDay, clearRoute]);
+
+  // Centralizar o mapa no destino real quando não houver coordenadas válidas nas atrações
+  useEffect(() => {
+    let active = true;
+
+    const resolveDestinationCenter = async () => {
+      if (!trip?.destination) return;
+
+      try {
+        const suggestions = await searchCities(trip.destination, 'pt');
+        const bestMatch = suggestions.find((suggestion) => {
+          const coords = suggestion.coordinates;
+          return Array.isArray(coords) && coords.length === 2 && !(coords[0] === 0 && coords[1] === 0);
+        });
+
+        if (active && bestMatch?.coordinates) {
+          setMapCenter(bestMatch.coordinates);
+          debug.log('🗺️ DayDetailScreen: map center resolved from destination', {
+            destination: trip.destination,
+            coordinates: bestMatch.coordinates,
+          });
+        }
+      } catch (error) {
+        debug.warn('⚠️ DayDetailScreen: could not resolve destination center', error);
+      }
+    };
+
+    resolveDestinationCenter();
+
+    return () => {
+      active = false;
+    };
+  }, [trip?.destination]);
 
   // Buscar data do dia
   const dayDate = useMemo(() => {
@@ -592,11 +712,13 @@ export const DayDetailScreen: React.FC = () => {
               <Card.Body className="p-0 overflow-hidden">
                 <Suspense fallback={<Skeleton className="w-full h-64 sm:h-96 rounded-lg" />}>
                   <MapboxMap
+                    center={mapCenter}
                     attractions={attractions.map((a) => ({
                       name: a.name,
                       reason: a.reason,
-                      lat: a.location?.lat || 0,
-                      lng: a.location?.lng || 0,
+                      location: a.location,
+                      lat: a.location?.lat,
+                      lng: a.location?.lng,
                     }))}
                     onAttractionSelect={(attraction) => {
                       debug.log("Localização selecionada:", attraction);
@@ -623,7 +745,8 @@ async function generatePhotosForAttraction(
   attraction: any,
   destination?: string,
   season?: string,
-  tripDay?: number
+  tripDay?: number,
+  language?: string
 ): Promise<PhotoData[]> {
   debug.log(`📸 Gerando fotos para atração: "${attraction.name}" em ${destination || 'local desconhecido'}`);
 
@@ -644,6 +767,7 @@ async function generatePhotosForAttraction(
     tip: attraction.tip,
     season: validatedSeason,
     dayOfWeek: tripDay ? new Date().toLocaleDateString('pt-BR', { weekday: 'long' }).split('-')[0] : undefined,
+    language,
   };
 
   // Gerar 2 URLs diferentes usando PhotoService

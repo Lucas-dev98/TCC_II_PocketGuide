@@ -1,6 +1,7 @@
 import { ReactNode } from 'react'
 import { TopBar } from './TopBar'
 import { Sidebar } from './Sidebar'
+import { BackendStatusBadge } from '../BackendStatusBadge'
 
 /**
  * MainLayout Component
@@ -28,6 +29,9 @@ export function MainLayout({ children, withoutPadding = false }: MainLayoutProps
     <>
       {/* Desktop TopBar */}
       <TopBar />
+
+      {/* Backend health indicator */}
+      <BackendStatusBadge />
 
       {/* Desktop Sidebar */}
       <Sidebar />
