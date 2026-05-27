@@ -59,6 +59,31 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
   const [isLoading, setIsLoading] = useState(false);
   const lastTrackedImpressionRef = useRef<string>('');
 
+  const effectiveMonth = useMemo(() => {
+    if (startDate) {
+      const parsed = new Date(startDate);
+      if (!Number.isNaN(parsed.getTime())) {
+        return parsed.getMonth() + 1;
+      }
+    }
+
+    if (typeof selectedMonth === 'number' && selectedMonth >= 1 && selectedMonth <= 12) {
+      return selectedMonth;
+    }
+
+    if (season && tripScope === 'nacional') {
+      const seasonMap: Record<'primavera' | 'verão' | 'outono' | 'inverno', number> = {
+        primavera: 10,
+        verão: 1,
+        outono: 4,
+        inverno: 7,
+      };
+      return seasonMap[season];
+    }
+
+    return undefined;
+  }, [startDate, selectedMonth, season, tripScope]);
+
   // Generate recommendations using Gemini (with fallback to rule-based)
   // Note: removed selectedDestination from dependencies to prevent re-generating
   // recommendations when a destination is selected
@@ -77,7 +102,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           startDate,
           endDate,
           season,
-          selectedMonth,
+          selectedMonth: effectiveMonth,
+          tripScope,
           userLocation, // ✅ Log user location to verify it's being used
           language: i18n?.language || 'en-US',
         });
@@ -102,7 +128,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           startDate,
           endDate,
           season,
-          selectedMonth,
+          effectiveMonth,
           tripScope,
           userLocation,
           () => matchDestinations(
@@ -114,7 +140,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
             budget,
             startDate,
             endDate,
-            selectedMonth || '',
+            effectiveMonth || '',
             '', // Don't filter by selected destination during recommendations
             tripScope
           ),
@@ -133,7 +159,7 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
           budget,
           startDate,
           endDate,
-          selectedMonth || '',
+          effectiveMonth || '',
           '', // Don't filter by selected destination during recommendations
           tripScope
         );
@@ -154,7 +180,8 @@ export const DestinationSelector: React.FC<DestinationSelectorProps> = ({
     startDate,
     endDate,
     season,
-    selectedMonth,
+    effectiveMonth,
+    tripScope,
     i18n?.language,
     userLocation, // ✅ CRITICAL: Added to regenerate recommendations when user location changes
   ]); // Regenerate when season or user location changes

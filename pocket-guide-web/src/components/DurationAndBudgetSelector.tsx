@@ -2,9 +2,11 @@ import React from 'react';
 import { useTranslation } from 'react-i18next';
 
 interface DurationAndBudgetProps {
+  planningMode?: 'dates' | 'season';
   startDate?: string;
   endDate?: string;
   season?: 'primavera' | 'verão' | 'outono' | 'inverno';
+  onPlanningModeChange?: (mode: 'dates' | 'season') => void;
   onStartDateChange?: (date: string) => void;
   onEndDateChange?: (date: string) => void;
   onSeasonChange?: (season: 'primavera' | 'verão' | 'outono' | 'inverno') => void;
@@ -20,9 +22,11 @@ const SEASON_OPTIONS = [
 
 
 export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
+  planningMode = 'dates',
   startDate,
   endDate,
   season,
+  onPlanningModeChange,
   onStartDateChange,
   onEndDateChange,
   onSeasonChange,
@@ -46,7 +50,52 @@ export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
 
   return (
     <div className="space-y-6">
+      <div>
+        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+          {t('newFlow.step2.dateModeTitle', 'Como voce prefere planejar?')}
+        </h3>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <button
+            type="button"
+            onClick={() => !disabled && onPlanningModeChange?.('dates')}
+            disabled={disabled}
+            className={`p-4 rounded-lg border-2 text-left transition-all ${
+              planningMode === 'dates'
+                ? 'border-blue-500 bg-blue-50 dark:bg-blue-950 dark:border-blue-400'
+                : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {t('newFlow.step2.defineDates', 'Quero definir a data exata')}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+              {t('newFlow.step2.defineDatesDesc', 'Escolher ida e volta especificas')}
+            </p>
+          </button>
+
+          <button
+            type="button"
+            onClick={() => !disabled && onPlanningModeChange?.('season')}
+            disabled={disabled}
+            className={`p-4 rounded-lg border-2 text-left transition-all ${
+              planningMode === 'season'
+                ? 'border-purple-500 bg-purple-50 dark:bg-purple-950 dark:border-purple-400'
+                : 'border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900'
+            } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+          >
+            <p className="text-sm font-semibold text-gray-900 dark:text-white">
+              {t('newFlow.step2.chooseSeason', 'Prefiro escolher a estacao do ano')}
+            </p>
+            <p className="text-xs text-gray-600 dark:text-gray-300 mt-1">
+              {t('newFlow.step2.chooseSeasonDesc', 'Datas flexiveis para a melhor epoca')}
+            </p>
+          </button>
+        </div>
+      </div>
+
       {/* Dates Section */}
+      {planningMode === 'dates' && (
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           {t('newFlow.step2.selectDates', '📅 Quando você vai viajar?')}
@@ -109,8 +158,10 @@ export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
           </div>
         )}
       </div>
+      )}
 
       {/* Season Selection */}
+      {planningMode === 'season' && (
       <div>
         <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
           {t('newFlow.step2.selectSeason', '🌍 Qual estação do ano?')}
@@ -156,6 +207,7 @@ export const DurationAndBudgetSelector: React.FC<DurationAndBudgetProps> = ({
           ))}
         </div>
       </div>
+      )}
 
     </div>
   );

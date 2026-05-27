@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { GroupType, BudgetPerDay } from '../types';
 
@@ -7,10 +7,15 @@ interface GroupCompositionSelectorProps {
   numPeople?: number;
   numChildren?: number;
   budgetPerDay?: BudgetPerDay | '';
+  budgetMinPerDay?: number;
+  budgetMaxPerDay?: number;
+  useCustomBudgetRange?: boolean;
   onGroupChange: (group: GroupType) => void;
   onNumPeopleChange?: (num: number) => void;
   onNumChildrenChange?: (num: number) => void;
   onBudgetChange?: (budget: BudgetPerDay) => void;
+  onBudgetRangeChange?: (range: { min?: number; max?: number }) => void;
+  onCustomBudgetRangeToggle?: (enabled: boolean) => void;
   disabled?: boolean;
 }
 
@@ -111,15 +116,30 @@ export const GroupCompositionSelector: React.FC<GroupCompositionSelectorProps> =
   numPeople = 1,
   numChildren = 0,
   budgetPerDay = '',
+  budgetMinPerDay,
+  budgetMaxPerDay,
+  useCustomBudgetRange = false,
   onGroupChange,
   onNumPeopleChange,
   onNumChildrenChange,
   onBudgetChange,
+  onBudgetRangeChange,
+  onCustomBudgetRangeToggle,
   disabled = false,
 }) => {
   const { t } = useTranslation();
   const [localNumPeople, setLocalNumPeople] = useState(numPeople);
   const [localNumChildren, setLocalNumChildren] = useState(numChildren);
+  const [localBudgetMin, setLocalBudgetMin] = useState<number | ''>(budgetMinPerDay ?? '');
+  const [localBudgetMax, setLocalBudgetMax] = useState<number | ''>(budgetMaxPerDay ?? '');
+
+  useEffect(() => {
+    setLocalBudgetMin(budgetMinPerDay ?? '');
+  }, [budgetMinPerDay]);
+
+  useEffect(() => {
+    setLocalBudgetMax(budgetMaxPerDay ?? '');
+  }, [budgetMaxPerDay]);
 
   const selectedOption = GROUP_OPTIONS.find((opt) => opt.id === selectedGroup);
 
@@ -141,6 +161,22 @@ export const GroupCompositionSelector: React.FC<GroupCompositionSelectorProps> =
     const num = parseInt(e.target.value) || 0;
     setLocalNumChildren(num);
     onNumChildrenChange?.(num);
+  };
+
+  const handleBudgetMinChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const parsed = raw === '' ? undefined : Number.parseFloat(raw);
+    const value = Number.isFinite(parsed as number) ? (parsed as number) : undefined;
+    setLocalBudgetMin(raw === '' ? '' : value ?? '');
+    onBudgetRangeChange?.({ min: value, max: localBudgetMax === '' ? undefined : localBudgetMax });
+  };
+
+  const handleBudgetMaxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const raw = e.target.value;
+    const parsed = raw === '' ? undefined : Number.parseFloat(raw);
+    const value = Number.isFinite(parsed as number) ? (parsed as number) : undefined;
+    setLocalBudgetMax(raw === '' ? '' : value ?? '');
+    onBudgetRangeChange?.({ min: localBudgetMin === '' ? undefined : localBudgetMin, max: value });
   };
 
   return (
@@ -278,64 +314,137 @@ export const GroupCompositionSelector: React.FC<GroupCompositionSelectorProps> =
           {t('newFlow.step2.selectBudget', '💰 Orçamento por dia')}
         </h3>
 
-        <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
-          {BUDGET_OPTIONS.map((opt) => (
+        {!useCustomBudgetRange && (
+          <>
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+              {BUDGET_OPTIONS.map((opt) => (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    console.log('🎯 Budget Selected:', opt.id);
+                    !disabled && onBudgetChange?.(opt.id);
+                  }}
+                  disabled={disabled}
+                  className={`p-3 rounded-lg border-2 transition-all duration-200 text-center relative ${
+                    budgetPerDay === opt.id
+                      ? 'border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-400'
+                      : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600'
+                  } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                  title={t(opt.descriptionKey)}
+                >
+                  {budgetPerDay === opt.id && (
+                    <div className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
+                      <svg
+                        className="w-3 h-3 text-white"
+                        fill="none"
+                        stroke="currentColor"
+                        viewBox="0 0 24 24"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={3}
+                          d="M5 13l4 4L19 7"
+                        />
+                      </svg>
+                    </div>
+                  )}
+
+                  <div className="flex flex-col items-center gap-1">
+                    <span className="text-2xl font-bold text-gray-900 dark:text-white">
+                      {opt.symbol}
+                    </span>
+                    <span className="text-xs text-gray-500 dark:text-gray-400">
+                      {t(opt.labelKey)}
+                    </span>
+                  </div>
+                </button>
+              ))}
+            </div>
+
+            {/* Budget Reference */}
+            <div className="mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
+              <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
+                <strong>{t('newFlow.step2.budgetGuide', 'Guia de orçamento por dia')}:</strong>
+              </p>
+              <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
+                <li>💵 <strong>{t('ultraEconomico', 'Ultra Econômico')}:</strong> R$ 0-50/dia (hostels, comida rua)</li>
+                <li>💵 <strong>{t('economico', 'Econômico')}:</strong> R$ 50-150/dia (hotels simples, comida local)</li>
+                <li>💵 <strong>{t('medio', 'Médio')}:</strong> R$ 150-350/dia (3-4 stars, restaurantes bons)</li>
+                <li>💵 <strong>{t('premium', 'Premium')}:</strong> R$ 350-800/dia (resorts, restaurantes top)</li>
+                <li>💵 <strong>{t('luxo', 'Luxo')}:</strong> R$ 800+/dia (5-stars, tudo incluído)</li>
+              </ul>
+            </div>
+          </>
+        )}
+
+        <div className="mt-4 p-4 rounded-lg bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 space-y-3">
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              {t('newFlow.step2.customBudgetQuestion', 'Gostaria de inserir os valores?')}
+            </p>
             <button
-              key={opt.id}
-              onClick={() => {
-                console.log('🎯 Budget Selected:', opt.id);
-                !disabled && onBudgetChange?.(opt.id);
-              }}
+              type="button"
+              onClick={() => !disabled && onCustomBudgetRangeToggle?.(!useCustomBudgetRange)}
               disabled={disabled}
-              className={`p-3 rounded-lg border-2 transition-all duration-200 text-center relative ${
-                budgetPerDay === opt.id
-                  ? 'border-green-500 bg-green-50 dark:bg-green-950 dark:border-green-400'
-                  : 'border-gray-200 bg-white hover:border-gray-300 dark:border-gray-700 dark:bg-gray-900 dark:hover:border-gray-600'
+              aria-pressed={useCustomBudgetRange}
+              className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${
+                useCustomBudgetRange ? 'bg-blue-600' : 'bg-blue-200'
               } ${disabled ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-              title={t(opt.descriptionKey)}
             >
-              {budgetPerDay === opt.id && (
-                <div className="absolute top-2 right-2 w-5 h-5 bg-green-500 rounded-full flex items-center justify-center">
-                  <svg
-                    className="w-3 h-3 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={3}
-                      d="M5 13l4 4L19 7"
-                    />
-                  </svg>
-                </div>
-              )}
-
-              <div className="flex flex-col items-center gap-1">
-                <span className="text-2xl font-bold text-gray-900 dark:text-white">
-                  {opt.symbol}
-                </span>
-                <span className="text-xs text-gray-500 dark:text-gray-400">
-                  {t(opt.labelKey)}
-                </span>
-              </div>
+              <span
+                className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                  useCustomBudgetRange ? 'translate-x-5' : 'translate-x-1'
+                }`}
+              />
             </button>
-          ))}
-        </div>
+          </div>
 
-        {/* Budget Reference */}
-        <div className="mt-4 p-4 rounded-lg bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800">
-          <p className="text-xs text-amber-800 dark:text-amber-300 mb-2">
-            <strong>{t('newFlow.step2.budgetGuide', 'Guia de orçamento por dia')}:</strong>
-          </p>
-          <ul className="text-xs text-amber-700 dark:text-amber-400 space-y-1">
-            <li>💵 <strong>{t('ultraEconomico', 'Ultra Econômico')}:</strong> R$ 0-50/dia (hostels, comida rua)</li>
-            <li>💵 <strong>{t('economico', 'Econômico')}:</strong> R$ 50-150/dia (hotels simples, comida local)</li>
-            <li>💵 <strong>{t('medio', 'Médio')}:</strong> R$ 150-350/dia (3-4 stars, restaurantes bons)</li>
-            <li>💵 <strong>{t('premium', 'Premium')}:</strong> R$ 350-800/dia (resorts, restaurantes top)</li>
-            <li>💵 <strong>{t('luxo', 'Luxo')}:</strong> R$ 800+/dia (5-stars, tudo incluído)</li>
-          </ul>
+          {!useCustomBudgetRange && (
+            <p className="text-xs text-blue-800 dark:text-blue-200">
+              {t('newFlow.step2.autoBudgetInfo', 'Sem problema. Vamos usar automaticamente a faixa sugerida para o nivel selecionado.')}
+            </p>
+          )}
+
+          {useCustomBudgetRange && (
+            <>
+              <p className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                {t('newFlow.step2.customBudgetRange', 'Faixa real de orçamento por dia (R$)')}
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs text-blue-800 dark:text-blue-200 mb-1">
+                    {t('newFlow.step2.budgetMin', 'Valor minimo/dia')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={localBudgetMin}
+                    onChange={handleBudgetMinChange}
+                    disabled={disabled}
+                    placeholder="150"
+                    className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs text-blue-800 dark:text-blue-200 mb-1">
+                    {t('newFlow.step2.budgetMax', 'Valor maximo/dia')}
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="10"
+                    value={localBudgetMax}
+                    onChange={handleBudgetMaxChange}
+                    disabled={disabled}
+                    placeholder="350"
+                    className="w-full px-3 py-2 rounded-lg border border-blue-300 dark:border-blue-700 bg-white dark:bg-slate-900 text-gray-900 dark:text-white"
+                  />
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
 

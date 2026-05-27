@@ -120,6 +120,37 @@ func (g *GeminiClient) GenerateItinerary(ctx context.Context, req models.Itinera
 }
 
 func buildGeminiPrompt(req models.ItineraryRequest, agg models.AggregatedContext) string {
+	budgetRange := "not informed"
+	if req.BudgetMinPerDay != nil || req.BudgetMaxPerDay != nil {
+		currency := strings.TrimSpace(req.BudgetCurrency)
+		if currency == "" {
+			currency = "BRL"
+		}
+
+		minValue := "?"
+		maxValue := "?"
+		if req.BudgetMinPerDay != nil {
+			minValue = fmt.Sprintf("%.0f", *req.BudgetMinPerDay)
+		}
+		if req.BudgetMaxPerDay != nil {
+			maxValue = fmt.Sprintf("%.0f", *req.BudgetMaxPerDay)
+		}
+
+		budgetRange = fmt.Sprintf("%s %s-%s per day", currency, minValue, maxValue)
+	}
+
+	travelers := "not informed"
+	if req.Travelers != nil && *req.Travelers > 0 {
+		travelers = fmt.Sprintf("%d", *req.Travelers)
+	}
+
+	selectedInterests := "not informed"
+	interestHints := ""
+	if len(req.Tags) > 0 {
+		selectedInterests = strings.Join(req.Tags, ", ")
+		interestHints = buildInterestHints(req.Tags)
+	}
+
 	return fmt.Sprintf(`Generate a travel itinerary in strict JSON.
 Rules:
 - Return ONLY valid JSON.
@@ -127,9 +158,40 @@ Rules:
 - Each item fields: day(int), time(HH:mm), name(string), duration(int minutes), reason(string), tip(string), category(string)
 - Create %d days for destination %q.
 - Budget: %q; Group: %q; Language: %q; Season: %q; Scope: %q.
+- Explicit daily budget range: %q; Travelers: %q.
+- Selected interests: %q.
+- Interest activity hints: %q.
 - Context hints: weather=%q, currency=%q, safety=%q.
 - Ensure variety across days and categories.
-`, req.Days, req.Destination, req.Budget, req.GroupType, req.Language, req.Season, req.TripScope, agg.WeatherHint, agg.Currency, agg.SafetyHint)
+`, req.Days, req.Destination, req.Budget, req.GroupType, req.Language, req.Season, req.TripScope, budgetRange, travelers, selectedInterests, interestHints, agg.WeatherHint, agg.Currency, agg.SafetyHint)
+}
+
+func buildInterestHints(tags []string) string {
+	if len(tags) == 0 {
+		return "no explicit interests provided"
+	}
+
+	interestHints := make([]string, 0, len(tags))
+	for _, tag := range tags {
+		switch strings.ToLower(strings.TrimSpace(tag)) {
+		case "mergulho", "subaquatico", "subaquático":
+			interestHints = append(interestHints, "mergulho: scuba diving, snorkeling, reef tours, boat trips, underwater experiences")
+		case "praia", "piscinas-naturais":
+			interestHints = append(interestHints, "praia: beaches, water activities, coastal viewpoints, seaside walks")
+		case "natureza":
+			interestHints = append(interestHints, "natureza: parks, trails, waterfalls, wildlife, outdoor experiences")
+		case "gastronomia":
+			interestHints = append(interestHints, "gastronomia: local food, markets, food tours, signature restaurants")
+		case "cultura", "museus":
+			interestHints = append(interestHints, "cultura: museums, heritage sites, monuments, art, historical districts")
+		case "aventura":
+			interestHints = append(interestHints, "aventura: zip lines, rafting, hiking, climbing, adrenaline activities")
+		default:
+			interestHints = append(interestHints, fmt.Sprintf("%s: activities directly related to this interest", tag))
+		}
+	}
+
+	return strings.Join(interestHints, " | ")
 }
 
 func parseGeminiItems(raw []byte) ([]models.ItineraryItem, error) {

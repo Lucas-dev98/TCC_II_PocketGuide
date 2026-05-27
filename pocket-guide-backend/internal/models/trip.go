@@ -54,15 +54,19 @@ type UpdateTripRequest struct {
 }
 
 type ItineraryRequest struct {
-	Destination string   `json:"destination"`
-	Days        int      `json:"days"`
-	Tags        []string `json:"tags"`
-	Budget      string   `json:"budget"`
-	Language    string   `json:"language"`
-	GroupType   string   `json:"groupType"`
-	Season      string   `json:"season"`
-	TripScope   string   `json:"tripScope"`
-	Async       bool     `json:"async"`
+	Destination     string   `json:"destination"`
+	Days            int      `json:"days"`
+	Tags            []string `json:"tags"`
+	Budget          string   `json:"budget"`
+	BudgetMinPerDay *float64 `json:"budgetMinPerDay,omitempty"`
+	BudgetMaxPerDay *float64 `json:"budgetMaxPerDay,omitempty"`
+	BudgetCurrency  string   `json:"budgetCurrency,omitempty"`
+	Travelers       *int     `json:"travelers,omitempty"`
+	Language        string   `json:"language"`
+	GroupType       string   `json:"groupType"`
+	Season          string   `json:"season"`
+	TripScope       string   `json:"tripScope"`
+	Async           bool     `json:"async"`
 }
 
 type ItineraryItem struct {

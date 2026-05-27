@@ -12,6 +12,13 @@ import type { LanguageCode } from './promptTranslator';
 import type { Location } from '../types';
 import { generateItineraryInBackend, isBackendApiEnabled, isBackendRequired } from './backendApi';
 
+export interface BudgetContext {
+  minPerDay?: number;
+  maxPerDay?: number;
+  currency?: string;
+  travelers?: number;
+}
+
 export interface ItineraryItem {
   day: number;
   time: string;
@@ -160,7 +167,8 @@ export const generateItinerary = async (
   language: LanguageCode = 'en-US',
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
   tripScope?: 'nacional' | 'internacional' | '',
-  userLocation?: Location | null
+  userLocation?: Location | null,
+  budgetContext?: BudgetContext
 ): Promise<ItineraryItem[]> => {
   try {
     if (isBackendRequired() && !isBackendApiEnabled()) {
@@ -174,6 +182,10 @@ export const generateItinerary = async (
           days,
           tags,
           budget,
+          budgetMinPerDay: budgetContext?.minPerDay,
+          budgetMaxPerDay: budgetContext?.maxPerDay,
+          budgetCurrency: budgetContext?.currency,
+          travelers: budgetContext?.travelers,
           groupType,
           language,
           season,
@@ -210,6 +222,9 @@ export const generateItinerary = async (
     console.log('📅 Days:', days);
     console.log('⭐ Tags/Interests:', tags.join(', '));
     console.log('💰 BUDGET:', budget, '← CRITICAL!');
+    if (budgetContext?.minPerDay !== undefined || budgetContext?.maxPerDay !== undefined) {
+      console.log('💰 Budget Range:', budgetContext?.minPerDay, '-', budgetContext?.maxPerDay, budgetContext?.currency || 'BRL');
+    }
     console.log('👥 Group Type:', groupType);
     console.log('🌐 Language:', language);
     console.log('🌍 Season:', season);
@@ -239,7 +254,8 @@ export const generateItinerary = async (
           language,
           season,
           tripScope,
-          userLocation
+          userLocation,
+          budgetContext
         ),
       {
         maxRetries: 3,

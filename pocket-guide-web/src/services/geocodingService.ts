@@ -123,9 +123,9 @@ export const geocodePlaceInDestination = async (
 
     if (!response.ok) {
       console.warn(`⚠️ Nominatim API error for "${fullAddress}": ${response.status}`);
-      // Fallback: try just the place name
-      console.log(`↩️ Fallback: trying just place name "${placeName}"`);
-      return geocodeLocation(placeName);
+      // Keep destination context to avoid matching homonymous places in other countries.
+      console.log(`↩️ Fallback: trying destination center "${destination}"`);
+      return geocodeLocation(destination);
     }
 
     const results = await response.json() as Array<{
@@ -137,9 +137,8 @@ export const geocodePlaceInDestination = async (
     console.log(`📝 Nominatim returned ${results.length} result(s) for "${fullAddress}"`);
 
     if (results.length === 0) {
-      console.warn(`⚠️ No geocoding results for "${fullAddress}", trying place only`);
-      // Fallback: try just the place name
-      return geocodeLocation(placeName);
+      console.warn(`⚠️ No geocoding results for "${fullAddress}", using destination center`);
+      return geocodeLocation(destination);
     }
 
     const result = results[0];
@@ -153,7 +152,7 @@ export const geocodePlaceInDestination = async (
     // Validate the coordinates
     if (isNaN(location.lat) || isNaN(location.lng)) {
       console.error(`❌ Invalid coordinates from Nominatim for "${fullAddress}"`);
-      return geocodeLocation(placeName);
+      return geocodeLocation(destination);
     }
 
     // Cache the result

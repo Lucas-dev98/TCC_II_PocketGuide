@@ -83,6 +83,11 @@ export interface Trip {
   notes?: string;
   interests?: string[];
   budget?: "econômico" | "médio" | "luxo";
+  budgetMinPerDay?: number;
+  budgetMaxPerDay?: number;
+  estimatedTotalBudgetMin?: number;
+  estimatedTotalBudgetMax?: number;
+  budgetCurrency?: string;
   description?: string;
   imageUrl?: string;
   itinerary?: any;

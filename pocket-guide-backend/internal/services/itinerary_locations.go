@@ -1,6 +1,7 @@
 package services
 
 import (
+	"context"
 	"strings"
 
 	"pocket-guide-backend/internal/models"
@@ -219,9 +220,21 @@ func locationForDestinationSeed(destination string, seed int) models.Location {
 func enrichItineraryLocations(destination string, items []models.ItineraryItem) []models.ItineraryItem {
 	landmarkPoints, hasLandmarkPoints := landmarkCoordinatesForDestination(destination)
 
+	center, centerErr := resolveDestinationCoordinates(context.Background(), destination)
+	hasCenter := centerErr == nil
+
+	const maxDistanceFromDestinationKm = 250.0
+
 	for index := range items {
 		if !hasLandmarkPoints && items[index].Location != nil && items[index].Location.Lat != 0 && items[index].Location.Lng != 0 {
-			continue
+			if !hasCenter {
+				continue
+			}
+
+			distanceKm := haversineKm(center.Lat, center.Lng, items[index].Location.Lat, items[index].Location.Lng)
+			if distanceKm <= maxDistanceFromDestinationKm {
+				continue
+			}
 		}
 
 		var location models.Location

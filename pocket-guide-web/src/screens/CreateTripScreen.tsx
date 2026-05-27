@@ -47,10 +47,15 @@ interface TripFormData {
   tripScope: 'nacional' | 'internacional' | '';
   tripTypes: TripType[];
   budgetPerDay: BudgetPerDay;
+  useCustomBudgetRange?: boolean;
+  budgetMinPerDay?: number;
+  budgetMaxPerDay?: number;
+  budgetCurrency?: string;
   groupType: GroupType;
   numPeople?: number;
   numChildren?: number;
   travelMonth: string;
+  planningMode?: 'dates' | 'season';
   startDate: string;
   endDate: string;
   season?: 'primavera' | 'verão' | 'outono' | 'inverno';
@@ -59,6 +64,78 @@ interface TripFormData {
 }
 
 type StepType = 1 | 2 | 3 | 4 | 5 | 6 | 7;
+
+const BUDGET_BASE_RANGES: Record<BudgetPerDay, { min: number; max: number }> = {
+  'ultra-economico': { min: 50, max: 120 },
+  economico: { min: 120, max: 250 },
+  medio: { min: 250, max: 500 },
+  premium: { min: 500, max: 1000 },
+  luxo: { min: 1000, max: 2500 },
+}
+
+const calculateBudgetByGroup = (
+  budgetPerDay: BudgetPerDay,
+  groupType: GroupType,
+  numPeople?: number
+): { min: number; max: number } => {
+  const base = BUDGET_BASE_RANGES[budgetPerDay]
+  const people = Math.max(1, numPeople || (groupType === 'casal' ? 2 : 1))
+  const factor = groupType === 'solo' ? 1 : groupType === 'casal' ? 1.7 : Math.max(1.5, people * 0.8)
+
+  return {
+    min: Math.round(base.min * factor),
+    max: Math.round(base.max * factor),
+  }
+}
+
+const buildSeasonDateRange = (season?: 'primavera' | 'verão' | 'outono' | 'inverno') => {
+  const now = new Date()
+  const year = now.getFullYear()
+
+  const seasonStartMap: Record<string, { month: number; day: number }> = {
+    primavera: { month: 8, day: 23 },
+    verão: { month: 11, day: 21 },
+    outono: { month: 2, day: 20 },
+    inverno: { month: 5, day: 21 },
+  }
+
+  const selected = seasonStartMap[season || 'primavera'] || seasonStartMap.primavera
+  const start = new Date(year, selected.month, selected.day)
+  const end = new Date(start)
+  end.setDate(end.getDate() + 6)
+
+  return {
+    startDate: start.toISOString().split('T')[0],
+    endDate: end.toISOString().split('T')[0],
+    durationDays: 7,
+  }
+}
+
+const inferRecommendationMonth = (
+  startDate?: string,
+  season?: 'primavera' | 'verão' | 'outono' | 'inverno',
+  tripScope?: 'nacional' | 'internacional' | ''
+): number | undefined => {
+  if (startDate) {
+    const parsed = new Date(startDate)
+    if (!Number.isNaN(parsed.getTime())) {
+      return parsed.getMonth() + 1
+    }
+  }
+
+  // For domestic trips in Brazil, season can be mapped to southern hemisphere months.
+  if (tripScope === 'nacional' && season) {
+    const seasonMonth: Record<'primavera' | 'verão' | 'outono' | 'inverno', number> = {
+      primavera: 10,
+      verão: 1,
+      outono: 4,
+      inverno: 7,
+    }
+    return seasonMonth[season]
+  }
+
+  return undefined
+}
 
 export default function CreateTripScreen() {
   const navigate = useNavigate()
@@ -79,8 +156,13 @@ export default function CreateTripScreen() {
     tripScope: '',
     tripTypes: [],
     budgetPerDay: 'medio',
+    useCustomBudgetRange: false,
+    budgetMinPerDay: BUDGET_BASE_RANGES.medio.min,
+    budgetMaxPerDay: BUDGET_BASE_RANGES.medio.max,
+    budgetCurrency: 'BRL',
     groupType: 'casal',
     travelMonth: '6',
+    planningMode: 'dates',
     startDate: '',
     endDate: '',
     season: 'primavera',
@@ -155,17 +237,33 @@ export default function CreateTripScreen() {
           showError(t('createTrip.selectBudget') || 'Please select a budget')
           return false
         }
+        if (
+          formData.useCustomBudgetRange &&
+          formData.budgetMinPerDay !== undefined &&
+          formData.budgetMaxPerDay !== undefined &&
+          formData.budgetMinPerDay > formData.budgetMaxPerDay
+        ) {
+          showError(t('createTrip.invalidBudgetRange') || 'O valor minimo do orcamento nao pode ser maior que o maximo')
+          return false
+        }
         return true
 
       case 4:
         // Step 4: Dates + Month - required
-        if (!formData.startDate) {
-          showError(t('createTrip.selectStartDate') || 'Please select a start date')
-          return false
-        }
-        if (!formData.endDate) {
-          showError(t('createTrip.selectEndDate') || 'Please select an end date')
-          return false
+        if (formData.planningMode === 'season') {
+          if (!formData.season) {
+            showError(t('createTrip.selectSeason') || 'Please select a season')
+            return false
+          }
+        } else {
+          if (!formData.startDate) {
+            showError(t('createTrip.selectStartDate') || 'Please select a start date')
+            return false
+          }
+          if (!formData.endDate) {
+            showError(t('createTrip.selectEndDate') || 'Please select an end date')
+            return false
+          }
         }
         return true
 
@@ -252,17 +350,42 @@ export default function CreateTripScreen() {
       debug.log('👤 User ID:', user.uid)
 
       // Calculate duration from dates
-      const start = new Date(formData.startDate)
-      const end = new Date(formData.endDate)
-      let durationDays = Math.ceil((end.getTime() - start.getTime()) / (1000 * 60 * 60 * 24))
-      
-      // Ensure minimum 1 day for same-day trips (nearby destinations)
-      if (durationDays <= 0) {
-        durationDays = 1
-        debug.log('📍 Same-day trip detected, setting to 1 day')
-      }
+      const resolvedDates =
+        formData.planningMode === 'season'
+          ? buildSeasonDateRange(formData.season)
+          : {
+              startDate: formData.startDate,
+              endDate: formData.endDate,
+              durationDays: Math.max(
+                1,
+                Math.ceil(
+                  (new Date(formData.endDate).getTime() - new Date(formData.startDate).getTime()) /
+                    (1000 * 60 * 60 * 24)
+                )
+              ),
+            }
+
+      let durationDays = resolvedDates.durationDays
 
       debug.log('📅 Duration:', durationDays, 'days')
+
+      const defaultRange = calculateBudgetByGroup(
+        formData.budgetPerDay,
+        formData.groupType,
+        formData.numPeople
+      )
+
+      const minPerDay =
+        formData.budgetMinPerDay !== undefined ? formData.budgetMinPerDay : defaultRange.min
+      const maxPerDay =
+        formData.budgetMaxPerDay !== undefined ? formData.budgetMaxPerDay : defaultRange.max
+
+      const budgetContext = {
+        minPerDay,
+        maxPerDay,
+        currency: formData.budgetCurrency || 'BRL',
+        travelers: formData.numPeople || (formData.groupType === 'casal' ? 2 : 1),
+      }
 
       // Generate AI itinerary with timeout fallback
       let itinerary = []
@@ -280,6 +403,10 @@ export default function CreateTripScreen() {
             groupType: formData.groupType,
             season: formData.season,
             tripScope: formData.tripScope,
+            budgetMinPerDay: budgetContext.minPerDay,
+            budgetMaxPerDay: budgetContext.maxPerDay,
+            budgetCurrency: budgetContext.currency,
+            travelers: budgetContext.travelers,
           }
 
           try {
@@ -305,7 +432,8 @@ export default function CreateTripScreen() {
             currentLanguage,
             formData.season,
             formData.tripScope,
-            userLocation
+            userLocation,
+            budgetContext
           )
 
           const timeoutPromise = new Promise((_, reject) =>
@@ -331,7 +459,8 @@ export default function CreateTripScreen() {
             currentLanguage,
             formData.season,
             formData.tripScope,
-            userLocation
+            userLocation,
+            budgetContext
           )
 
           itinerary = fallbackItinerary || []
@@ -355,10 +484,15 @@ export default function CreateTripScreen() {
         userId: user.uid,
         destination: formData.destination,
         country: formData.destination,
-        startDate: formData.startDate,
-        endDate: formData.endDate,
+        startDate: resolvedDates.startDate,
+        endDate: resolvedDates.endDate,
         tripType: formData.tripTypes[0] || TRAVEL_TYPES_ARRAY[0],
         budgetPerDay: formData.budgetPerDay,
+        budgetMinPerDay: budgetContext.minPerDay,
+        budgetMaxPerDay: budgetContext.maxPerDay,
+        estimatedTotalBudgetMin: budgetContext.minPerDay * durationDays,
+        estimatedTotalBudgetMax: budgetContext.maxPerDay * durationDays,
+        budgetCurrency: budgetContext.currency,
         groupType: formData.groupType,
         travelMonth: formData.travelMonth,
         tripScope: formData.tripScope,
@@ -406,15 +540,29 @@ export default function CreateTripScreen() {
     }
   }
 
+  const previewDates =
+    formData.planningMode === 'season'
+      ? buildSeasonDateRange(formData.season)
+      : null
+
   const tripForPreview: Trip | null = formData.destination ? {
     id: 'preview',
     userId: user?.uid || '',
     destination: formData.destination,
     country: formData.destination,
-    startDate: formData.startDate || new Date().toISOString().split('T')[0],
-    endDate: formData.endDate || new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+    startDate:
+      formData.startDate ||
+      previewDates?.startDate ||
+      new Date().toISOString().split('T')[0],
+    endDate:
+      formData.endDate ||
+      previewDates?.endDate ||
+      new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
     tripType: formData.tripTypes[0] || TRAVEL_TYPES_ARRAY[0],
     budgetPerDay: formData.budgetPerDay,
+    budgetMinPerDay: formData.budgetMinPerDay,
+    budgetMaxPerDay: formData.budgetMaxPerDay,
+    budgetCurrency: formData.budgetCurrency,
     groupType: formData.groupType,
     travelMonth: formData.travelMonth,
     tripScope: formData.tripScope || undefined,
@@ -425,6 +573,12 @@ export default function CreateTripScreen() {
   // DEBUG: Log budget value for TripPreview
   debug.log('🎯 CreateTripScreen - tripForPreview.budgetPerDay:', tripForPreview?.budgetPerDay);
   debug.log('🎯 CreateTripScreen - formData.budgetPerDay:', formData.budgetPerDay);
+
+  const recommendationMonth = inferRecommendationMonth(
+    formData.startDate,
+    formData.season,
+    formData.tripScope
+  )
 
   return (
     <MainLayout>
@@ -521,28 +675,110 @@ export default function CreateTripScreen() {
                 numPeople={formData.numPeople}
                 numChildren={formData.numChildren}
                 budgetPerDay={formData.budgetPerDay}
+                budgetMinPerDay={formData.budgetMinPerDay}
+                budgetMaxPerDay={formData.budgetMaxPerDay}
                 onGroupChange={(groupType) =>
-                  setFormData((prev) => ({ ...prev, groupType }))
+                  setFormData((prev) => {
+                    if (prev.useCustomBudgetRange) {
+                      return { ...prev, groupType }
+                    }
+
+                    const suggested = calculateBudgetByGroup(
+                      prev.budgetPerDay,
+                      groupType,
+                      prev.numPeople
+                    )
+
+                    return {
+                      ...prev,
+                      groupType,
+                      budgetMinPerDay: suggested.min,
+                      budgetMaxPerDay: suggested.max,
+                    }
+                  })
                 }
                 onNumPeopleChange={(numPeople) =>
-                  setFormData((prev) => ({ ...prev, numPeople }))
+                  setFormData((prev) => {
+                    if (prev.useCustomBudgetRange) {
+                      return { ...prev, numPeople }
+                    }
+
+                    const suggested = calculateBudgetByGroup(
+                      prev.budgetPerDay,
+                      prev.groupType,
+                      numPeople
+                    )
+
+                    return {
+                      ...prev,
+                      numPeople,
+                      budgetMinPerDay: suggested.min,
+                      budgetMaxPerDay: suggested.max,
+                    }
+                  })
                 }
                 onNumChildrenChange={(numChildren) =>
                   setFormData((prev) => ({ ...prev, numChildren }))
                 }
                 onBudgetChange={(budgetPerDay) => {
-                  console.log('🎯 CreateTripScreen - Budget changed to:', budgetPerDay);
-                  setFormData((prev) => ({ ...prev, budgetPerDay }));
+                  const suggested = calculateBudgetByGroup(
+                    budgetPerDay,
+                    formData.groupType,
+                    formData.numPeople
+                  )
+                  setFormData((prev) => ({
+                    ...prev,
+                    budgetPerDay,
+                    budgetMinPerDay: prev.useCustomBudgetRange ? prev.budgetMinPerDay : suggested.min,
+                    budgetMaxPerDay: prev.useCustomBudgetRange ? prev.budgetMaxPerDay : suggested.max,
+                    budgetCurrency: prev.budgetCurrency || 'BRL',
+                  }))
                 }}
+                useCustomBudgetRange={formData.useCustomBudgetRange}
+                onCustomBudgetRangeToggle={(enabled) =>
+                  setFormData((prev) => {
+                    if (!enabled) {
+                      const suggested = calculateBudgetByGroup(
+                        prev.budgetPerDay,
+                        prev.groupType,
+                        prev.numPeople
+                      )
+
+                      return {
+                        ...prev,
+                        useCustomBudgetRange: false,
+                        budgetMinPerDay: suggested.min,
+                        budgetMaxPerDay: suggested.max,
+                      }
+                    }
+
+                    return {
+                      ...prev,
+                      useCustomBudgetRange: true,
+                    }
+                  })
+                }
+                onBudgetRangeChange={({ min, max }) =>
+                  setFormData((prev) => ({
+                    ...prev,
+                    budgetMinPerDay: min,
+                    budgetMaxPerDay: max,
+                    budgetCurrency: prev.budgetCurrency || 'BRL',
+                  }))
+                }
               />
             )}
 
             {/* Step 4: Dates and Season */}
             {step === 4 && (
               <DurationAndBudgetSelector
+                planningMode={formData.planningMode || 'dates'}
                 startDate={formData.startDate}
                 endDate={formData.endDate}
                 season={formData.season}
+                onPlanningModeChange={(planningMode) =>
+                  setFormData((prev) => ({ ...prev, planningMode }))
+                }
                 onStartDateChange={(startDate) =>
                   setFormData((prev) => ({ ...prev, startDate }))
                 }
@@ -569,7 +805,7 @@ export default function CreateTripScreen() {
                 endDate={formData.endDate}
                 season={formData.season}
                 tripScope={formData.tripScope}
-                selectedMonth={parseInt(formData.travelMonth)}
+                selectedMonth={recommendationMonth}
                 selectedDestination={formData.destination}
                 onDestinationChange={(destination: string) =>
                   setFormData((prev) => ({ ...prev, destination }))
@@ -602,8 +838,13 @@ export default function CreateTripScreen() {
                     tripScope: '',
                     tripTypes: [],
                     budgetPerDay: 'medio',
+                    useCustomBudgetRange: false,
+                    budgetMinPerDay: BUDGET_BASE_RANGES.medio.min,
+                    budgetMaxPerDay: BUDGET_BASE_RANGES.medio.max,
+                    budgetCurrency: 'BRL',
                     groupType: 'casal',
                     travelMonth: '6',
+                    planningMode: 'dates',
                     startDate: '',
                     endDate: '',
                     destination: '',

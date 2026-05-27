@@ -27,6 +27,10 @@ interface ItineraryGeneratePayload {
   days: number
   tags: string[]
   budget: string
+  budgetMinPerDay?: number
+  budgetMaxPerDay?: number
+  budgetCurrency?: string
+  travelers?: number
   language: string
   groupType: string
   season?: string

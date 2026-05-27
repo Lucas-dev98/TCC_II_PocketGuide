@@ -58,6 +58,13 @@ interface GeminiActivity {
   longitude?: number;
 }
 
+interface BudgetContext {
+  minPerDay?: number;
+  maxPerDay?: number;
+  currency?: string;
+  travelers?: number;
+}
+
 /**
  * Validate itinerary for repetitions and fix if needed
  */
@@ -340,6 +347,10 @@ const generateDiversifiedFallbackItinerary = async (
       { name: 'Mountain Biking Trail', duration: 180, category: 'Adventure/Active', time: '08:00' },
       { name: 'White Water Rafting', duration: 150, category: 'Adventure/Active', time: '09:00' },
       { name: 'Canopy Zip Line Tour', duration: 170, category: 'Adventure/Active', time: '14:00' },
+      { name: 'Scuba Diving Experience', duration: 120, category: 'Beach/Water', time: '08:00' },
+      { name: 'Snorkeling and Coral Reef Tour', duration: 150, category: 'Beach/Water', time: '09:00' },
+      { name: 'Underwater Marine Life Excursion', duration: 130, category: 'Beach/Water', time: '10:00' },
+      { name: 'Boat Trip to Dive Spots', duration: 180, category: 'Beach/Water', time: '07:30' },
     ],
     wellness: [
       { name: 'Spa & Wellness Retreat', duration: 180, category: 'Spa/Wellness', time: '10:00' },
@@ -559,7 +570,8 @@ export const generateItineraryWithGemini = async (
   language: LanguageCode = 'en-US',
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
   tripScope?: 'nacional' | 'internacional' | '',
-  userLocation?: Location | null
+  userLocation?: Location | null,
+  budgetContext?: BudgetContext
 ): Promise<GeneratedItinerary | null> => {
   if (!GEMINI_API_KEY) {
     console.error('Gemini API key not configured');
@@ -568,7 +580,7 @@ export const generateItineraryWithGemini = async (
 
   try {
     // Generate prompt in the specified language
-    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season, tripScope, userLocation);
+    const prompt = generateItineraryPrompt(days, destination, budget, groupType, tags, language, season, tripScope, userLocation, budgetContext);
     const systemInstruction = getSystemInstruction(language);
 
     // DEBUG: Log all parameters
@@ -579,6 +591,9 @@ export const generateItineraryWithGemini = async (
     console.log('📅 Days:', days);
     console.log('⭐ Tags/Interests:', tags.join(', '));
     console.log('💰 Budget:', budget);
+    if (budgetContext?.minPerDay !== undefined || budgetContext?.maxPerDay !== undefined) {
+      console.log('💰 Budget Range:', budgetContext?.minPerDay, '-', budgetContext?.maxPerDay, budgetContext?.currency || 'BRL');
+    }
     console.log('👥 Group Type:', groupType);
     console.log('🌍 Season:', season || 'Not selected');
     console.log('🗺️ Trip Scope:', tripScope || 'Not selected');

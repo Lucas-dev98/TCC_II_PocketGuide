@@ -79,6 +79,9 @@ const mapInterestsToActivities = (tags: string[]): string => {
     
     // Adventure & Sports
     'aventura': 'Rock climbing, paragliding, zip-lining, extreme sports',
+    'mergulho': 'Scuba diving, snorkeling, coral reef tours, underwater adventures, boat trips',
+    'subaquatico': 'Scuba diving, snorkeling, coral reef tours, underwater adventures, boat trips',
+    'subaquático': 'Scuba diving, snorkeling, coral reef tours, underwater adventures, boat trips',
     'esportes': 'Sports centers, activities, adventure parks, outdoor challenges',
     'adrenalina': 'Adrenaline activities, speed sports, thrilling experiences',
     
@@ -136,10 +139,15 @@ export const generateItineraryPrompt = (
   language: LanguageCode,
   season?: 'primavera' | 'verão' | 'outono' | 'inverno',
   tripScope?: 'nacional' | 'internacional' | '',
-  userLocation?: Location | null
+  userLocation?: Location | null,
+  budgetContext?: { minPerDay?: number; maxPerDay?: number; currency?: string; travelers?: number }
 ): string => {
   const tagsString = tags.join(', ');
   const budgetDescription = getBudgetDescription(budget, language);
+  const budgetRangeText =
+    budgetContext?.minPerDay !== undefined || budgetContext?.maxPerDay !== undefined
+      ? `${budgetContext?.currency || 'BRL'} ${budgetContext?.minPerDay ?? '?'} - ${budgetContext?.maxPerDay ?? '?'}/day`
+      : ''
   const activitiesCount = days * 3;
   const tripScopeDescription = tripScope === 'nacional' 
     ? (language === 'pt-BR' ? 'Nacional' : language === 'en-US' ? 'Domestic' : 'Nacional')
@@ -151,7 +159,9 @@ export const generateItineraryPrompt = (
 🚨 PARÂMETROS OBRIGATÓRIOS:
 - Duração: ${days} dias
 - Orçamento: ${budgetDescription}
+- Faixa de orçamento real: ${budgetRangeText || 'não informada'}
 - Grupo: ${groupType}
+- Viajantes: ${budgetContext?.travelers || 'não informado'}
 - Interesses: ${tagsString}
 - Tipo de Viagem: ${tripScopeDescription}
 - Estação: ${season || 'não especificada'}${userLocation && (userLocation.lat || userLocation.lng) ? `
@@ -284,7 +294,9 @@ RESPONDA AGORA - SÓ JSON, SEM EXPLICAÇÕES:`,
 🚨 MANDATORY PARAMETERS:
 - Duration: ${days} days
 - Budget: ${budgetDescription}
+- Real budget range: ${budgetRangeText || 'not informed'}
 - Group: ${groupType}
+- Travelers: ${budgetContext?.travelers || 'not informed'}
 - Interests: ${tagsString}
 - Trip Type: ${tripScopeDescription}
 - Season: ${season || 'not specified'}${userLocation && (userLocation.lat || userLocation.lng) ? `
@@ -398,7 +410,9 @@ RESPOND NOW - ONLY JSON, NO EXPLANATIONS:`,
 🚨 PARÁMETROS OBLIGATORIOS:
 - Duración: ${days} días
 - Presupuesto: ${budgetDescription}
+- Rango real de presupuesto: ${budgetRangeText || 'no informado'}
 - Grupo: ${groupType}
+- Viajeros: ${budgetContext?.travelers || 'no informado'}
 - Intereses: ${tagsString}
 - Tipo de Viaje: ${tripScopeDescription}
 - Estación: ${season || 'no especificada'}
