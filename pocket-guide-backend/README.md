@@ -12,7 +12,7 @@ Backend REST modular para suportar a aplicacao web com foco em performance, segu
 - Cache com Redis (fallback noop quando desabilitado)
 - Rate limiting por IP
 - Fila leve com Redis para geracao assincrona de itinerarios
-- Persistencia real com Postgres (com fallback para memoria)
+- Persistencia real com Postgres (obrigatorio em runtime)
 - Integracao Gemini no servidor com timeout, retry e fallback
 
 ## Estrutura
@@ -84,7 +84,6 @@ Servidor sobe em http://localhost:8080 por padrao.
 
 ## Proximos passos recomendados
 
-- trocar repository in-memory por Postgres
 - integrar provedores reais no agregador externo (weather/pricing/context)
 - persistir jobs e status de processamento
 - adicionar observabilidade (OpenTelemetry, metrics, tracing)

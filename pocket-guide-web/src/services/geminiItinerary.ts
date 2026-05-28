@@ -383,14 +383,14 @@ const generateDiversifiedFallbackItinerary = async (
   // Geocode the destination to get accurate base coordinates
   console.log(`🌍 Geocoding destination "${destination}" for fallback itinerary`);
   const geocodedDest = await geocodeLocation(destination);
-  const baseCoords: [number, number] = geocodedDest 
-    ? [geocodedDest.lat, geocodedDest.lng]
-    : [0, 0];
+  const baseCoords = geocodedDest
+    ? { lat: geocodedDest.lat, lng: geocodedDest.lng }
+    : { lat: 0, lng: 0 };
   
-  if (baseCoords[0] === 0 && baseCoords[1] === 0) {
+  if (baseCoords.lat === 0 && baseCoords.lng === 0) {
     console.warn(`⚠️ Could not geocode destination "${destination}", using Null Island (0,0)`);
   } else {
-    console.log(`✅ Geocoded destination to [${baseCoords[0]}, ${baseCoords[1]}]`);
+    console.log(`✅ Geocoded destination to [${baseCoords.lat}, ${baseCoords.lng}]`);
   }
 
   const itinerary: ItineraryItem[] = [];
@@ -484,9 +484,16 @@ const generateDiversifiedFallbackItinerary = async (
 
       usedCategoriesByDay[day].push(selectedActivity.category);
 
-      // Add slight random offset for coordinates
-      const lat = baseCoords[0] + (Math.random() - 0.5) * 0.1;
-      const lng = baseCoords[1] + (Math.random() - 0.5) * 0.1;
+      // Prefer real geocoded coordinates for each activity.
+      // Fallback to a deterministic small offset near destination center.
+      const geocodedActivity = await geocodePlaceInDestination(selectedActivity.name, destination);
+      const fallbackRadius = 0.015;
+      const offsetSeed = day * 10 + timeSlotIndex;
+      const offsetAngle = offsetSeed * Math.PI * 0.7;
+      const fallbackLat = baseCoords.lat + Math.sin(offsetAngle) * fallbackRadius;
+      const fallbackLng = baseCoords.lng + Math.cos(offsetAngle) * fallbackRadius;
+      const lat = geocodedActivity?.lat ?? fallbackLat;
+      const lng = geocodedActivity?.lng ?? fallbackLng;
 
       const tip = getBudgetAppropriateTips(budget);
       const selectedTip = tip[Math.floor(Math.random() * tip.length)];

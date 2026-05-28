@@ -21,7 +21,7 @@ export function BackendStatusBadge() {
       type="button"
       onClick={() => void refresh()}
       className={`fixed right-3 top-3 lg:top-20 z-50 px-3 py-1.5 rounded-full border text-xs font-semibold shadow-sm backdrop-blur-sm flex items-center gap-2 ${statusClass}`}
-      title={enabled ? `${statusLabel} (${baseUrl})${error ? ` - ${error}` : ''}` : 'Enable VITE_USE_BACKEND_API=true to use backend'}
+      title={enabled ? `${statusLabel} (${baseUrl})${error ? ` - ${error}` : ''}` : 'Configure VITE_BACKEND_URL para habilitar persistencia via backend'}
       aria-label={statusLabel}
     >
       <Server className="w-3.5 h-3.5" />

@@ -3,23 +3,12 @@ import type { Trip } from '../types'
 import type { ItineraryItem } from './itineraryGenerator'
 
 const BACKEND_URL = import.meta.env.VITE_BACKEND_URL?.trim() || ''
-const BACKEND_REQUIRED = import.meta.env.PROD
-const BACKEND_ENABLED_FLAG = String(import.meta.env.VITE_USE_BACKEND_API || '').toLowerCase()
+const BACKEND_REQUIRED = true
 const REQUEST_TIMEOUT_MS = 12000
 const ITINERARY_REQUEST_TIMEOUT_MS = 70000
 
-const parseEnvBoolean = (value: string): boolean => {
-  return value === '1' || value === 'true' || value === 'yes' || value === 'on'
-}
-
 const isBackendEnabledByConfig = (): boolean => {
-  // In production, backend remains enabled whenever URL exists.
-  if (import.meta.env.PROD) {
-    return Boolean(BACKEND_URL)
-  }
-
-  // In development, only enable backend when explicitly requested.
-  return Boolean(BACKEND_URL) && parseEnvBoolean(BACKEND_ENABLED_FLAG)
+  return Boolean(BACKEND_URL)
 }
 
 interface ItineraryGeneratePayload {

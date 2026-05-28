@@ -31,19 +31,18 @@ func main() {
 	itineraryService := services.NewItineraryService(cacheService, queueService, jobStatusStore, aggregator, geminiClient, logger)
 
 	var tripRepo repository.TripRepository
-	if cfg.UsePostgres && cfg.DatabaseURL != "" {
-		pgRepo, err := repository.NewPostgresTripRepository(cfg.DatabaseURL)
-		if err != nil {
-			logger.Error("postgres init failed; fallback to memory", "error", err)
-			tripRepo = repository.NewMemoryTripRepository()
-		} else {
-			tripRepo = pgRepo
-			logger.Info("trip repository using postgres")
-		}
-	} else {
-		tripRepo = repository.NewMemoryTripRepository()
-		logger.Warn("trip repository using memory mode")
+	if !cfg.UsePostgres || cfg.DatabaseURL == "" {
+		logger.Error("postgres is required; set USE_POSTGRES=true and DATABASE_URL")
+		os.Exit(1)
 	}
+
+	pgRepo, err := repository.NewPostgresTripRepository(cfg.DatabaseURL)
+	if err != nil {
+		logger.Error("postgres init failed; refusing to start", "error", err)
+		os.Exit(1)
+	}
+	tripRepo = pgRepo
+	logger.Info("trip repository using postgres")
 
 	if cfg.EnableItineraryWorker {
 		worker := services.NewItineraryWorker(queueService, itineraryService, logger)

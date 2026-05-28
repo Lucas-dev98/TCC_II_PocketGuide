@@ -45,35 +45,66 @@ function normalizeCategory(value?: string): 'restaurante' | 'museu' | 'natureza'
   return 'outro';
 }
 
-function extractValidLocation(item: any): AttractionDetail['location'] | undefined {
-  const rawLat = item?.location?.lat ?? item?.lat;
-  const rawLng = item?.location?.lng ?? item?.lng;
+function toFiniteNumber(value: unknown): number {
+  if (typeof value === 'number') return value;
+  if (typeof value === 'string') return Number.parseFloat(value);
+  return Number.NaN;
+}
 
-  const lat =
-    typeof rawLat === 'number'
-      ? rawLat
-      : typeof rawLat === 'string'
-        ? Number.parseFloat(rawLat)
-        : NaN;
+function isValidLatLng(lat: number, lng: number): boolean {
+  return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+}
 
-  const lng =
-    typeof rawLng === 'number'
-      ? rawLng
-      : typeof rawLng === 'string'
-        ? Number.parseFloat(rawLng)
-        : NaN;
+function normalizeLatLngWithHint(
+  rawLat: unknown,
+  rawLng: unknown,
+  destinationCenter?: [number, number]
+): { lat: number; lng: number } | undefined {
+  const lat = toFiniteNumber(rawLat);
+  const lng = toFiniteNumber(rawLng);
 
-  if (Number.isNaN(lat) || Number.isNaN(lng)) {
+  const normalValid = isValidLatLng(lat, lng);
+  const swappedValid = isValidLatLng(lng, lat);
+
+  if (!normalValid && !swappedValid) {
     return undefined;
   }
 
-  if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+  if (!normalValid && swappedValid) {
+    return { lat: lng, lng: lat };
+  }
+
+  if (!swappedValid) {
+    return { lat, lng };
+  }
+
+  if (destinationCenter) {
+    const [centerLng, centerLat] = destinationCenter;
+    const distanceNormal = Math.hypot(lng - centerLng, lat - centerLat);
+    const distanceSwapped = Math.hypot(lat - centerLng, lng - centerLat);
+    if (distanceSwapped + 0.2 < distanceNormal) {
+      return { lat: lng, lng: lat };
+    }
+  }
+
+  return { lat, lng };
+}
+
+function extractValidLocation(
+  item: any,
+  destinationCenter?: [number, number]
+): AttractionDetail['location'] | undefined {
+  const rawLat = item?.location?.lat ?? item?.lat;
+  const rawLng = item?.location?.lng ?? item?.lng;
+
+  const normalized = normalizeLatLngWithHint(rawLat, rawLng, destinationCenter);
+  if (!normalized) {
     return undefined;
   }
 
   return {
-    lat,
-    lng,
+    lat: normalized.lat,
+    lng: normalized.lng,
     address: item?.location?.address || item?.address,
     name: item?.location?.name || item?.name,
   };
@@ -128,10 +159,22 @@ function normalizeItineraryItems(itinerary: any): any[] {
 async function resolveAttractionLocation(
   attraction: AttractionDetail,
   destination: string,
-  language: string
+  language: string,
+  destinationCenter?: [number, number]
 ): Promise<AttractionDetail['location']> {
   if (attraction.location?.lat !== undefined && attraction.location?.lng !== undefined) {
-    return attraction.location;
+    const normalized = normalizeLatLngWithHint(
+      attraction.location.lat,
+      attraction.location.lng,
+      destinationCenter
+    );
+    if (normalized) {
+      return {
+        ...attraction.location,
+        lat: normalized.lat,
+        lng: normalized.lng,
+      };
+    }
   }
 
   const query = `${attraction.name}, ${destination}`;
@@ -271,6 +314,14 @@ export const DayDetailScreen: React.FC = () => {
         }
         
         const attractionsData = trip?.attractions || [];
+        const destinationSuggestions = await searchCities(
+          trip.destination,
+          language.startsWith('pt') ? 'pt' : language.startsWith('es') ? 'es' : 'en'
+        );
+        const destinationCenter = destinationSuggestions.find((suggestion) => {
+          const coords = suggestion.coordinates;
+          return Array.isArray(coords) && coords.length === 2 && !(coords[0] === 0 && coords[1] === 0);
+        })?.coordinates;
         
         debug.log("🎯 Extraindo atrações do dia", currentDay);
         debug.log("📦 attractionsData:", attractionsData);
@@ -287,7 +338,7 @@ export const DayDetailScreen: React.FC = () => {
               ...a,
               id: a.id || `${currentDay}-${index}-${a.name || 'attraction'}`,
               category: normalizeCategory((a as any).category || a.reason),
-              location: extractValidLocation(a),
+              location: extractValidLocation(a, destinationCenter),
             } as AttractionDetail));
           
           // Carregar fotos de forma assíncrona
@@ -295,7 +346,7 @@ export const DayDetailScreen: React.FC = () => {
           
           filtered = await Promise.all(
             baseAttrs.map(async (a) => {
-              const location = await resolveAttractionLocation(a, trip.destination, language);
+              const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
               return {
                 ...a,
                 location,
@@ -360,7 +411,7 @@ export const DayDetailScreen: React.FC = () => {
             duration: a.duration || 60,
             reason: a.description || a.reason || "Atração do dia",
             tip: a.tip || a.suggestions || "",
-            location: extractValidLocation(a),
+            location: extractValidLocation(a, destinationCenter),
             order: a.order || 0,
             category: normalizeCategory(a.category || a.reason),
           } as AttractionDetail))
@@ -371,7 +422,7 @@ export const DayDetailScreen: React.FC = () => {
         
         filtered = await Promise.all(
           baseAttrs.map(async (a) => {
-            const location = await resolveAttractionLocation(a, trip.destination, language);
+            const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
             return {
               ...a,
               location,
