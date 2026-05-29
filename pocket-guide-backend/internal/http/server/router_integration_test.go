@@ -23,18 +23,22 @@ func newTestRouter(t *testing.T) (http.Handler, services.JobStatusStore) {
 
 	logger := slog.New(slog.NewTextHandler(io.Discard, nil))
 	cfg := config.Config{
-		AuthBypass:      true,
-		RateLimitPerMin: 1000,
+		AuthBypass:        true,
+		RateLimitPerMin:   1000,
+		JWTSecret:         "test-secret",
+		JWTExpiresInHours: 24,
 	}
 
 	tripRepo := repository.NewMemoryTripRepository()
+	userRepo := repository.NewMemoryUserRepository()
 	jobStore := services.NewMemoryJobStatusStore()
 	cache := &services.NoopCacheService{}
 	queue := &services.NoopQueueService{}
 	aggregator := services.NewExternalAggregator(logger)
 	itineraryService := services.NewItineraryService(cache, queue, jobStore, aggregator, nil, logger)
+	authService := services.NewLocalAuthService(cfg, userRepo, logger)
 
-	h := handlers.NewHandlerSet(cfg, logger, nil, tripRepo, itineraryService, jobStore, cache)
+	h := handlers.NewHandlerSet(cfg, logger, authService, userRepo, tripRepo, itineraryService, jobStore, cache)
 	return NewRouter(cfg, logger, h), jobStore
 }
 

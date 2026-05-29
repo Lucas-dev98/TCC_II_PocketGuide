@@ -1,4 +1,4 @@
-import { auth } from './firebase'
+import * as tokenStorage from './tokenStorage'
 import type { Trip } from '../types'
 import type { ItineraryItem } from './itineraryGenerator'
 
@@ -62,6 +62,8 @@ type RetryOptions = {
   timeoutMs?: number
 }
 
+type UnknownRecord = Record<string, unknown>
+
 export class ApiRequestError extends Error {
   status?: number
   code: 'network' | 'timeout' | 'http' | 'config'
@@ -74,8 +76,171 @@ export class ApiRequestError extends Error {
   }
 }
 
+const toNumberOrUndefined = (value: unknown): number | undefined => {
+  if (typeof value === 'number' && Number.isFinite(value)) return value
+  if (typeof value === 'string') {
+    const parsed = Number(value)
+    if (Number.isFinite(parsed)) return parsed
+  }
+  return undefined
+}
+
+const toIntOrDefault = (value: unknown, fallback: number): number => {
+  const parsed = toNumberOrUndefined(value)
+  return parsed === undefined ? fallback : Math.trunc(parsed)
+}
+
+const extractArraySegments = (text: string): string[] => {
+  const segments: string[] = []
+  let depth = 0
+  let start = -1
+  let inString = false
+  let escaped = false
+
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i]
+
+    if (escaped) {
+      escaped = false
+      continue
+    }
+
+    if (ch === '\\') {
+      escaped = true
+      continue
+    }
+
+    if (ch === '"') {
+      inString = !inString
+      continue
+    }
+
+    if (inString) continue
+
+    if (ch === '[') {
+      if (depth === 0) start = i
+      depth++
+      continue
+    }
+
+    if (ch === ']') {
+      depth--
+      if (depth === 0 && start >= 0) {
+        segments.push(text.slice(start, i + 1))
+        start = -1
+      }
+    }
+  }
+
+  return segments
+}
+
+const parseUnknownJson = (value: string): unknown => {
+  const trimmed = value.trim()
+  if (!trimmed) return null
+
+  const attempts = [
+    trimmed,
+    trimmed.replace(/""/g, '"'),
+  ]
+
+  for (const candidate of attempts) {
+    try {
+      return JSON.parse(candidate)
+    } catch {
+      // try next variant
+    }
+  }
+
+  return null
+}
+
+const parseLegacyItineraryString = (value: string): unknown[] => {
+  const parsed = parseUnknownJson(value)
+  if (Array.isArray(parsed)) return parsed
+
+  if (parsed && typeof parsed === 'object') {
+    const obj = parsed as UnknownRecord
+    if (Array.isArray(obj.items)) return obj.items
+    if (Array.isArray(obj.itinerary)) return obj.itinerary
+  }
+
+  if (typeof parsed === 'string') {
+    const nested = parseUnknownJson(parsed)
+    if (Array.isArray(nested)) return nested
+    if (nested && typeof nested === 'object') {
+      const obj = nested as UnknownRecord
+      if (Array.isArray(obj.items)) return obj.items
+      if (Array.isArray(obj.itinerary)) return obj.itinerary
+    }
+  }
+
+  const segments = extractArraySegments(value)
+  if (segments.length === 0) return []
+
+  const merged: unknown[] = []
+  for (const segment of segments) {
+    const segmentParsed = parseUnknownJson(segment)
+    if (Array.isArray(segmentParsed)) merged.push(...segmentParsed)
+  }
+
+  return merged
+}
+
+const normalizeItineraryItem = (value: unknown): ItineraryItem | null => {
+  if (!value || typeof value !== 'object') return null
+  const raw = value as UnknownRecord
+
+  const name = typeof raw.name === 'string' ? raw.name.trim() : ''
+  const time = typeof raw.time === 'string' ? raw.time.trim() : '09:00'
+  if (!name) return null
+
+  const locationRaw = raw.location && typeof raw.location === 'object' ? (raw.location as UnknownRecord) : null
+  const lat = locationRaw ? toNumberOrUndefined(locationRaw.lat) : undefined
+  const lng = locationRaw ? toNumberOrUndefined(locationRaw.lng) : undefined
+
+  return {
+    day: toIntOrDefault(raw.day, 1),
+    time,
+    name,
+    duration: toIntOrDefault(raw.duration, 120),
+    reason: typeof raw.reason === 'string' ? raw.reason : '',
+    tip: typeof raw.tip === 'string' ? raw.tip : '',
+    category: typeof raw.category === 'string' && raw.category.trim() ? raw.category : 'Exploration',
+    location:
+      lat !== undefined && lng !== undefined
+        ? { lat, lng }
+        : undefined,
+  }
+}
+
+const normalizeItineraryPayload = (itinerary: unknown): ItineraryItem[] => {
+  let source: unknown[] = []
+
+  if (Array.isArray(itinerary)) {
+    source = itinerary
+  } else if (itinerary && typeof itinerary === 'object') {
+    const obj = itinerary as UnknownRecord
+    if (Array.isArray(obj.items)) source = obj.items
+    else if (Array.isArray(obj.itinerary)) source = obj.itinerary
+  } else if (typeof itinerary === 'string') {
+    source = parseLegacyItineraryString(itinerary)
+  }
+
+  return source
+    .map(normalizeItineraryItem)
+    .filter((item): item is ItineraryItem => item !== null)
+}
+
+const normalizeTripItinerary = (trip: Trip): Trip => {
+  return {
+    ...trip,
+    itinerary: normalizeItineraryPayload(trip.itinerary),
+  }
+}
+
 async function getAuthHeader(): Promise<Record<string, string>> {
-  const token = await auth?.currentUser?.getIdToken()
+  const token = tokenStorage.getToken()
   if (!token) return {}
   return { Authorization: `Bearer ${token}` }
 }
@@ -203,31 +368,37 @@ export async function checkBackendHealth(): Promise<BackendHealthResponse> {
 
 export async function listTripsFromBackend(): Promise<Trip[]> {
   const payload = await request<{ items: Trip[] }>('/api/v1/trips', { method: 'GET' }, { retries: 2, retryDelayMs: 350 })
-  return payload.items || []
+  return (payload.items || []).map(normalizeTripItinerary)
 }
 
 export async function createTripInBackend(tripData: Partial<Trip>): Promise<Trip> {
   const payload = {
     ...tripData,
     budget: tripData.budget ?? tripData.budgetPerDay,
+    itinerary: normalizeItineraryPayload(tripData.itinerary),
   }
 
-  return request<Trip>('/api/v1/trips', {
+  const created = await request<Trip>('/api/v1/trips', {
     method: 'POST',
     body: JSON.stringify(payload),
   })
+
+  return normalizeTripItinerary(created)
 }
 
 export async function updateTripInBackend(tripId: string, tripData: Partial<Trip>): Promise<Trip> {
   const payload = {
     ...tripData,
     budget: tripData.budget ?? tripData.budgetPerDay,
+    itinerary: normalizeItineraryPayload(tripData.itinerary),
   }
 
-  return request<Trip>(`/api/v1/trips/${tripId}`, {
+  const updated = await request<Trip>(`/api/v1/trips/${tripId}`, {
     method: 'PATCH',
     body: JSON.stringify(payload),
   })
+
+  return normalizeTripItinerary(updated)
 }
 
 export async function deleteTripInBackend(tripId: string): Promise<void> {

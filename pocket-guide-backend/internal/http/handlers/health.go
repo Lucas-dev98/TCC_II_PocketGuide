@@ -14,8 +14,8 @@ func (h *HandlerSet) Health(w http.ResponseWriter, _ *http.Request) {
 		"env":    h.Config.AppEnv,
 		"time":   time.Now().UTC(),
 		"services": map[string]bool{
-			"firebaseAuth": h.AuthService.Ready(),
-			"cache":        h.Cache.Available(),
+			"auth":  h.AuthService.Ready(),
+			"cache": h.Cache.Available(),
 		},
 	})
 }

@@ -14,6 +14,8 @@ type Config struct {
 
 	FirebaseProjectID string
 	GoogleCredentials string
+	JWTSecret         string
+	JWTExpiresInHours int
 
 	RedisAddr     string
 	RedisPassword string
@@ -37,9 +39,11 @@ func Load() Config {
 		AppName:               getEnv("APP_NAME", "PocketGuide Backend"),
 		AppEnv:                getEnv("APP_ENV", "development"),
 		Port:                  getEnv("PORT", "8080"),
-		AuthBypass:            getEnvBool("AUTH_BYPASS", true),
+		AuthBypass:            getEnvBool("AUTH_BYPASS", false),
 		FirebaseProjectID:     getEnv("FIREBASE_PROJECT_ID", ""),
 		GoogleCredentials:     getEnv("GOOGLE_APPLICATION_CREDENTIALS", ""),
+		JWTSecret:             getEnv("JWT_SECRET", "change-me-dev-secret"),
+		JWTExpiresInHours:     getEnvInt("JWT_EXPIRES_IN_HOURS", 24),
 		RedisAddr:             getEnv("REDIS_ADDR", "localhost:6379"),
 		RedisPassword:         getEnv("REDIS_PASSWORD", ""),
 		RedisDB:               getEnvInt("REDIS_DB", 0),

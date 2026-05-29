@@ -23,6 +23,8 @@ interface PersistentAuthState {
 }
 
 export const usePersistentAuth = (): PersistentAuthState & {
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (name: string, email: string, password: string) => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
 } => {
@@ -65,6 +67,8 @@ export const usePersistentAuth = (): PersistentAuthState & {
     tokenExpiresIn,
     sessionInfo,
     hasValidSession: tokenStorage.hasValidSession(),
+    signIn: auth.signIn,
+    signUp: auth.signUp,
     signInWithGoogle: auth.signInWithGoogle,
     signOut: auth.signOut,
   }

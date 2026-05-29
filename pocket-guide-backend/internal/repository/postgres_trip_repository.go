@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"strings"
 	"time"
 
 	_ "github.com/jackc/pgx/v5/stdlib"
@@ -107,7 +108,7 @@ ORDER BY created_at DESC`, userID)
 
 		_ = json.Unmarshal(tagsRaw, &trip.Tags)
 		_ = json.Unmarshal(interestsRaw, &trip.Interests)
-		_ = json.Unmarshal(itineraryRaw, &trip.Itinerary)
+		trip.Itinerary = decodeItineraryJSONB(itineraryRaw)
 
 		items = append(items, trip)
 	}
@@ -117,6 +118,143 @@ ORDER BY created_at DESC`, userID)
 	}
 
 	return items, nil
+}
+
+func decodeItineraryJSONB(raw []byte) []models.ItineraryItem {
+	if len(raw) == 0 {
+		return nil
+	}
+
+	var direct []models.ItineraryItem
+	if err := json.Unmarshal(raw, &direct); err == nil {
+		return direct
+	}
+
+	// Legacy rows can contain a JSON string instead of a JSON array.
+	var legacyString string
+	if err := json.Unmarshal(raw, &legacyString); err == nil {
+		return parseLegacyItineraryString(legacyString)
+	}
+
+	return nil
+}
+
+func parseLegacyItineraryString(value string) []models.ItineraryItem {
+	value = strings.TrimSpace(value)
+	if value == "" {
+		return nil
+	}
+
+	if parsed := parseItineraryItemsFromString(value); len(parsed) > 0 {
+		return parsed
+	}
+
+	// Some old payloads duplicate quotes like {""day"":1}.
+	normalized := strings.ReplaceAll(value, `""`, `"`)
+	if parsed := parseItineraryItemsFromString(normalized); len(parsed) > 0 {
+		return parsed
+	}
+
+	// Fallback for concatenated arrays in one string.
+	segments := splitJSONArraySegments(normalized)
+	if len(segments) == 0 {
+		return nil
+	}
+
+	merged := make([]models.ItineraryItem, 0)
+	for _, segment := range segments {
+		if parsed := parseItineraryItemsFromString(segment); len(parsed) > 0 {
+			merged = append(merged, parsed...)
+		}
+	}
+
+	if len(merged) == 0 {
+		return nil
+	}
+
+	return merged
+}
+
+func parseItineraryItemsFromString(value string) []models.ItineraryItem {
+	trimmed := strings.TrimSpace(value)
+	if trimmed == "" {
+		return nil
+	}
+
+	var direct []models.ItineraryItem
+	if err := json.Unmarshal([]byte(trimmed), &direct); err == nil && len(direct) > 0 {
+		return direct
+	}
+
+	var wrapper struct {
+		Items     []models.ItineraryItem `json:"items"`
+		Itinerary []models.ItineraryItem `json:"itinerary"`
+	}
+	if err := json.Unmarshal([]byte(trimmed), &wrapper); err == nil {
+		if len(wrapper.Items) > 0 {
+			return wrapper.Items
+		}
+		if len(wrapper.Itinerary) > 0 {
+			return wrapper.Itinerary
+		}
+	}
+
+	// Nested JSON string.
+	var nested string
+	if err := json.Unmarshal([]byte(trimmed), &nested); err == nil {
+		return parseItineraryItemsFromString(nested)
+	}
+
+	return nil
+}
+
+func splitJSONArraySegments(value string) []string {
+	segments := make([]string, 0)
+	depth := 0
+	start := -1
+	inString := false
+	escaped := false
+
+	for i := 0; i < len(value); i++ {
+		ch := value[i]
+
+		if escaped {
+			escaped = false
+			continue
+		}
+
+		if ch == '\\' {
+			escaped = true
+			continue
+		}
+
+		if ch == '"' {
+			inString = !inString
+			continue
+		}
+
+		if inString {
+			continue
+		}
+
+		if ch == '[' {
+			if depth == 0 {
+				start = i
+			}
+			depth++
+			continue
+		}
+
+		if ch == ']' {
+			depth--
+			if depth == 0 && start >= 0 {
+				segments = append(segments, value[start:i+1])
+				start = -1
+			}
+		}
+	}
+
+	return segments
 }
 
 func (r *PostgresTripRepository) Create(ctx context.Context, userID string, req models.CreateTripRequest) (models.Trip, error) {

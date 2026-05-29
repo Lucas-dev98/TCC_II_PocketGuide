@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useCallback, useEffect, useMemo, useState } from 'react'
 import clsx from 'clsx'
 
 type ToastType = 'success' | 'error' | 'warning' | 'info'
@@ -145,21 +145,21 @@ export const ToastContainer: React.FC<ToastContainerProps> = ({ toasts, onRemove
 export const useToast = () => {
   const [toasts, setToasts] = React.useState<Array<ToastProps & { id: string }>>([])
 
-  const addToast = (message: string, type: ToastType = 'info', duration = 4000) => {
+  const addToast = useCallback((message: string, type: ToastType = 'info', duration = 4000) => {
     const id = Math.random().toString(36).substr(2, 9)
     setToasts((prev) => [...prev, { id, message, type, duration, isOpen: true }])
-  }
+  }, [])
 
-  const removeToast = (id: string) => {
+  const removeToast = useCallback((id: string) => {
     setToasts((prev) => prev.filter((t) => t.id !== id))
-  }
+  }, [])
 
-  const showSuccess = (message: string, duration?: number) => addToast(message, 'success', duration)
-  const showError = (message: string, duration?: number) => addToast(message, 'error', duration)
-  const showWarning = (message: string, duration?: number) => addToast(message, 'warning', duration)
-  const showInfo = (message: string, duration?: number) => addToast(message, 'info', duration)
+  const showSuccess = useCallback((message: string, duration?: number) => addToast(message, 'success', duration), [addToast])
+  const showError = useCallback((message: string, duration?: number) => addToast(message, 'error', duration), [addToast])
+  const showWarning = useCallback((message: string, duration?: number) => addToast(message, 'warning', duration), [addToast])
+  const showInfo = useCallback((message: string, duration?: number) => addToast(message, 'info', duration), [addToast])
 
-  return {
+  return useMemo(() => ({
     toasts,
     addToast,
     removeToast,
@@ -167,5 +167,5 @@ export const useToast = () => {
     showError,
     showWarning,
     showInfo,
-  }
+  }), [toasts, addToast, removeToast, showSuccess, showError, showWarning, showInfo])
 }

@@ -13,28 +13,48 @@ type landmarkPoint struct {
 }
 
 var destinationBaseCoordinates = map[string]models.Location{
-	"lisboa":         {Lat: 38.7223, Lng: -9.1393},
-	"porto":          {Lat: 41.1579, Lng: -8.6291},
-	"barcelona":      {Lat: 41.3851, Lng: 2.1734},
-	"madrid":         {Lat: 40.4168, Lng: -3.7038},
-	"sevilha":        {Lat: 37.3891, Lng: -5.9845},
-	"sevilla":        {Lat: 37.3891, Lng: -5.9845},
-	"roma":           {Lat: 41.9028, Lng: 12.4964},
-	"rome":           {Lat: 41.9028, Lng: 12.4964},
-	"paris":          {Lat: 48.8566, Lng: 2.3522},
-	"rio de janeiro": {Lat: -22.9068, Lng: -43.1729},
-	"rio":            {Lat: -22.9068, Lng: -43.1729},
-	"niteroi":        {Lat: -22.8832, Lng: -43.1034},
-	"niterói":        {Lat: -22.8832, Lng: -43.1034},
-	"são paulo":      {Lat: -23.5505, Lng: -46.6333},
-	"sao paulo":      {Lat: -23.5505, Lng: -46.6333},
-	"buenos aires":   {Lat: -34.6037, Lng: -58.3816},
-	"bangkok":        {Lat: 13.7563, Lng: 100.5018},
-	"tokyo":          {Lat: 35.6762, Lng: 139.6503},
-	"tóquio":         {Lat: 35.6762, Lng: 139.6503},
+	"salvador":        {Lat: -12.9777, Lng: -38.5016},
+	"salvador, bahia": {Lat: -12.9777, Lng: -38.5016},
+	"lisboa":          {Lat: 38.7223, Lng: -9.1393},
+	"porto":           {Lat: 41.1579, Lng: -8.6291},
+	"barcelona":       {Lat: 41.3851, Lng: 2.1734},
+	"madrid":          {Lat: 40.4168, Lng: -3.7038},
+	"sevilha":         {Lat: 37.3891, Lng: -5.9845},
+	"sevilla":         {Lat: 37.3891, Lng: -5.9845},
+	"roma":            {Lat: 41.9028, Lng: 12.4964},
+	"rome":            {Lat: 41.9028, Lng: 12.4964},
+	"paris":           {Lat: 48.8566, Lng: 2.3522},
+	"rio de janeiro":  {Lat: -22.9068, Lng: -43.1729},
+	"rio":             {Lat: -22.9068, Lng: -43.1729},
+	"niteroi":         {Lat: -22.8832, Lng: -43.1034},
+	"niterói":         {Lat: -22.8832, Lng: -43.1034},
+	"são paulo":       {Lat: -23.5505, Lng: -46.6333},
+	"sao paulo":       {Lat: -23.5505, Lng: -46.6333},
+	"buenos aires":    {Lat: -34.6037, Lng: -58.3816},
+	"bangkok":         {Lat: 13.7563, Lng: 100.5018},
+	"tokyo":           {Lat: 35.6762, Lng: 139.6503},
+	"tóquio":          {Lat: 35.6762, Lng: 139.6503},
 }
 
 var destinationLandmarkCoordinates = map[string][]landmarkPoint{
+	"salvador": {
+		{Name: "Pelourinho", Location: models.Location{Lat: -12.9718, Lng: -38.5108}},
+		{Name: "Farol da Barra", Location: models.Location{Lat: -13.0107, Lng: -38.5328}},
+		{Name: "Elevador Lacerda", Location: models.Location{Lat: -12.9714, Lng: -38.5124}},
+		{Name: "Mercado Modelo", Location: models.Location{Lat: -12.9706, Lng: -38.5125}},
+		{Name: "Igreja do Bonfim", Location: models.Location{Lat: -12.9235, Lng: -38.5108}},
+		{Name: "Rio Vermelho", Location: models.Location{Lat: -13.0095, Lng: -38.4880}},
+		{Name: "Praia do Porto da Barra", Location: models.Location{Lat: -13.0098, Lng: -38.5310}},
+	},
+	"salvador, bahia": {
+		{Name: "Pelourinho", Location: models.Location{Lat: -12.9718, Lng: -38.5108}},
+		{Name: "Farol da Barra", Location: models.Location{Lat: -13.0107, Lng: -38.5328}},
+		{Name: "Elevador Lacerda", Location: models.Location{Lat: -12.9714, Lng: -38.5124}},
+		{Name: "Mercado Modelo", Location: models.Location{Lat: -12.9706, Lng: -38.5125}},
+		{Name: "Igreja do Bonfim", Location: models.Location{Lat: -12.9235, Lng: -38.5108}},
+		{Name: "Rio Vermelho", Location: models.Location{Lat: -13.0095, Lng: -38.4880}},
+		{Name: "Praia do Porto da Barra", Location: models.Location{Lat: -13.0098, Lng: -38.5310}},
+	},
 	"lisboa": {
 		{Name: "Praca do Comercio", Location: models.Location{Lat: 38.7139, Lng: -9.1394}},
 		{Name: "Alfama", Location: models.Location{Lat: 38.7071, Lng: -9.1355}},
@@ -153,8 +173,18 @@ var destinationLandmarkCoordinates = map[string][]landmarkPoint{
 
 func baseCoordinatesForDestination(destination string) (models.Location, bool) {
 	normalized := strings.ToLower(strings.TrimSpace(destination))
-	location, ok := destinationBaseCoordinates[normalized]
-	return location, ok
+
+	if location, ok := destinationBaseCoordinates[normalized]; ok {
+		return location, true
+	}
+
+	for key, location := range destinationBaseCoordinates {
+		if strings.Contains(normalized, key) {
+			return location, true
+		}
+	}
+
+	return models.Location{}, false
 }
 
 func landmarkCoordinatesForDestination(destination string) ([]landmarkPoint, bool) {
@@ -241,7 +271,7 @@ func enrichItineraryLocations(destination string, items []models.ItineraryItem) 
 		if hasLandmarkPoints {
 			selectedPoint := landmarkPoints[index%len(landmarkPoints)]
 			location = selectedPoint.Location
-			if shouldReplaceItineraryName(items[index].Name) {
+			if shouldReplaceItineraryName(items[index].Name) || looksLikeWrongDestinationName(destination, items[index].Name) {
 				items[index].Name = selectedPoint.Name
 			}
 		} else {
@@ -251,6 +281,39 @@ func enrichItineraryLocations(destination string, items []models.ItineraryItem) 
 	}
 
 	return items
+}
+
+func looksLikeWrongDestinationName(destination string, itemName string) bool {
+	destinationNormalized := strings.ToLower(strings.TrimSpace(destination))
+	name := strings.ToLower(strings.TrimSpace(itemName))
+
+	if destinationNormalized == "" || name == "" {
+		return false
+	}
+
+	// Disambiguation guardrail: Salvador city trips in Brazil should not return places from El Salvador.
+	if strings.Contains(destinationNormalized, "salvador") {
+		forbiddenTerms := []string{
+			"el salvador",
+			"cuscatlán",
+			"cuscatlan",
+			"cojutepeque",
+			"ilobasco",
+			"tejutepeque",
+			"tenancingo",
+			"san rafael cedros",
+			"candelaria, el salvador",
+			"jutiapa, el salvador",
+		}
+
+		for _, term := range forbiddenTerms {
+			if strings.Contains(name, term) {
+				return true
+			}
+		}
+	}
+
+	return false
 }
 
 func fallbackLocationForDestination(destination string, day int, slot int) *models.Location {

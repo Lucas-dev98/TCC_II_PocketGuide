@@ -25,6 +25,8 @@ services:
     restart: unless-stopped
     env_file:
       - ./pocket-guide-backend/.env
+    environment:
+      DATABASE_URL: postgres://postgres:postgres@postgres:5432/pocketguide?sslmode=disable
     depends_on:
       postgres:
         condition: service_healthy

@@ -5,7 +5,7 @@ Backend REST modular para suportar a aplicacao web com foco em performance, segu
 ## O que esta implementado
 
 - Arquitetura modular em Go (handlers, services, repository, middleware)
-- Autenticacao Firebase no backend com validacao de ID token
+- Autenticacao local com JWT (cadastro/login) e persistencia de usuarios no Postgres
 - Endpoints base de viagens
 - Geracao de itinerario no servidor
 - Agregacao de contexto externo (estrutura pronta para provedores reais)
@@ -20,7 +20,7 @@ Backend REST modular para suportar a aplicacao web com foco em performance, segu
 - cmd/api/main.go: bootstrap da aplicacao
 - internal/config: leitura de ambiente
 - internal/http: handlers, middlewares, router
-- internal/services: auth firebase, cache redis, queue redis, itinerary, worker
+- internal/services: auth JWT local, cache redis, queue redis, itinerary, worker
 - internal/repository: persistencia (in-memory inicial)
 - internal/models: modelos de dominio e payloads
 - pkg/response: helper para respostas JSON
@@ -32,9 +32,9 @@ Copie .env.example para seu ambiente e ajuste os valores.
 Principais:
 
 - PORT: porta HTTP
-- AUTH_BYPASS: true para desenvolvimento sem token real
-- FIREBASE_PROJECT_ID: id do projeto Firebase
-- GOOGLE_APPLICATION_CREDENTIALS: caminho do JSON de credenciais (opcional se ADC configurado)
+- AUTH_BYPASS: true para desenvolvimento sem token real (default recomendado: false)
+- JWT_SECRET: segredo para assinar tokens JWT
+- JWT_EXPIRES_IN_HOURS: validade do token em horas
 - REDIS_ENABLED: ativa cache e fila
 - REDIS_ADDR, REDIS_PASSWORD, REDIS_DB
 - USE_POSTGRES: ativa repositorio Postgres
@@ -48,8 +48,16 @@ Principais:
 Publico:
 
 - GET /health
+- POST /api/v1/auth/register
+- POST /api/v1/auth/login
 
-Privados (Bearer token Firebase ou AUTH_BYPASS=true):
+Privados (Bearer token JWT ou AUTH_BYPASS=true):
+
+- GET /api/v1/auth/me
+- GET /api/v1/users/me
+- PUT /api/v1/users/me
+- PATCH /api/v1/users/me
+- DELETE /api/v1/users/me
 
 - GET /api/v1/trips
 - POST /api/v1/trips

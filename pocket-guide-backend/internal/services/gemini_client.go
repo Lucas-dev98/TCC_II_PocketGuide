@@ -146,6 +146,7 @@ func buildGeminiPrompt(req models.ItineraryRequest, agg models.AggregatedContext
 
 	selectedInterests := "not informed"
 	interestHints := ""
+	destinationGuardrails := buildDestinationGuardrails(req)
 	if len(req.Tags) > 0 {
 		selectedInterests = strings.Join(req.Tags, ", ")
 		interestHints = buildInterestHints(req.Tags)
@@ -155,15 +156,31 @@ func buildGeminiPrompt(req models.ItineraryRequest, agg models.AggregatedContext
 Rules:
 - Return ONLY valid JSON.
 - Format: {"items":[...]}
-- Each item fields: day(int), time(HH:mm), name(string), duration(int minutes), reason(string), tip(string), category(string)
+- Each item fields: day(int), time(HH:mm), name(string), duration(int minutes), reason(string), tip(string), category(string), location({"lat":number,"lng":number})
+- Do not return JSON as a quoted string. Return an array of objects in items.
 - Create %d days for destination %q.
 - Budget: %q; Group: %q; Language: %q; Season: %q; Scope: %q.
 - Explicit daily budget range: %q; Travelers: %q.
 - Selected interests: %q.
 - Interest activity hints: %q.
+- Destination disambiguation rules: %q.
 - Context hints: weather=%q, currency=%q, safety=%q.
 - Ensure variety across days and categories.
-`, req.Days, req.Destination, req.Budget, req.GroupType, req.Language, req.Season, req.TripScope, budgetRange, travelers, selectedInterests, interestHints, agg.WeatherHint, agg.Currency, agg.SafetyHint)
+`, req.Days, req.Destination, req.Budget, req.GroupType, req.Language, req.Season, req.TripScope, budgetRange, travelers, selectedInterests, interestHints, destinationGuardrails, agg.WeatherHint, agg.Currency, agg.SafetyHint)
+}
+
+func buildDestinationGuardrails(req models.ItineraryRequest) string {
+	destination := strings.ToLower(strings.TrimSpace(req.Destination))
+	language := strings.ToLower(strings.TrimSpace(req.Language))
+	scope := strings.ToLower(strings.TrimSpace(req.TripScope))
+
+	if destination == "salvador" || destination == "salvador, bahia" {
+		if scope == "nacional" || strings.HasPrefix(language, "pt") {
+			return "Interpret destination as Salvador, Bahia, Brazil. Do NOT include places from El Salvador (country) and do NOT switch to Portugal."
+		}
+	}
+
+	return "Use attractions only from the specified destination city/region; avoid homonymous cities in other countries unless explicitly requested."
 }
 
 func buildInterestHints(tags []string) string {

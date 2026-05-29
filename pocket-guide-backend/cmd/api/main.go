@@ -22,7 +22,6 @@ func main() {
 
 	ctx := context.Background()
 
-	authService := services.NewFirebaseAuthService(ctx, cfg, logger)
 	cacheService := services.NewCacheService(ctx, cfg, logger)
 	jobStatusStore := services.NewCachedJobStatusStore(cacheService)
 	queueService := services.NewQueueService(ctx, cfg, logger)
@@ -31,6 +30,7 @@ func main() {
 	itineraryService := services.NewItineraryService(cacheService, queueService, jobStatusStore, aggregator, geminiClient, logger)
 
 	var tripRepo repository.TripRepository
+	var userRepo repository.UserRepository
 	if !cfg.UsePostgres || cfg.DatabaseURL == "" {
 		logger.Error("postgres is required; set USE_POSTGRES=true and DATABASE_URL")
 		os.Exit(1)
@@ -42,6 +42,15 @@ func main() {
 		os.Exit(1)
 	}
 	tripRepo = pgRepo
+
+	pgUserRepo, err := repository.NewPostgresUserRepository(cfg.DatabaseURL)
+	if err != nil {
+		logger.Error("user repository init failed; refusing to start", "error", err)
+		os.Exit(1)
+	}
+	userRepo = pgUserRepo
+
+	authService := services.NewLocalAuthService(cfg, userRepo, logger)
 	logger.Info("trip repository using postgres")
 
 	if cfg.EnableItineraryWorker {
@@ -50,7 +59,7 @@ func main() {
 		logger.Info("itinerary worker enabled")
 	}
 
-	h := handlers.NewHandlerSet(cfg, logger, authService, tripRepo, itineraryService, jobStatusStore, cacheService)
+	h := handlers.NewHandlerSet(cfg, logger, authService, userRepo, tripRepo, itineraryService, jobStatusStore, cacheService)
 	router := server.NewRouter(cfg, logger, h)
 
 	srv := &http.Server{

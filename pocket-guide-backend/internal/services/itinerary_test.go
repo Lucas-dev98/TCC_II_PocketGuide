@@ -93,3 +93,28 @@ func TestFallbackItineraryPrefersExternalPOIs(t *testing.T) {
 		t.Fatalf("expected external poi 'Museu do Amanhã' to be used")
 	}
 }
+
+func TestLooksLikeWrongDestinationNameForSalvador(t *testing.T) {
+	if !looksLikeWrongDestinationName("Salvador", "Candelaria, El Salvador") {
+		t.Fatalf("expected El Salvador place to be flagged for Salvador destination")
+	}
+
+	if looksLikeWrongDestinationName("Salvador", "Pelourinho") {
+		t.Fatalf("expected Salvador-Bahia attraction to be accepted")
+	}
+}
+
+func TestBaseCoordinatesForSalvador(t *testing.T) {
+	location, ok := baseCoordinatesForDestination("Salvador")
+	if !ok {
+		t.Fatalf("expected base coordinates for Salvador")
+	}
+
+	if location.Lat > -12.0 || location.Lat < -14.0 {
+		t.Fatalf("unexpected latitude for Salvador base: %f", location.Lat)
+	}
+
+	if location.Lng > -37.0 || location.Lng < -40.0 {
+		t.Fatalf("unexpected longitude for Salvador base: %f", location.Lng)
+	}
+}

@@ -7,15 +7,18 @@ import { Card } from '../components/Card'
 import useI18n from '../hooks/useI18n'
 import { ArrowRight, Compass, Globe, MapPin, Sparkles, Zap } from 'lucide-react'
 
-export default function LoginScreen() {
+export default function RegisterScreen() {
   const navigate = useNavigate()
-  const { isAuthenticated, signIn, isLoading, error } = useAuth()
-  const { showError } = useToast()
+  const { isAuthenticated, signUp, isLoading, error } = useAuth()
+  const { showError, showSuccess } = useToast()
   const { t } = useI18n()
 
   const [isAnimating, setIsAnimating] = useState(false)
+  const [name, setName] = useState('')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [confirmPassword, setConfirmPassword] = useState('')
+  const [isConfirmStep, setIsConfirmStep] = useState(false)
 
   useEffect(() => {
     if (isAuthenticated) {
@@ -36,13 +39,29 @@ export default function LoginScreen() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
 
-    if (!email.trim() || !password.trim()) {
-      showError('Email e senha sao obrigatorios.')
+    if (!name.trim() || !email.trim() || !password.trim() || !confirmPassword.trim()) {
+      showError('Nome, email e senha sao obrigatorios.')
       return
     }
 
+    if (password.length < 6) {
+      showError('A senha deve ter no minimo 6 caracteres.')
+      return
+    }
+
+    if (password !== confirmPassword) {
+      showError('A confirmacao de senha nao confere.')
+      return
+    }
+
+    setIsConfirmStep(true)
+  }
+
+  const handleConfirmCreate = async () => {
     try {
-      await signIn(email.trim(), password)
+      await signUp(name.trim(), email.trim(), password)
+      showSuccess('Conta criada com sucesso!')
+      navigate('/home', { replace: true })
     } catch {
       // Errors are handled in the auth context.
     }
@@ -68,18 +87,18 @@ export default function LoginScreen() {
             <Sparkles className="w-6 h-6 text-primary animate-pulse" />
           </h1>
 
-          <p className="text-body text-slate-600 dark:text-slate-300 mb-2">{t('auth.loginDescription')}</p>
-          <p className="text-small text-slate-500 dark:text-slate-300">{t('auth.loginTitle')}</p>
+          <p className="text-body text-slate-600 dark:text-slate-300 mb-2">Crie sua conta para comecar.</p>
+          <p className="text-small text-slate-500 dark:text-slate-300">Planeje viagens com IA em poucos cliques.</p>
         </div>
 
         <Card elevation="lg" className="mb-6 p-8 backdrop-blur-sm bg-white/80 dark:bg-slate-800/80 border border-white/20 dark:border-slate-700/30 hover:border-primary/20 dark:hover:border-primary/30 transition-all duration-300">
           <div className="mb-8">
-            <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-3">Entrar</h2>
-            <p className="text-body text-slate-600 dark:text-slate-300 leading-relaxed">Acesse sua conta para continuar seu planejamento de viagem.</p>
+            <h2 className="text-h3 font-semibold text-slate-900 dark:text-white mb-3">Cadastro</h2>
+            <p className="text-body text-slate-600 dark:text-slate-300 leading-relaxed">Defina seus dados e tenha acesso ao seu painel de viagens.</p>
           </div>
 
           <div className="space-y-4 mb-8">
-            {[{ icon: Zap, text: 'Roteiros personalizados com IA.' }, { icon: MapPin, text: 'Mapa com pontos e rotas inteligentes.' }, { icon: Globe, text: 'Planejamento nacional e internacional.' }].map(({ icon: Icon, text }, idx) => (
+            {[{ icon: Zap, text: 'Cadastro rapido com email e senha.' }, { icon: MapPin, text: 'Historico de viagens sincronizado.' }, { icon: Globe, text: 'Sugestoes de destinos inteligentes.' }].map(({ icon: Icon, text }, idx) => (
               <div key={idx} className="flex items-start gap-3 animate-slide-in-left" style={{ animationDelay: `${idx * 90}ms` }}>
                 <div className="flex-shrink-0 w-6 h-6 rounded-lg bg-success/20 dark:bg-success/30 flex items-center justify-center mt-0.5 flex-none">
                   <Icon className="w-4 h-4 text-success" />
@@ -91,11 +110,24 @@ export default function LoginScreen() {
 
           <form onSubmit={handleSubmit} className="space-y-4">
             <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Nome</label>
+              <input
+                type="text"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={isConfirmStep}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                placeholder="Seu nome"
+              />
+            </div>
+
+            <div>
               <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Email</label>
               <input
                 type="email"
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
+                disabled={isConfirmStep}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                 placeholder="voce@email.com"
               />
@@ -107,38 +139,70 @@ export default function LoginScreen() {
                 type="password"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
+                disabled={isConfirmStep}
                 className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
                 placeholder="Minimo 6 caracteres"
               />
-              <div className="mt-2 text-right">
-                <Link to="/forgot-password" className="text-xs font-medium text-primary hover:underline">
-                  Esqueci minha senha
-                </Link>
-              </div>
             </div>
 
-            <Button type="submit" disabled={isLoading} isLoading={isLoading} className="w-full group hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
-              <span className="flex items-center justify-center gap-1">
-                {isLoading ? 'Entrando...' : 'Entrar'}
-                {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
-              </span>
-            </Button>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 dark:text-slate-300 mb-1">Confirmar senha</label>
+              <input
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                disabled={isConfirmStep}
+                className="w-full px-3 py-2 rounded-lg border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 text-slate-900 dark:text-white"
+                placeholder="Repita sua senha"
+              />
+            </div>
+
+            {isConfirmStep && (
+              <div className="rounded-lg border border-primary/30 bg-primary/5 p-3 text-sm text-primary dark:border-primary/40 dark:bg-primary/10 dark:text-primary/90">
+                <p className="font-medium">Confirme os dados para finalizar:</p>
+                <p>Nome: {name.trim()}</p>
+                <p>Email: {email.trim()}</p>
+              </div>
+            )}
+
+            {!isConfirmStep && (
+              <Button type="submit" disabled={isLoading} isLoading={isLoading} className="w-full group hover:shadow-lg transition-all duration-300 transform hover:scale-[1.02]">
+                <span className="flex items-center justify-center gap-1">
+                  {isLoading ? 'Validando...' : 'Continuar'}
+                  {!isLoading && <ArrowRight className="w-4 h-4 transition-transform duration-300 group-hover:translate-x-1" />}
+                </span>
+              </Button>
+            )}
+
+            {isConfirmStep && (
+              <div className="grid grid-cols-2 gap-2">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setIsConfirmStep(false)}
+                  disabled={isLoading}
+                >
+                  Editar
+                </Button>
+                <Button
+                  type="button"
+                  onClick={handleConfirmCreate}
+                  disabled={isLoading}
+                  isLoading={isLoading}
+                >
+                  {isLoading ? 'Criando...' : 'Confirmar cadastro'}
+                </Button>
+              </div>
+            )}
           </form>
 
           <div className="mt-6 p-3 bg-primary/5 dark:bg-primary/10 border border-primary/20 rounded-lg text-center text-caption text-primary dark:text-primary/80">
-            Conta nova? {' '}
-            <Link to="/register" className="font-semibold hover:underline">
-              Criar cadastro
+            Ja possui conta? {' '}
+            <Link to="/login" className="font-semibold hover:underline">
+              Entrar
             </Link>
           </div>
         </Card>
-
-        <p className="text-center text-caption text-slate-500 dark:text-slate-300">
-          {t('auth.disclaimer')}{' '}
-          <a href="#" className="text-primary hover:underline font-medium transition-colors duration-200">
-            {t('auth.termsOfService')}
-          </a>
-        </p>
       </div>
 
       <style>{`

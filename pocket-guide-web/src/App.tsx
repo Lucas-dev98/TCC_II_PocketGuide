@@ -8,13 +8,12 @@ import { OfflineIndicator } from './components/OfflineIndicator'
 import { WebVitalsDebugger } from './components/WebVitalsDebugger'
 import { ErrorBoundary } from './components/ErrorBoundary'
 import { cleanupInvalidStorage, logStorageState } from './utils/storageCleanup'
-// Import diagnostics for browser console access
-import './utils/firestoreDiagnostics'
 import './utils/debugPersistence'
-import './utils/migrationCleanup'
 
 // Lazy loaded screens for code-splitting
 const LoginScreen = lazy(() => import('./screens/LoginScreen'))
+const RegisterScreen = lazy(() => import('./screens/RegisterScreen'))
+const ForgotPasswordScreen = lazy(() => import('./screens/ForgotPasswordScreen'))
 const HomeScreen = lazy(() => import('./screens/HomeScreen'))
 const CreateTripScreen = lazy(() => import('./screens/CreateTripScreen'))
 const TripDetailScreen = lazy(() => import('./screens/TripDetailScreen'))
@@ -70,6 +69,8 @@ function App() {
             <Routes>
             {/* Public routes */}
             <Route path="/login" element={<LoginScreen />} />
+            <Route path="/register" element={<RegisterScreen />} />
+            <Route path="/forgot-password" element={<ForgotPasswordScreen />} />
 
             {/* Protected routes */}
             <Route

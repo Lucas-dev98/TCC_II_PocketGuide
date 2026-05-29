@@ -1,13 +1,16 @@
 import React, { createContext, useContext, useEffect, useState } from 'react'
-import { auth, handleAuthError, isFirebaseConfigured, signInWithGoogle, signOut as firebaseSignOut } from '../services/firebase'
-import { getRedirectResult, onAuthStateChanged, User as FirebaseUser } from 'firebase/auth'
+import { AuthUser, deleteCurrentUser, getCurrentUser, loginUser, logoutUser, registerUser, updateCurrentUser } from '../services/authApi'
 import * as tokenStorage from '../services/tokenStorage'
 import { debug } from '../utils/debug'
 
 interface AuthContextType {
-  user: FirebaseUser | null
+  user: AuthUser | null
   isLoading: boolean
   error: string | null
+  signIn: (email: string, password: string) => Promise<void>
+  signUp: (name: string, email: string, password: string) => Promise<void>
+  updateProfile: (payload: { name?: string; email?: string; password?: string }) => Promise<void>
+  deleteAccount: () => Promise<void>
   signInWithGoogle: () => Promise<void>
   signOut: () => Promise<void>
   isAuthenticated: boolean
@@ -19,8 +22,20 @@ const fallbackAuthContext: AuthContextType = {
   user: null,
   isLoading: false,
   error: null,
-  signInWithGoogle: async () => {
+  signIn: async () => {
     throw new Error('AuthProvider não está disponível no momento')
+  },
+  signUp: async () => {
+    throw new Error('AuthProvider não está disponível no momento')
+  },
+  updateProfile: async () => {
+    throw new Error('AuthProvider não está disponível no momento')
+  },
+  deleteAccount: async () => {
+    throw new Error('AuthProvider não está disponível no momento')
+  },
+  signInWithGoogle: async () => {
+    throw new Error('Login com Google não está disponível nesta versão')
   },
   signOut: async () => {},
   isAuthenticated: false,
@@ -46,141 +61,111 @@ interface AuthProviderProps {
 }
 
 export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
-  const [user, setUser] = useState<FirebaseUser | null>(null)
+  const [user, setUser] = useState<AuthUser | null>(null)
   const [isLoading, setIsLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    if (!isFirebaseConfigured) {
-      tokenStorage.clearToken()
-      setUser(null)
-      setIsLoading(false)
-      return undefined
-    }
-
-    // Tenta recuperar sessão persistida
     const recoverSession = async () => {
       try {
-        const storedUser = tokenStorage.getStoredUser()
-        
-        if (storedUser && tokenStorage.hasValidSession()) {
-          // Se tem sessão válida no localStorage, tenta revalidar com Firebase
-          debug.log('Sessão encontrada no localStorage, revalidando...')
+        if (!tokenStorage.hasValidSession()) {
+          setUser(null)
+          setIsLoading(false)
+          return
         }
+
+        const current = await getCurrentUser()
+        setUser(current)
+        tokenStorage.saveUser({
+          uid: current.uid,
+          email: current.email,
+          displayName: current.displayName,
+          photoURL: null,
+        })
       } catch (err) {
         debug.error('Erro ao recuperar sessão:', err)
-      }
-    }
-    
-    recoverSession()
-
-    let authStateResolved = false
-    let redirectResolved = false
-
-    const syncLoadingState = () => {
-      if (authStateResolved && redirectResolved) {
+        tokenStorage.clearToken()
+        setUser(null)
+      } finally {
         setIsLoading(false)
       }
     }
 
-    // Monitora mudanças de autenticação do Firebase
-    const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-      setUser(currentUser)
-      
-      // Se usuário fez login, salva no localStorage
-      if (currentUser) {
-        const idToken = currentUser.getIdToken()
-        idToken.then((token) => {
-          tokenStorage.saveToken(token)
-          tokenStorage.saveUser({
-            uid: currentUser.uid,
-            email: currentUser.email,
-            displayName: currentUser.displayName,
-            photoURL: currentUser.photoURL,
-          })
-          debug.log('Token salvo no localStorage')
-        })
-      } else {
-        // Evita limpar sessão cedo demais durante o retorno do redirect.
-        if (redirectResolved) {
-          tokenStorage.clearToken()
-        }
-      }
+    recoverSession()
 
-      authStateResolved = true
-      syncLoadingState()
-    })
-
-    getRedirectResult(auth)
-      .then((result) => {
-        if (result?.user) {
-          setUser(result.user)
-          result.user.getIdToken().then((token) => {
-            tokenStorage.saveToken(token)
-            tokenStorage.saveUser({
-              uid: result.user.uid,
-              email: result.user.email,
-              displayName: result.user.displayName,
-              photoURL: result.user.photoURL,
-            })
-          })
-        }
-      })
-      .catch((err) => {
-        const message = handleAuthError(err)
-        setError(message)
-      })
-      .finally(() => {
-        redirectResolved = true
-
-        if (!authStateResolved && auth.currentUser) {
-          setUser(auth.currentUser)
-          authStateResolved = true
-        }
-
-        syncLoadingState()
-      })
-
-    return unsubscribe
+    return undefined
   }, [])
 
-  const handleSignInWithGoogle = async () => {
+  const handleSignIn = async (email: string, password: string) => {
     try {
       setError(null)
       setIsLoading(true)
-      const signedInUser = await signInWithGoogle()
-
-      // Quando popup retorna usuário imediatamente, persistimos já aqui
-      // para não depender apenas do callback assíncrono do observer.
-      if (signedInUser) {
-        setUser(signedInUser)
-        const token = await signedInUser.getIdToken()
-        tokenStorage.saveToken(token)
-        tokenStorage.saveUser({
-          uid: signedInUser.uid,
-          email: signedInUser.email,
-          displayName: signedInUser.displayName,
-          photoURL: signedInUser.photoURL,
-        })
-        setIsLoading(false)
-      }
-
-      // No fluxo por redirect, o estado final será concluído no useEffect.
+      const loggedIn = await loginUser({ email, password })
+      setUser(loggedIn)
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Falha ao fazer login'
       setError(message)
-      setIsLoading(false)
       debug.error('Erro no login:', err)
       throw err
+    } finally {
+      setIsLoading(false)
     }
+  }
+
+  const handleSignUp = async (name: string, email: string, password: string) => {
+    try {
+      setError(null)
+      setIsLoading(true)
+      const created = await registerUser({ name, email, password })
+      setUser(created)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Falha ao criar conta'
+      setError(message)
+      debug.error('Erro no cadastro:', err)
+      throw err
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleUpdateProfile = async (payload: { name?: string; email?: string; password?: string }) => {
+    try {
+      setError(null)
+      const updated = await updateCurrentUser(payload)
+      setUser(updated)
+      tokenStorage.saveUser({
+        uid: updated.uid,
+        email: updated.email,
+        displayName: updated.displayName,
+        photoURL: null,
+      })
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Falha ao atualizar perfil'
+      setError(message)
+      throw err
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      setError(null)
+      await deleteCurrentUser()
+      setUser(null)
+    } catch (err) {
+      const message = err instanceof Error ? err.message : 'Falha ao excluir conta'
+      setError(message)
+      throw err
+    }
+  }
+
+  const handleSignInWithGoogle = async () => {
+    throw new Error('Login com Google não está disponível nesta versão')
   }
 
   const handleSignOut = async () => {
     try {
       setError(null)
-      // Limpa token do localStorage antes de fazer logout no Firebase
-      tokenStorage.clearToken()
-      await firebaseSignOut()
+      logoutUser()
       setUser(null)
       debug.log('Logout realizado, sessão limpa')
     } catch (err) {
@@ -195,9 +180,13 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     user,
     isLoading,
     error,
+    signIn: handleSignIn,
+    signUp: handleSignUp,
+    updateProfile: handleUpdateProfile,
+    deleteAccount: handleDeleteAccount,
     signInWithGoogle: handleSignInWithGoogle,
     signOut: handleSignOut,
-    isAuthenticated: !!user || tokenStorage.hasValidSession(),
+    isAuthenticated: !!user && tokenStorage.hasValidSession(),
   }
 
   return (

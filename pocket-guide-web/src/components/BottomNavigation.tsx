@@ -25,7 +25,7 @@ export function BottomNavigation() {
   const { t } = useI18n()
 
   // Não mostrar nav em login/share
-  if (location.pathname === '/login' || location.pathname.startsWith('/share/')) {
+  if ((location.pathname === '/login' || location.pathname === '/register' || location.pathname === '/forgot-password') || location.pathname.startsWith('/share/')) {
     return null
   }
 

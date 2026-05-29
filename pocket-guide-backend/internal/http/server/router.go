@@ -47,13 +47,24 @@ func NewRouter(cfg config.Config, logger *slog.Logger, h *handlers.HandlerSet) h
 
 	r.Get("/health", h.Health)
 
-	authMw := appmiddleware.FirebaseAuth(cfg, h.AuthService)
+	authMw := appmiddleware.BearerAuth(cfg, h.AuthService)
 	rateLimiter := appmiddleware.NewRateLimiter(cfg.RateLimitPerMin)
 
 	r.Route("/api/v1", func(api chi.Router) {
 		api.Use(rateLimiter.Middleware)
+
+		api.Post("/auth/register", h.Register)
+		api.Post("/auth/login", h.Login)
+		api.Post("/auth/forgot-password", h.ForgotPassword)
+		api.Post("/auth/reset-password", h.ResetPassword)
+
 		api.Group(func(private chi.Router) {
 			private.Use(authMw)
+			private.Get("/auth/me", h.Me)
+			private.Get("/users/me", h.Me)
+			private.Put("/users/me", h.UpdateMe)
+			private.Patch("/users/me", h.UpdateMe)
+			private.Delete("/users/me", h.DeleteMe)
 			private.Get("/trips", h.ListTrips)
 			private.Post("/trips", h.CreateTrip)
 			private.Put("/trips/{tripId}", h.UpdateTrip)

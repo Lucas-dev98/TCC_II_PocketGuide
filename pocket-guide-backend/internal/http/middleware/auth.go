@@ -9,7 +9,7 @@ import (
 	"pocket-guide-backend/pkg/response"
 )
 
-func FirebaseAuth(cfg config.Config, verifier services.AuthVerifier) func(http.Handler) http.Handler {
+func BearerAuth(cfg config.Config, verifier services.AuthVerifier) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			if cfg.AuthBypass {
@@ -40,4 +40,9 @@ func FirebaseAuth(cfg config.Config, verifier services.AuthVerifier) func(http.H
 			next.ServeHTTP(w, r.WithContext(ctx))
 		})
 	}
+}
+
+// Backward-compatible alias.
+func FirebaseAuth(cfg config.Config, verifier services.AuthVerifier) func(http.Handler) http.Handler {
+	return BearerAuth(cfg, verifier)
 }
