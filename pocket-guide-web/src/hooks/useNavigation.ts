@@ -20,7 +20,7 @@ export interface UseNavigationReturn {
   routeError: string | null;
   currentOrigin: Attraction | null;
   currentDestination: Attraction | null;
-  routingProfile: string;
+  routingProfile: 'driving' | 'walking' | 'cycling' | 'driving-traffic';
 }
 
 /**
@@ -39,6 +39,7 @@ export const useNavigation = (): UseNavigationReturn => {
     setLoadingRoute,
     setRouteError,
     setRouteSummaryOpen,
+    setRoutingProfile,
     clearRoute: clearRouteStore,
   } = useRouteStore();
 
@@ -49,9 +50,11 @@ export const useNavigation = (): UseNavigationReturn => {
     async (
       origin: Attraction,
       destination: Attraction,
-      profile: 'driving' | 'walking' | 'cycling' | 'driving-traffic' = 'driving'
+      profile?: 'driving' | 'walking' | 'cycling' | 'driving-traffic'
     ) => {
       try {
+        const selectedProfile = profile ?? routingProfile;
+
         // Log inicial com dados brutos
         console.log('🧭 useNavigation.calculateRoute START:', {
           origin: {
@@ -64,7 +67,7 @@ export const useNavigation = (): UseNavigationReturn => {
             location: destination.location,
             raw: JSON.stringify(destination.location),
           },
-          profile,
+          profile: selectedProfile,
         });
 
         // Validar coordenadas com logs detalhados
@@ -114,11 +117,12 @@ export const useNavigation = (): UseNavigationReturn => {
         }
 
         setOriginAndDestination(origin, destination);
+        setRoutingProfile(selectedProfile);
         setLoadingRoute(true);
         setRouteError(null);
 
         // Chamar serviço de direções
-        const quickProfile = profile === 'driving-traffic' ? 'driving' : profile;
+        const quickProfile = selectedProfile === 'driving-traffic' ? 'driving' : selectedProfile;
         
         console.log('🧭 Calling directionsService.getQuickRoute:', {
           origin: { lat: origin.location.lat, lng: origin.location.lng },
@@ -165,6 +169,8 @@ export const useNavigation = (): UseNavigationReturn => {
       setRouteError,
       setCurrentRoute,
       setRouteSummaryOpen,
+      setRoutingProfile,
+      routingProfile,
     ]
   );
 

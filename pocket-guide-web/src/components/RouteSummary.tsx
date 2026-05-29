@@ -1,14 +1,18 @@
 import React from 'react';
-import { MapPin, Clock, Navigation, X } from 'lucide-react';
+import { MapPin, Clock, Navigation, X, Car, Footprints, Bike } from 'lucide-react';
 import { useI18n } from '../hooks/useI18n';
 import { Card } from './Card';
 import { DirectionRoute } from '../services/directionsService';
+
+type RouteProfile = 'driving' | 'walking' | 'cycling';
 
 interface RouteSummaryProps {
   route: DirectionRoute | null;
   origin?: string;
   destination?: string;
   isLoading?: boolean;
+  selectedProfile?: RouteProfile;
+  onProfileChange?: (profile: RouteProfile) => void;
   onClose: () => void;
 }
 
@@ -21,6 +25,8 @@ export const RouteSummary: React.FC<RouteSummaryProps> = ({
   origin,
   destination,
   isLoading = false,
+  selectedProfile = 'driving',
+  onProfileChange,
   onClose,
 }) => {
   const { t } = useI18n();
@@ -69,6 +75,42 @@ export const RouteSummary: React.FC<RouteSummaryProps> = ({
         </div>
       ) : route ? (
         <div className="space-y-4">
+          <div className="pt-1">
+            <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">Modo de deslocamento</p>
+            <div className="grid grid-cols-3 gap-2">
+              <button
+                type="button"
+                onClick={() => onProfileChange?.('walking')}
+                className={`flex items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium border transition ${selectedProfile === 'walking'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'}`}
+              >
+                <Footprints className="w-3 h-3" />
+                A pe
+              </button>
+              <button
+                type="button"
+                onClick={() => onProfileChange?.('driving')}
+                className={`flex items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium border transition ${selectedProfile === 'driving'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'}`}
+              >
+                <Car className="w-3 h-3" />
+                Carro
+              </button>
+              <button
+                type="button"
+                onClick={() => onProfileChange?.('cycling')}
+                className={`flex items-center justify-center gap-1 rounded-lg px-2 py-2 text-xs font-medium border transition ${selectedProfile === 'cycling'
+                  ? 'bg-blue-600 text-white border-blue-600'
+                  : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-blue-400'}`}
+              >
+                <Bike className="w-3 h-3" />
+                Bike
+              </button>
+            </div>
+          </div>
+
           {/* Origem e Destino */}
           {(origin || destination) && (
             <div className="space-y-2 text-sm">

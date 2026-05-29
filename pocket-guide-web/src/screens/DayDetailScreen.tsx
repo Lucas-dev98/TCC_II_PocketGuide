@@ -230,7 +230,16 @@ export const DayDetailScreen: React.FC = () => {
     currentOrigin,
     currentDestination,
     isLoadingRoute,
+    routingProfile,
   } = useNavigation();
+
+  const handleRouteProfileChange = (profile: 'driving' | 'walking' | 'cycling') => {
+    if (!currentOrigin || !currentDestination) {
+      return;
+    }
+
+    calculateRoute(currentOrigin, currentDestination, profile);
+  };
 
   // Validar parâmetros
   if (!tripId || !dayNumber) {
@@ -724,7 +733,7 @@ export const DayDetailScreen: React.FC = () => {
                     });
                   }
 
-                  calculateRoute(originAttraction, destination, 'driving');
+                  calculateRoute(originAttraction, destination, routingProfile);
                 }}
               />
             </>
@@ -751,6 +760,8 @@ export const DayDetailScreen: React.FC = () => {
             origin={currentOrigin.name || currentOrigin.location?.address}
             destination={currentDestination.name || currentDestination.location?.address}
             isLoading={isLoadingRoute}
+            selectedProfile={routingProfile === 'driving-traffic' ? 'driving' : routingProfile}
+            onProfileChange={handleRouteProfileChange}
             onClose={clearRoute}
           />
         )}
