@@ -337,6 +337,7 @@ export const DayDetailScreen: React.FC = () => {
         debug.log("📋 trip?.itinerary:", trip?.itinerary);
 
         let filtered: AttractionDetail[] = [];
+        const usedPhotoIds = new Set<string>();
 
         // Se houver attractions diretas, usar essas
         if (attractionsData && attractionsData.length > 0) {
@@ -353,22 +354,22 @@ export const DayDetailScreen: React.FC = () => {
           // Carregar fotos de forma assíncrona
           const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
           
-          filtered = await Promise.all(
-            baseAttrs.map(async (a) => {
-              const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
-              return {
-                ...a,
-                location,
-                photos: await generatePhotosForAttraction(
-                  a,
-                  trip.destination,
-                  season,
-                  currentDay,
-                  language
-                ),
-              };
-            })
-          );
+          filtered = [];
+          for (const a of baseAttrs) {
+            const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
+            filtered.push({
+              ...a,
+              location,
+              photos: await generatePhotosForAttraction(
+                a,
+                trip.destination,
+                season,
+                currentDay,
+                language,
+                usedPhotoIds
+              ),
+            });
+          }
           
           debug.log("📸 Atrações filtradas da lista:", filtered);
           if (isMounted) {
@@ -429,22 +430,22 @@ export const DayDetailScreen: React.FC = () => {
         // Carregar fotos de forma assíncrona
         const season = trip.travelMonth ? getSeasonFromMonth(parseInt(trip.travelMonth)) : undefined;
         
-        filtered = await Promise.all(
-          baseAttrs.map(async (a) => {
-            const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
-            return {
-              ...a,
-              location,
-              photos: await generatePhotosForAttraction(
-                a,
-                trip.destination,
-                season,
-                currentDay,
-                language
-              ),
-            };
-          })
-        );
+        filtered = [];
+        for (const a of baseAttrs) {
+          const location = await resolveAttractionLocation(a, trip.destination, language, destinationCenter);
+          filtered.push({
+            ...a,
+            location,
+            photos: await generatePhotosForAttraction(
+              a,
+              trip.destination,
+              season,
+              currentDay,
+              language,
+              usedPhotoIds
+            ),
+          });
+        }
         
         debug.log("✅ Atrações finais extraídas e ordenadas:", filtered);
         if (isMounted) {
@@ -808,7 +809,8 @@ async function generatePhotosForAttraction(
   destination?: string,
   season?: string,
   tripDay?: number,
-  language?: string
+  language?: string,
+  usedPhotoIds?: Set<string>
 ): Promise<PhotoData[]> {
   debug.log(`📸 Gerando fotos para atração: "${attraction.name}" em ${destination || 'local desconhecido'}`);
 
@@ -835,7 +837,24 @@ async function generatePhotosForAttraction(
   // Gerar 2 URLs diferentes usando PhotoService
   for (let i = 0; i < 2; i++) {
     try {
-      const photoSource = await PhotoService.generatePhotoUrl(attraction.name, photoContext);
+      let photoSource = await PhotoService.generatePhotoUrl(attraction.name, {
+        ...photoContext,
+        cacheVariant: `slot-${i + 1}-attempt-1`,
+        excludePhotoIds: usedPhotoIds ? Array.from(usedPhotoIds) : undefined,
+      });
+
+      // Retry with a different variant if provider still returns a repeated photo id.
+      if (usedPhotoIds && photoSource.photoId && usedPhotoIds.has(photoSource.photoId)) {
+        photoSource = await PhotoService.generatePhotoUrl(attraction.name, {
+          ...photoContext,
+          cacheVariant: `slot-${i + 1}-attempt-2`,
+          excludePhotoIds: Array.from(usedPhotoIds),
+        });
+      }
+
+      if (usedPhotoIds && photoSource.photoId) {
+        usedPhotoIds.add(photoSource.photoId);
+      }
       
       photos.push({
         id: `${attraction.id || 'attraction'}-${i}`,

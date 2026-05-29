@@ -27,6 +27,8 @@ export interface PhotoContext {
   season?: 'primavera' | 'verão' | 'outono' | 'inverno';
   dayOfWeek?: string; // e.g., "Monday", "segunda"
   language?: string; // e.g., "pt-BR", "en-US", "es-ES"
+  cacheVariant?: string; // Optional key to allow distinct photos for the same attraction/context
+  excludePhotoIds?: string[]; // Optional list of photo IDs that must not repeat on the same page/day
 }
 
 interface PhotoCacheEntry {
@@ -38,6 +40,8 @@ interface UnsplashImage {
   urls: {
     regular: string;
   };
+  description?: string;
+  alt_description?: string;
   user: {
     name: string;
     username?: string;
@@ -464,6 +468,7 @@ export class PhotoService {
   private static readonly CACHE_TTL_MS = 6 * 60 * 60 * 1000;
   private static readonly CACHE = new Map<string, PhotoCacheEntry>();
   private static downloadedPhotos = new Map<string, any>(); // Track photos with metadata
+  private static readonly recentPhotoIdsByDestination = new Map<string, string[]>();
 
   static async generatePhotoUrl(attractionName: string, context?: PhotoContext): Promise<PhotoSource> {
     try {
@@ -521,7 +526,8 @@ export class PhotoService {
     const destination = (context?.destination || 'default').toLowerCase().trim();
     const language = (context?.language || 'default').toLowerCase().trim();
     const category = (context?.category || 'outro').toLowerCase().trim();
-    return `${this.CACHE_VERSION}_${attractionName.toLowerCase().trim()}_${destination}_${language}_${category}`;
+    const cacheVariant = (context?.cacheVariant || 'default').toLowerCase().trim();
+    return `${this.CACHE_VERSION}_${attractionName.toLowerCase().trim()}_${destination}_${language}_${category}_${cacheVariant}`;
   }
 
   /**
@@ -570,8 +576,22 @@ export class PhotoService {
 
     // Add destination for more specific results
     if (context.destination) {
-      enhanced += ` ${context.destination}`;
-      debug.log(`   ✅ Adicionado destino: "${context.destination}"`);
+      const normalizedEnhanced = enhanced.toLowerCase();
+      const normalizedDestination = context.destination.toLowerCase();
+      if (!normalizedEnhanced.includes(normalizedDestination)) {
+        enhanced += ` ${context.destination}`;
+        debug.log(`   ✅ Adicionado destino: "${context.destination}"`);
+      }
+
+      // Add a compact location hint (city/country) to improve locality without over-broad queries.
+      const destinationParts = context.destination
+        .split(',')
+        .map((part) => part.trim())
+        .filter(Boolean)
+        .slice(0, 2);
+      if (destinationParts.length > 1) {
+        enhanced += ` ${destinationParts.join(' ')}`;
+      }
     }
 
     // Add category-specific keywords
@@ -641,45 +661,55 @@ export class PhotoService {
 
   private static async fetchFromUnsplash(attractionName: string, context?: PhotoContext): Promise<PhotoSource | null> {
     try {
-      let query = this.getSearchQuery(attractionName, context);
-      debug.log(`   📝 Query base: "${query}"`);
-      
-      // Enhance query with context if provided
-      if (context) {
-        query = this.enhanceQueryWithContext(query, context);
+      const baseQuery = this.getSearchQuery(attractionName, context);
+      const finalQuery = context ? this.enhanceQueryWithContext(baseQuery, context) : baseQuery;
+
+      const alternateQueries = [
+        finalQuery,
+        `${this.normalizeAttractionName(attractionName)} ${context?.destination || ''}`.trim(),
+        this.normalizeAttractionName(attractionName),
+      ].filter(Boolean);
+
+      let bestImage: UnsplashImage | null = null;
+      for (const query of Array.from(new Set(alternateQueries))) {
+        debug.log(`   🚀 Query FINAL para Unsplash: "${query}"`);
+
+        const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
+        url.searchParams.set('query', query);
+        url.searchParams.set('client_id', this.UNSPLASH_API_KEY);
+        url.searchParams.set('per_page', '12');
+        url.searchParams.set('orientation', 'landscape');
+        url.searchParams.set('order_by', 'relevant');
+        url.searchParams.set('content_filter', 'high');
+
+        const response = await retryService.fetchWithRetry(url.toString(), {
+          headers: {
+            'User-Agent': 'PocketGuide/1.0',
+          },
+        });
+
+        if (!response.ok) {
+          debug.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
+          continue;
+        }
+
+        const data: UnsplashResponse = await response.json();
+        if (!data.results.length) {
+          continue;
+        }
+
+        bestImage = this.selectBestImage(data.results, attractionName, context);
+        if (bestImage) {
+          break;
+        }
       }
-      
-      debug.log(`   🚀 Query FINAL para Unsplash: "${query}"`);
 
-      // Buscar múltiplas imagens e selecionar a melhor (mais likes/relevante)
-      const url = new URL(`${this.UNSPLASH_BASE_URL}/search/photos`);
-      url.searchParams.set('query', query);
-      url.searchParams.set('client_id', this.UNSPLASH_API_KEY);
-      url.searchParams.set('per_page', '10'); // Buscar 10 para selecionar melhor
-      url.searchParams.set('orientation', 'landscape');
-      url.searchParams.set('order_by', 'relevant'); // Ordenar por relevância
-      url.searchParams.set('content_filter', 'high'); // Filtro de conteúdo seguro
-
-      const response = await retryService.fetchWithRetry(url.toString(), {
-        headers: {
-          'User-Agent': 'PocketGuide/1.0',
-        },
-      });
-
-      if (!response.ok) {
-        debug.warn(`⚠️ Resposta Unsplash: ${response.status} ${response.statusText}`);
+      if (!bestImage) {
+        debug.warn(`⚠️ Nenhuma imagem encontrada para: "${attractionName}"`);
         return null;
       }
 
-      const data: UnsplashResponse = await response.json();
-
-      if (data.results.length === 0) {
-        debug.warn(`⚠️ Nenhuma imagem encontrada para: "${query}"`);
-        return null;
-      }
-
-      // Selecionar a imagem melhor classificada (por likes e downloads)
-      const bestImage = this.selectBestImage(data.results);
+      this.markPhotoAsUsed(bestImage.id, context?.destination);
       
       const photo: PhotoSource = {
         url: bestImage.urls.regular,
@@ -779,20 +809,38 @@ export class PhotoService {
     }
   }
 
-  private static selectBestImage(images: UnsplashImage[]): UnsplashImage {
-    // Improved scoring algorithm considering multiple quality metrics
-    // Formula: likes * 0.5 + downloads * 0.3 + views * 0.15 + color diversity * 0.05
+  private static selectBestImage(images: UnsplashImage[], attractionName: string, context?: PhotoContext): UnsplashImage {
+    const attractionTokens = this.tokenizeForMatch(this.normalizeAttractionName(attractionName));
+    const destinationTokens = this.tokenizeForMatch(context?.destination || '');
+    const usedIds = new Set(this.getRecentlyUsedPhotoIds(context?.destination));
+    const excludedIds = new Set(context?.excludePhotoIds || []);
+
     const scored = images.map((img: any) => {
       const likes = img.likes || 0;
       const downloads = img.downloads || 0;
       const views = img.views || 0;
+      const description = `${img.description || ''} ${img.alt_description || ''}`.toLowerCase();
       
       // Normalize downloads and views to similar scale as likes
       const normalizedDownloads = (downloads / 100) || 0;
       const normalizedViews = (views / 10000) || 0;
       
       // Weighted score (likes are most reliable indicator of quality)
-      const score = (likes * 0.5) + (normalizedDownloads * 0.3) + (normalizedViews * 0.15) + Math.random() * 0.05;
+      let tokenScore = 0;
+      attractionTokens.forEach((token) => {
+        if (description.includes(token)) {
+          tokenScore += 8;
+        }
+      });
+      destinationTokens.forEach((token) => {
+        if (description.includes(token)) {
+          tokenScore += 3;
+        }
+      });
+
+      const duplicatePenalty = img.id && usedIds.has(img.id) ? 40 : 0;
+      const excludedPenalty = img.id && excludedIds.has(img.id) ? 1000 : 0;
+      const score = (likes * 0.5) + (normalizedDownloads * 0.3) + (normalizedViews * 0.15) + tokenScore - duplicatePenalty - excludedPenalty + Math.random() * 0.05;
       
       return {
         image: img,
@@ -813,7 +861,8 @@ export class PhotoService {
     });
     
     // Return first image with score, or fallback to first if none
-    const bestImage = scored[0]?.image || images[0];
+    const preferredPool = scored.filter((item) => !item.image?.id || !excludedIds.has(item.image.id));
+    const bestImage = (preferredPool[0]?.image || scored[0]?.image || images[0]);
     debug.log(`   ✅ Melhor imagem selecionada: Score ${scored[0]?.score.toFixed(2)}`);
     
     return bestImage;
@@ -831,6 +880,20 @@ export class PhotoService {
   private static getSearchQuery(attractionName: string, context?: PhotoContext): string {
     const normalizedName = this.normalizeAttractionName(attractionName);
     const lowerName = normalizedName.toLowerCase().trim();
+
+    // Names like "Castelo, Rio de Janeiro" usually indicate precise POIs.
+    // Prioritize local landmark phrasing before generic destination-heavy queries.
+    if (normalizedName.includes(',')) {
+      const parts = normalizedName.split(',').map((part) => part.trim()).filter(Boolean);
+      const poi = parts[0];
+      const locality = parts.slice(1, 3).join(' ');
+      const categoryHint = context?.category === 'museu'
+        ? 'museum historic architecture'
+        : context?.category === 'natureza'
+          ? 'landmark viewpoint landscape'
+          : 'landmark historic place';
+      return `${poi} ${locality} ${categoryHint}`.trim();
+    }
 
     if (ATTRACTION_SEARCH_QUERIES[lowerName]) {
       return ATTRACTION_SEARCH_QUERIES[lowerName];
@@ -866,6 +929,31 @@ export class PhotoService {
     }
 
     return normalizedName;
+  }
+
+  private static tokenizeForMatch(value: string): string[] {
+    return value
+      .toLowerCase()
+      .normalize('NFD')
+      .replace(/[\u0300-\u036f]/g, '')
+      .replace(/[^a-z0-9\s]/g, ' ')
+      .split(/\s+/)
+      .filter((token) => token.length > 2 && !['rio', 'city', 'dos', 'das', 'the', 'de', 'da'].includes(token));
+  }
+
+  private static getRecentlyUsedPhotoIds(destination?: string): string[] {
+    const key = this.normalizeDestinationKey(destination || 'default');
+    return this.recentPhotoIdsByDestination.get(key) || [];
+  }
+
+  private static markPhotoAsUsed(photoId?: string, destination?: string): void {
+    if (!photoId) {
+      return;
+    }
+    const key = this.normalizeDestinationKey(destination || 'default');
+    const current = this.recentPhotoIdsByDestination.get(key) || [];
+    const next = [photoId, ...current.filter((id) => id !== photoId)].slice(0, 30);
+    this.recentPhotoIdsByDestination.set(key, next);
   }
 
   private static getFallbackPhoto(attractionName: string, context?: PhotoContext): PhotoSource {
